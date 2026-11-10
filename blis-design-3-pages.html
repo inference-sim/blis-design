@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The BLIS design in three pages</title>
+<style>
+@page { size: Letter; margin: 0.9in; }
+:root { color-scheme: light; }
+html { background: #fff; }
+body { font-family: Charter, "Iowan Old Style", Georgia, "Times New Roman", serif; font-size: 10.5pt; line-height: 1.36; color: #1b1f24; max-width: 6.7in; margin: 0 auto; padding: 0.4in 0.2in; }
+h1 { font-size: 18pt; line-height: 1.15; margin: 0 0 0.35em; }
+h2 { font-size: 12.5pt; line-height: 1.2; margin: 1.05em 0 0.3em; break-after: avoid; border-bottom: 1px solid #c9d1d9; padding-bottom: 2px; }
+h3 { font-size: 10.5pt; margin: 0.8em 0 0.15em; break-after: avoid; }
+p { margin: 0 0 0.5em; orphans: 3; widows: 3; }
+.lead { font-size: 10.5pt; color: #3a424a; margin-bottom: 0.7em; }
+ul, ol { margin: 0 0 0.5em; padding-left: 1.3em; }
+li { margin: 0 0 0.2em; }
+code { font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace; font-size: 9pt; background: #f2f4f6; padding: 0 2px; border-radius: 2px; }
+a { color: #1d4f91; text-decoration: none; }
+.c { font-size: 8.5pt; color: #5b6570; white-space: nowrap; }
+.c a { color: #5b6570; }
+table { border-collapse: collapse; width: 100%; font-size: 9pt; line-height: 1.28; margin: 0.25em 0 0.6em; break-inside: avoid; }
+th, td { border: 1px solid #c9d1d9; padding: 2px 5px; vertical-align: top; text-align: left; }
+th { background: #eef1f4; font-weight: 600; }
+figure { margin: 0.4em 0 0.6em; break-inside: avoid; }
+figure svg { width: 100%; height: auto; display: block; color: #1b1f24; }
+figcaption { font-size: 8.8pt; color: #3a424a; margin-top: 2px; line-height: 1.3; }
+.tight li { margin-bottom: 0.1em; }
+@media print { body { padding: 0; max-width: none; } a { color: inherit; } }
+</style>
+</head>
+<body>
+<h1>The BLIS design in three pages</h1>
+<p class="lead">This summarises the BLIS target design for engineers who already know llm-d and vLLM; the design is the authority, and each claim below links to the section that states it.</p>
+
+<h2>What BLIS is</h2>
+<p>BLIS simulates an LLM serving cluster. It runs two kinds of code: the router of llm-d, unchanged, and Go ports of the vLLM and SGLang engines. Each port covers the engine's scheduling, its KV-cache management, its KV transfer and tiering, and how it resolves settings and chooses kernels <span class="c">(<a href="blis-target-design.html#s7-1">§7.1</a>)</span>. Each port is tested step by step against the engine's own Python code <span class="c">(<a href="blis-target-design.html#s7-2">§7.2</a>)</span>. A cost model, built from published hardware facts and fitted coefficients, prices every step.</p>
+<p>One idea organises the design: the engine decides what runs, the cost model says how long it takes, and neither uses the other's vocabulary <span class="c">(<a href="blis-target-design.html#s6-1">§6.1</a>)</span>.</p>
+
+<h2>Seven repositories, one owner for every fact</h2>
+<figure>
+<svg viewBox="0 0 700 262" role="img" aria-label="The seven repositories. The applications blis-config-search and accuracy-dashboard depend on inference-sim. inference-sim depends on the engine repositories and the router fork, and on the whole of blis-substrate. The engine repositories and the router fork depend only on the contracts of blis-substrate.">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+<g font-family="Helvetica, Arial, sans-serif" font-size="11" fill="currentColor" stroke="none">
+<g stroke="currentColor" stroke-width="1.2" fill="#f4f6f8">
+<rect x="130" y="6" width="200" height="40" rx="3"/>
+<rect x="370" y="6" width="200" height="40" rx="3"/>
+<rect x="215" y="80" width="270" height="42" rx="3"/>
+<rect x="20" y="152" width="200" height="42" rx="3"/>
+<rect x="250" y="152" width="200" height="42" rx="3"/>
+<rect x="480" y="152" width="200" height="42" rx="3"/>
+<rect x="20" y="222" width="660" height="34" rx="3" fill="#e8eef6"/>
+</g>
+<g text-anchor="middle">
+<text x="230" y="24" font-weight="bold">blis-config-search</text><text x="230" y="39" font-size="10">which configuration is best?</text>
+<text x="470" y="24" font-weight="bold">accuracy-dashboard</text><text x="470" y="39" font-size="10">how accurate is BLIS?</text>
+<text x="350" y="99" font-weight="bold">inference-sim</text><text x="350" y="114" font-size="10">event loop, cluster, workload, replay</text>
+<text x="120" y="170" font-weight="bold">blis-vllm</text><text x="120" y="185" font-size="10">vLLM, one release at a time</text>
+<text x="350" y="170" font-weight="bold">blis-sglang</text><text x="350" y="185" font-size="10">SGLang, one release at a time</text>
+<text x="580" y="170" font-weight="bold">llm-d-router fork</text><text x="580" y="185" font-size="10">llm-d, hosted unchanged</text>
+<text x="350" y="243" font-weight="bold">blis-substrate: contracts · catalog · coefficient registry · cost model</text>
+<text x="350" y="68" font-size="10">depends on</text>
+</g>
+<text x="358" y="141" font-size="10">depends on</text>
+<text x="358" y="212" font-size="10">contracts only</text>
+<text x="500" y="96" font-size="10">depends on the whole substrate</text>
+</g>
+<g stroke="currentColor" stroke-width="1.2" fill="none" marker-end="url(#ar)">
+<path d="M230,46 L290,80"/><path d="M470,46 L410,80"/>
+<path d="M270,122 L125,152"/><path d="M350,122 L350,152"/><path d="M430,122 L575,152"/>
+<path d="M120,194 L120,222"/><path d="M350,194 L350,222"/><path d="M580,194 L580,222"/>
+<path d="M485,106 H692 V239 H682"/>
+</g>
+</svg>
+
+<figcaption>The seven repositories. An arrow means "depends on". The engine repositories and the router fork use only the substrate's contracts, so a coefficient or pricing change needs no new engine or router release; only inference-sim uses the whole substrate. <span class="c">(<a href="blis-target-design.html#s2-1">§2.1</a>, <a href="blis-target-design.html#s3-2">§3.2</a>)</span></figcaption>
+</figure>
+<p>blis-substrate holds everything true whatever engine runs: the shared contracts, the catalog of hardware and model facts, the coefficient registry and the cost model <span class="c">(<a href="blis-target-design.html#s3-1">§3.1</a>)</span>. Three repositories each track one upstream: blis-vllm, blis-sglang and the llm-d router fork. inference-sim is the simulator. blis-config-search ranks configurations, and accuracy-dashboard measures how accurate BLIS is <span class="c">(<a href="blis-target-design.html#s2-1">§2.1</a>)</span>.</p>
+<p>Every fact and every kind of work has exactly one owner. To place a fact, ask what it depends on: an engine release, an llm-d release, or the simulator's own design. If none, it is true of the hardware, the model, the physics or the data, and it belongs in the substrate. The test for the substrate is whether a second engine would need the same edit; if not, the change belongs in an engine repository <span class="c">(<a href="blis-target-design.html#s2-2">§2.2</a>)</span>. So inference-sim runs simulations and holds no scorer. The dashboard's scoring harness is the only place where a simulation is compared with a measured benchmark <span class="c">(<a href="blis-target-design.html#s2-2">§2.2</a>, <a href="blis-target-design.html#s11-7">§11.7</a>)</span>.</p>
+
+<h2>One simulated step</h2>
+<p>Once per pool, the engine resolves its configuration as the upstream does, lowers the model to kernel implementations, sizes its KV budget, and hands the cost model a <code>PoolPlan</code>. At each step the scheduler forms a <code>StepShape</code>, already padded as the upstream pads it, and asks for its price through an <code>Environment</code> that inference-sim supplies. The cost model prices it from the catalog and the coefficient registry and returns a time. The engine reports the step done with its metrics and KV events. inference-sim advances simulated time and delivers the metrics and events to the router <span class="c">(<a href="blis-target-design.html#s2-3">§2.3</a>, <a href="blis-target-design.html#s6-3">§6.3</a>)</span>.</p>
+<p>Each KV move between tiers is an <code>engine.Transfer</code>. The cost model turns it into the bytes each link must carry, and inference-sim shares each link among the transfers that overlap in time. This is the only resource arithmetic the simulator does <span class="c">(<a href="blis-target-design.html#s6-2">§6.2</a>)</span>.</p>
+<p>The three objects are described in physical units, never in an engine's terms. The cost model therefore never sees an engine's settings and never applies an engine's rules, and outside its tests the substrate contains no engine name <span class="c">(<a href="blis-target-design.html#s6-1">§6.1</a>, <a href="blis-target-design.html#s4">§4</a>)</span>. A coefficient is keyed by a hash of the kernel's source, not by a library version, so a version bump that leaves a kernel unchanged needs no substrate change <span class="c">(<a href="blis-target-design.html#s6-2">§6.2</a>)</span>. A new engine is a new repository that adds to the contracts and changes nothing else in the substrate <span class="c">(<a href="blis-target-design.html#s12-6">§12.6</a>)</span>.</p>
+
+<h2>The discrete-event core</h2>
+<p>BLIS takes its terms from DEVS. Simulated time moves from one event, such as a request arriving or a step ending, to the next. The parts are components: an engine instance, the router, a link, a client. Components interact only through timestamped messages, and none reads another's state. The router learns of an engine only through the metrics and KV events the engine sends, after the delay the deployment's settings impose <span class="c">(<a href="blis-target-design.html#s8-1">§8.1</a>)</span>.</p>
+<p>Many events fall at one instant, and BLIS processes an instant in three phases. Every component with an internal event runs its output function. Each component receives the bag of its messages, sorted by the key (time, class, sender, the sender's own message count). Each component then makes exactly one transition: internal, external, or confluent when both coincide. No component sees another's change from the same instant before making its own, and no global counter enters the order <span class="c">(<a href="blis-target-design.html#s8-2">§8.2</a>)</span>.</p>
+<p>Time is an integer number of microseconds. Every random draw comes from a substream named by component, purpose and entity and seeded from the scenario seed, so request 17 of client 3 gets the same prompt length whatever happened to earlier requests <span class="c">(<a href="blis-target-design.html#s8-3">§8.3</a>, <a href="blis-target-design.html#s8-4">§8.4</a>)</span>. For fixed inputs the output is identical byte for byte across runs, thread counts and platforms <span class="c">(<a href="blis-target-design.html#s4">§4</a>)</span>.</p>
+<p>A run measures something only within its experimental frame: the workload and seeds, the initial state, warm-up, measured window and drain, the stop rule, the acceptance conditions and the metric definitions. The frame is recorded in every Result <span class="c">(<a href="blis-target-design.html#s8-6">§8.6</a>)</span>. Outputs are estimates. Where a run has random input, the estimate is a mean over replications with a confidence interval, and a comparison of two configurations has three outcomes: better, worse, or not distinguished <span class="c">(<a href="blis-target-design.html#s8-8">§8.8</a>)</span>. A deterministic run is reproducible, not accurate. Verification asks whether the code does what the model says; validation asks whether the model matches the real system, and a change that is both is split <span class="c">(<a href="blis-target-design.html#s8-9">§8.9</a>)</span>.</p>
+
+<h2>Where numbers come from, and how much to trust them</h2>
+<p>The cost model needs a coefficient for every primitive on every chip. For each lookup it uses the entry with the smallest rank number: measured, calibrated, transferred, literature, vendor_spec, roofline, assumed. Every value is labelled with its method, and every price records the least trusted method it used, so coverage can grow without hiding how good an estimate is <span class="c">(<a href="blis-target-design.html#s9-1">§9.1</a>, <a href="blis-target-design.html#s9-2">§9.2</a>, <a href="blis-target-design.html#s9-3">§9.3</a>)</span>.</p>
+<p>The data ledger lists the external data units (benchmark runs, operator sweeps, forward-pass cells) and gives each exactly one role: fit, select, validate, held, anchor or report. A role is computed from a secret seed, once for each group of near-copies, so a point that fitted a value cannot also judge it <span class="c">(<a href="blis-target-design.html#s10-2">§10.2</a>)</span>.</p>
+<p>With each simulator release the dashboard scores the anchor units and gives each point one grade: G1 when the run's engine release is the one scoring and every condition for exactness holds, G2 where substitutions are named, G3 and G4 for another engine release, and G5 for a point not scored, for a listed reason. A grade is computed from data, and a condition the data cannot decide is never assumed to hold <span class="c">(<a href="blis-target-design.html#s11-3">§11.3</a>, <a href="blis-target-design.html#s11-4">§11.4</a>)</span>. The dashboard copies the run's recorded configuration unchanged and reads each field's status from the engine's own field list; it keeps no table of modelled settings <span class="c">(<a href="blis-target-design.html#s11-1">§11.1</a>, <a href="blis-target-design.html#s11-2">§11.2</a>)</span>. Every published figure shows how many points it covers. What lowers coverage or grade is ranked in a backlog, and work is chosen from its top <span class="c">(<a href="blis-target-design.html#s11-6">§11.6</a>)</span>.</p>
+
+<h2>How the project stays correct</h2>
+<p>Every rule has an identifier and is kept in one of three ways. An automated rule is a deterministic check in the repository that owns it. A maintainer practice is kept by a person with write access for a repository as a whole, such as branch protection. Agent guidance is followed by an agent that writes or reviews a change; where a rule needs judgement, a review agent answers a question as guidance, never as a check <span class="c">(<a href="blis-target-design.html#s4-kinds">§4.2</a>, <a href="blis-target-design.html#s13-2">§13.2</a>)</span>. Dependencies point one way, and a repository never imports one above it <span class="c">(<a href="blis-target-design.html#s4">§4</a>)</span>.</p>
+<p>For each upstream release, the engine repositories generate a surface list from the upstream's own registration tables. Every connector, tier, KV-cache manager, speculative method, policy, field, metric and event type has one status: modelled with evidence, refused by name with an issue, or out of scope for one of three listed reasons. CI fails while any item has none, so gaps are counted and ranked, not found by accident <span class="c">(<a href="blis-target-design.html#s7-5">§7.5</a>)</span>. Each simulator release runs exactly one upstream release of each engine and of llm-d, and says which <span class="c">(<a href="blis-target-design.html#s14-2">§14.2</a>)</span>.</p>
+
+<h2>Where to go next</h2>
+<ul class="tight">
+<li>Add a model, a chip or a data drop: <span class="c">(<a href="blis-target-design.html#s12-1">§12.1</a>, <a href="blis-target-design.html#s12-2">§12.2</a>, <a href="blis-target-design.html#s12-8">§12.8</a>)</span>.</li>
+<li>Move an engine to a new upstream release: <span class="c">(<a href="blis-target-design.html#s12-4">§12.4</a>)</span>, with the method and test tiers of <span class="c">(<a href="blis-target-design.html#s7">§7</a>)</span>.</li>
+<li>Change a simulation rule or read a metric: <span class="c">(<a href="blis-target-design.html#s8">§8</a>)</span>. Understand a score: <span class="c">(<a href="blis-target-design.html#s11">§11</a>)</span>.</li>
+<li>Work in one repository: its card in <span class="c">(<a href="blis-target-design.html#s5">§5</a>)</span>. Learn how rules are checked: <span class="c">(<a href="blis-target-design.html#s4">§4</a>, <a href="blis-target-design.html#s13">§13</a>)</span>.</li>
+</ul>
+</body>
+</html>

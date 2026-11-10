@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLIS design</title>
+<meta name="description" content="An introduction to the BLIS design in three steps: a three-page summary, a seven-page summary, and the full target design.">
+<style>
+:root { color-scheme: light; }
+html { background: #fff; }
+body { font-family: Charter, "Iowan Old Style", Georgia, "Times New Roman", serif; font-size: 11pt; line-height: 1.4; color: #1b1f24; max-width: 6.7in; margin: 0 auto; padding: 0.5in 16px; }
+h1 { font-size: 20pt; line-height: 1.15; margin: 0 0 0.35em; }
+h2 { font-size: 13pt; line-height: 1.2; margin: 1.4em 0 0.4em; border-bottom: 1px solid #c9d1d9; padding-bottom: 2px; }
+p { margin: 0 0 0.6em; }
+.lead { color: #3a424a; }
+a { color: #1d4f91; text-decoration: none; }
+a:hover { text-decoration: underline; }
+ol.steps { padding-left: 1.4em; margin: 0 0 0.8em; }
+ol.steps li { margin: 0 0 0.7em; }
+.len { color: #5b6570; font-size: 9.5pt; }
+footer { margin-top: 2em; font-size: 9.5pt; color: #5b6570; }
+</style>
+</head>
+<body>
+<h1>BLIS design</h1>
+<p class="lead">BLIS simulates an LLM serving cluster. It runs the router of llm-d unchanged, and Go ports of the vLLM and SGLang engines. These pages explain how its repositories are divided, what each one owns, and the rules that keep them correct.</p>
+
+<h2>Read in this order</h2>
+<p>The three documents say the same thing at three depths. Stop when you have what you need.</p>
+<ol class="steps">
+<li><a href="blis-design-3-pages.html">The design in three pages</a> <span class="len">(3 printed pages)</span><br>
+The shape of the simulator, for a reader who already knows llm-d and vLLM: the repositories, what each owns, and how a simulated step flows between them.</li>
+<li><a href="blis-design-7-pages.html">The design in seven pages</a> <span class="len">(7 printed pages)</span><br>
+The same account with the detail a contributor needs before changing code.</li>
+<li><a href="blis-target-design.html">The full target design</a> <span class="len">(about 90 printed pages)</span><br>
+The authority. Every rule, how it is checked, and why it exists. Each claim in the summaries links to the section here that states it.</li>
+</ol>
+
+<h2>What the design is</h2>
+<p>The design is a standing document. Every statement in it holds for every release: it says what must be true, not what is true at the moment, and it has no dates or milestones. Where a page says what a release schedules, that belongs to a separate release plan, which is not part of these pages.</p>
+
+<h2>The code</h2>
+<p>The repositories live under <a href="https://github.com/inference-sim">github.com/inference-sim</a>. Start with <a href="https://github.com/inference-sim/inference-sim">inference-sim</a>, the simulator, and follow the repository table in the design to the others. To ask for a feature or report a problem, open an issue in the repository that owns the behaviour.</p>
+
+<footer>Each page is a single self-contained HTML file and prints to US Letter.</footer>
+</body>
+</html>
