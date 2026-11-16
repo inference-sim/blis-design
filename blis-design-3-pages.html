@@ -38,46 +38,48 @@ figcaption { font-size: 8.8pt; color: #3a424a; margin-top: 2px; line-height: 1.3
 <p>BLIS simulates an LLM serving cluster. It runs two kinds of code: the router of llm-d, unchanged, and Go ports of the vLLM and SGLang engines. Each port covers the engine's scheduling, its KV-cache management, its KV transfer and tiering, and how it resolves settings and chooses kernels <span class="c">(<a href="blis-target-design.html#s7-1">§7.1</a>)</span>. Each port is tested step by step against the engine's own Python code <span class="c">(<a href="blis-target-design.html#s7-2">§7.2</a>)</span>. A cost model, built from published hardware facts and fitted coefficients, prices every step.</p>
 <p>One idea organises the design: the engine decides what runs, the cost model says how long it takes, and neither uses the other's vocabulary <span class="c">(<a href="blis-target-design.html#s6-1">§6.1</a>)</span>.</p>
 
-<h2>Seven repositories, one owner for every fact</h2>
+<h2>The repositories, one owner for every fact</h2>
 <figure>
-<svg viewBox="0 0 700 262" role="img" aria-label="The seven repositories. The applications blis-config-search and accuracy-dashboard depend on inference-sim. inference-sim depends on the engine repositories and the router fork, and on the whole of blis-substrate. The engine repositories and the router fork depend only on the contracts of blis-substrate.">
+<svg viewBox="0 0 700 262" role="img" aria-label="The repositories. The applications blis-config-search and accuracy-dashboard depend on inference-sim. inference-sim depends on the engine repositories, blis-kvstore and the router fork, and on the whole of blis-substrate. The engine repositories, blis-kvstore and the router fork depend only on the contracts of blis-substrate.">
 <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
 <g font-family="Helvetica, Arial, sans-serif" font-size="11" fill="currentColor" stroke="none">
 <g stroke="currentColor" stroke-width="1.2" fill="#f4f6f8">
 <rect x="130" y="6" width="200" height="40" rx="3"/>
 <rect x="370" y="6" width="200" height="40" rx="3"/>
 <rect x="215" y="80" width="270" height="42" rx="3"/>
-<rect x="20" y="152" width="200" height="42" rx="3"/>
-<rect x="250" y="152" width="200" height="42" rx="3"/>
-<rect x="480" y="152" width="200" height="42" rx="3"/>
+<rect x="20" y="152" width="150" height="42" rx="3"/>
+<rect x="185" y="152" width="150" height="42" rx="3"/>
+<rect x="350" y="152" width="150" height="42" rx="3"/>
+<rect x="515" y="152" width="150" height="42" rx="3"/>
 <rect x="20" y="222" width="660" height="34" rx="3" fill="#e8eef6"/>
 </g>
 <g text-anchor="middle">
 <text x="230" y="24" font-weight="bold">blis-config-search</text><text x="230" y="39" font-size="10">which configuration is best?</text>
 <text x="470" y="24" font-weight="bold">accuracy-dashboard</text><text x="470" y="39" font-size="10">how accurate is BLIS?</text>
 <text x="350" y="99" font-weight="bold">inference-sim</text><text x="350" y="114" font-size="10">event loop, cluster, workload, replay</text>
-<text x="120" y="170" font-weight="bold">blis-vllm</text><text x="120" y="185" font-size="10">vLLM, one release at a time</text>
-<text x="350" y="170" font-weight="bold">blis-sglang</text><text x="350" y="185" font-size="10">SGLang, one release at a time</text>
-<text x="580" y="170" font-weight="bold">llm-d-router fork</text><text x="580" y="185" font-size="10">llm-d, hosted unchanged</text>
+<text x="95" y="170" font-weight="bold">blis-vllm</text><text x="95" y="185" font-size="10">vLLM, one release</text>
+<text x="260" y="170" font-weight="bold">blis-sglang</text><text x="260" y="185" font-size="10">SGLang, one release</text>
+<text x="425" y="170" font-weight="bold">blis-kvstore</text><text x="425" y="185" font-size="10">KV store packages</text>
+<text x="590" y="170" font-weight="bold">llm-d-router fork</text><text x="590" y="185" font-size="10">llm-d, hosted unchanged</text>
 <text x="350" y="243" font-weight="bold">blis-substrate: contracts · catalog · coefficient registry · cost model</text>
 <text x="350" y="68" font-size="10">depends on</text>
 </g>
-<text x="358" y="141" font-size="10">depends on</text>
-<text x="358" y="212" font-size="10">contracts only</text>
+<text x="452" y="141" font-size="10">depends on</text>
+<text x="268" y="212" font-size="10">contracts only</text>
 <text x="500" y="96" font-size="10">depends on the whole substrate</text>
 </g>
 <g stroke="currentColor" stroke-width="1.2" fill="none" marker-end="url(#ar)">
 <path d="M230,46 L290,80"/><path d="M470,46 L410,80"/>
-<path d="M270,122 L125,152"/><path d="M350,122 L350,152"/><path d="M430,122 L575,152"/>
-<path d="M120,194 L120,222"/><path d="M350,194 L350,222"/><path d="M580,194 L580,222"/>
+<path d="M260,122 L100,152"/><path d="M320,122 L260,152"/><path d="M380,122 L425,152"/><path d="M440,122 L585,152"/>
+<path d="M95,194 L95,222"/><path d="M260,194 L260,222"/><path d="M425,194 L425,222"/><path d="M590,194 L590,222"/>
 <path d="M485,106 H692 V239 H682"/>
 </g>
 </svg>
 
-<figcaption>The seven repositories. An arrow means "depends on". The engine repositories and the router fork use only the substrate's contracts, so a coefficient or pricing change needs no new engine or router release; only inference-sim uses the whole substrate. <span class="c">(<a href="blis-target-design.html#s2-1">§2.1</a>, <a href="blis-target-design.html#s3-2">§3.2</a>)</span></figcaption>
+<figcaption>The repositories. An arrow means "depends on". The engine repositories, blis-kvstore and the router fork use only the substrate's contracts, so a coefficient or pricing change needs no new engine, store or router release; only inference-sim uses the whole substrate. <span class="c">(<a href="blis-target-design.html#s2-1">§2.1</a>, <a href="blis-target-design.html#s3-2">§3.2</a>)</span></figcaption>
 </figure>
-<p>blis-substrate holds everything true whatever engine runs: the shared contracts, the catalog of hardware and model facts, the coefficient registry and the cost model <span class="c">(<a href="blis-target-design.html#s3-1">§3.1</a>)</span>. Three repositories each track one upstream: blis-vllm, blis-sglang and the llm-d router fork. inference-sim is the simulator. blis-config-search ranks configurations, and accuracy-dashboard measures how accurate BLIS is <span class="c">(<a href="blis-target-design.html#s2-1">§2.1</a>)</span>.</p>
-<p>Every fact and every kind of work has exactly one owner. To place a fact, ask what it depends on: an engine release, an llm-d release, or the simulator's own design. If none, it is true of the hardware, the model, the physics or the data, and it belongs in the substrate. The test for the substrate is whether a second engine would need the same edit; if not, the change belongs in an engine repository <span class="c">(<a href="blis-target-design.html#s2-2">§2.2</a>)</span>. So inference-sim runs simulations and holds no scorer. The dashboard's scoring harness is the only place where a simulation is compared with a measured benchmark <span class="c">(<a href="blis-target-design.html#s2-2">§2.2</a>, <a href="blis-target-design.html#s11-7">§11.7</a>)</span>.</p>
+<p>blis-substrate holds everything true whatever engine runs: the shared contracts, the catalog of hardware and model facts, the coefficient registry and the cost model <span class="c">(<a href="blis-target-design.html#s3-1">§3.1</a>)</span>. blis-vllm, blis-sglang, the llm-d router fork and blis-kvstore track upstream code; blis-kvstore holds the KV store packages that engines call, such as the Mooncake store. inference-sim is the simulator. blis-config-search ranks configurations, and accuracy-dashboard measures how accurate BLIS is <span class="c">(<a href="blis-target-design.html#s2-1">§2.1</a>)</span>.</p>
+<p>Every fact and every kind of work has exactly one owner. To place a fact, ask what it depends on: an engine release, an llm-d release, a shared KV store's release, or the simulator's own design. If none, it is true of the hardware, the model, the physics or the data, and it belongs in the substrate. The test for the substrate is whether a second engine would need the same edit; if not, the change belongs in an engine repository <span class="c">(<a href="blis-target-design.html#s2-2">§2.2</a>)</span>. So inference-sim runs simulations and holds no scorer. The dashboard's scoring harness is the only place where a simulation is compared with a measured benchmark <span class="c">(<a href="blis-target-design.html#s2-2">§2.2</a>, <a href="blis-target-design.html#s11-7">§11.7</a>)</span>.</p>
 
 <h2>One simulated step</h2>
 <p>Once per pool, the engine resolves its configuration as the upstream does, lowers the model to kernel implementations, sizes its KV budget, and hands the cost model a <code>PoolPlan</code>. At each step the scheduler forms a <code>StepShape</code>, already padded as the upstream pads it, and asks for its price through an <code>Environment</code> that inference-sim supplies. The cost model prices it from the catalog and the coefficient registry and returns a time. The engine reports the step done with its metrics and KV events. inference-sim advances simulated time and delivers the metrics and events to the router <span class="c">(<a href="blis-target-design.html#s2-3">§2.3</a>, <a href="blis-target-design.html#s6-3">§6.3</a>)</span>.</p>

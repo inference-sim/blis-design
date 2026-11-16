@@ -38,62 +38,65 @@ figcaption { font-size: 8.8pt; color: #3a424a; margin-top: 2px; line-height: 1.3
 <h2>What BLIS is, and the five ideas behind it</h2>
 <p>BLIS simulates an LLM serving cluster. It runs the router of llm-d unchanged, and Go ports of the vLLM and SGLang engines. A cost model built from published hardware facts and fitted coefficients prices every step <span class="c">(<a href="blis-target-design.html#s1">§1</a>, <a href="blis-target-design.html#s7-1">§7.1</a>)</span>. The design rests on five ideas:</p>
 <ul class="tight">
-<li>One repository, blis-substrate, holds everything true whatever engine runs. Every other repository tracks one upstream or serves one purpose, and every kind of work has one owner <span class="c">(<a href="blis-target-design.html#s2-2">§2.2</a>)</span>.</li>
+<li>One repository, blis-substrate, holds everything true whatever engine runs. Every other repository tracks upstream code or serves one purpose, and every kind of work has one owner <span class="c">(<a href="blis-target-design.html#s2-2">§2.2</a>)</span>.</li>
 <li>Engines hand the cost model a fully resolved description of what runs, so the cost model does not depend on which engine produced it <span class="c">(<a href="blis-target-design.html#s6-1">§6.1</a>)</span>.</li>
 <li>Every upstream release gets a feature list generated from the upstream's source. Each feature is modelled, refused by name, or out of scope, and CI fails while any feature has no status <span class="c">(<a href="blis-target-design.html#s7-5">§7.5</a>)</span>.</li>
 <li>Every coefficient has a value, labelled by how it was obtained <span class="c">(<a href="blis-target-design.html#s9">§9</a>)</span>.</li>
 <li>The simulator follows explicit rules for discrete-event simulation and output analysis, so its figures are reproducible and carry their uncertainty <span class="c">(<a href="blis-target-design.html#s8">§8</a>)</span>.</li>
 </ul>
 
-<h2>The seven repositories</h2>
+<h2>The repositories</h2>
 <figure>
-<svg viewBox="0 0 700 262" role="img" aria-label="The seven repositories. The applications blis-config-search and accuracy-dashboard depend on inference-sim. inference-sim depends on the engine repositories and the router fork, and on the whole of blis-substrate. The engine repositories and the router fork depend only on the contracts of blis-substrate.">
+<svg viewBox="0 0 700 262" role="img" aria-label="The repositories. The applications blis-config-search and accuracy-dashboard depend on inference-sim. inference-sim depends on the engine repositories, blis-kvstore and the router fork, and on the whole of blis-substrate. The engine repositories, blis-kvstore and the router fork depend only on the contracts of blis-substrate.">
 <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
 <g font-family="Helvetica, Arial, sans-serif" font-size="11" fill="currentColor" stroke="none">
 <g stroke="currentColor" stroke-width="1.2" fill="#f4f6f8">
 <rect x="130" y="6" width="200" height="40" rx="3"/>
 <rect x="370" y="6" width="200" height="40" rx="3"/>
 <rect x="215" y="80" width="270" height="42" rx="3"/>
-<rect x="20" y="152" width="200" height="42" rx="3"/>
-<rect x="250" y="152" width="200" height="42" rx="3"/>
-<rect x="480" y="152" width="200" height="42" rx="3"/>
+<rect x="20" y="152" width="150" height="42" rx="3"/>
+<rect x="185" y="152" width="150" height="42" rx="3"/>
+<rect x="350" y="152" width="150" height="42" rx="3"/>
+<rect x="515" y="152" width="150" height="42" rx="3"/>
 <rect x="20" y="222" width="660" height="34" rx="3" fill="#e8eef6"/>
 </g>
 <g text-anchor="middle">
 <text x="230" y="24" font-weight="bold">blis-config-search</text><text x="230" y="39" font-size="10">which configuration is best?</text>
 <text x="470" y="24" font-weight="bold">accuracy-dashboard</text><text x="470" y="39" font-size="10">how accurate is BLIS?</text>
 <text x="350" y="99" font-weight="bold">inference-sim</text><text x="350" y="114" font-size="10">event loop, cluster, workload, replay</text>
-<text x="120" y="170" font-weight="bold">blis-vllm</text><text x="120" y="185" font-size="10">vLLM, one release at a time</text>
-<text x="350" y="170" font-weight="bold">blis-sglang</text><text x="350" y="185" font-size="10">SGLang, one release at a time</text>
-<text x="580" y="170" font-weight="bold">llm-d-router fork</text><text x="580" y="185" font-size="10">llm-d, hosted unchanged</text>
+<text x="95" y="170" font-weight="bold">blis-vllm</text><text x="95" y="185" font-size="10">vLLM, one release</text>
+<text x="260" y="170" font-weight="bold">blis-sglang</text><text x="260" y="185" font-size="10">SGLang, one release</text>
+<text x="425" y="170" font-weight="bold">blis-kvstore</text><text x="425" y="185" font-size="10">KV store packages</text>
+<text x="590" y="170" font-weight="bold">llm-d-router fork</text><text x="590" y="185" font-size="10">llm-d, hosted unchanged</text>
 <text x="350" y="243" font-weight="bold">blis-substrate: contracts · catalog · coefficient registry · cost model</text>
 <text x="350" y="68" font-size="10">depends on</text>
 </g>
-<text x="358" y="141" font-size="10">depends on</text>
-<text x="358" y="212" font-size="10">contracts only</text>
+<text x="452" y="141" font-size="10">depends on</text>
+<text x="268" y="212" font-size="10">contracts only</text>
 <text x="500" y="96" font-size="10">depends on the whole substrate</text>
 </g>
 <g stroke="currentColor" stroke-width="1.2" fill="none" marker-end="url(#ar)">
 <path d="M230,46 L290,80"/><path d="M470,46 L410,80"/>
-<path d="M270,122 L125,152"/><path d="M350,122 L350,152"/><path d="M430,122 L575,152"/>
-<path d="M120,194 L120,222"/><path d="M350,194 L350,222"/><path d="M580,194 L580,222"/>
+<path d="M260,122 L100,152"/><path d="M320,122 L260,152"/><path d="M380,122 L425,152"/><path d="M440,122 L585,152"/>
+<path d="M95,194 L95,222"/><path d="M260,194 L260,222"/><path d="M425,194 L425,222"/><path d="M590,194 L590,222"/>
 <path d="M485,106 H692 V239 H682"/>
 </g>
 </svg>
 
-<figcaption>The seven repositories; an arrow means "depends on". The engine repositories and the router fork use only the substrate's contracts. Only inference-sim uses the whole substrate; the two applications depend only on inference-sim. <span class="c">(<a href="blis-target-design.html#s2-1">§2.1</a>, <a href="blis-target-design.html#s3-2">§3.2</a>)</span></figcaption>
+<figcaption>The repositories; an arrow means "depends on". The engine repositories, blis-kvstore and the router fork use only the substrate's contracts. Only inference-sim uses the whole substrate; the two applications depend only on inference-sim. <span class="c">(<a href="blis-target-design.html#s2-1">§2.1</a>, <a href="blis-target-design.html#s3-2">§3.2</a>)</span></figcaption>
 </figure>
 <table>
 <tr><th>Repository</th><th>Owns</th><th>Changes when</th></tr>
 <tr><td>blis-substrate</td><td>Contracts and validators, the catalog, the coefficient registry, the cost model, the invariant registry</td><td>a new model or chip, a data drop, an accuracy improvement, a new contract</td></tr>
 <tr><td>blis-vllm, blis-sglang</td><td>The upstream's scheduler, KV-cache manager, connectors, defaults and lowering, in Go, for one upstream release at a time; its oracle, field list and surface list</td><td>an upstream release; a fidelity fix</td></tr>
+<tr><td>blis-kvstore</td><td>The decisions of each KV store package an engine calls, whether one engine or both (such as the Mooncake store and LMCache), in Go, one release of each store; its oracle and surface lists</td><td>a store release; a fidelity fix</td></tr>
 <tr><td>llm-d-router fork</td><td>llm-d's router code made runnable in simulated time, and nothing that changes a routing decision</td><td>an llm-d release; a plugin a user needs</td></tr>
 <tr><td>inference-sim</td><td>The event loop, cluster, workload, replay, engine selection, the Environment, link sharing, the command line, the Result</td><td>a pin bump; a simulator feature</td></tr>
 <tr><td>blis-config-search</td><td>Experiments that search configurations, and their reports</td><td>a new experiment; a simulator release</td></tr>
 <tr><td>accuracy-dashboard</td><td>Public accuracy and coverage, and the scoring harness</td><td>a simulator release; a new InferenceX dump</td></tr>
 </table>
 <p class="c" style="margin-top:-0.3em"><span class="c">(<a href="blis-target-design.html#s5">§5</a>, <a href="blis-target-design.html#s2-1">§2.1</a>)</span></p>
-<p>To place a fact, ask what it depends on. The engine release decides it: the engine repository. The llm-d release: the router fork. The simulator's design: inference-sim. Otherwise it is true of the hardware, the model, the physics or the data, and the substrate owns it. A fact such as H200 memory bandwidth lives in the catalog; how fast one attention kernel runs on H200 lives in the coefficient registry; a user's scorer weights live in the scenario, copied verbatim <span class="c">(<a href="blis-target-design.html#s2-2">§2.2</a>)</span>. Documents that cross a repository boundary, the scenario, the deployment, the Result and the per-point scoring record, each have one definition in the substrate; the applications validate them through inference-sim and define none of their own <span class="c">(<a href="blis-target-design.html#s2-2">§2.2</a>, <a href="blis-target-design.html#s5">§5</a>)</span>.</p>
+<p>To place a fact, ask what it depends on. The engine release decides it: the engine repository. The llm-d release: the router fork. A KV store package's release: blis-kvstore. The simulator's design: inference-sim. Otherwise it is true of the hardware, the model, the physics or the data, and the substrate owns it. A fact such as H200 memory bandwidth lives in the catalog; how fast one attention kernel runs on H200 lives in the coefficient registry; a user's scorer weights live in the scenario, copied verbatim <span class="c">(<a href="blis-target-design.html#s2-2">§2.2</a>)</span>. Documents that cross a repository boundary, the scenario, the deployment, the Result and the per-point scoring record, each have one definition in the substrate; the applications validate them through inference-sim and define none of their own <span class="c">(<a href="blis-target-design.html#s2-2">§2.2</a>, <a href="blis-target-design.html#s5">§5</a>)</span>.</p>
 <p>The substrate is one Go module, so a change that touches a model, its data, its coefficients and the cost model is one pull request, one review and one release <span class="c">(<a href="blis-target-design.html#s3-1">§3.1</a>)</span>. It has two kinds of package. Those under <code>contracts/</code> hold the interfaces, data types, validators, conformance suites, engine harness and invariant registry, import only the Go standard library, the YAML parser and each other, and change only compatibly. The rest hold the cost model, the validators, the loader and the embedded data, and only inference-sim imports them <span class="c">(<a href="blis-target-design.html#s3-2">§3.2</a>)</span>. A refit therefore needs no engine or router release: Go builds a program with the newest substrate version any module requires, and the contracts have not changed incompatibly. The reverse is guarded too. An engine requires the oldest substrate whose contracts it uses, and never one newer than inference-sim requires, so an engine release cannot change the simulator's data <span class="c">(<a href="blis-target-design.html#s3-2">§3.2</a>)</span>.</p>
 <p>Data reaches a run in one of two ways, and each run records which. A path (<code>--catalog</code>, <code>--registry</code>) replaces the embedded copy, so a recalibration candidate is scored with the released simulator and no rebuild. With no path, the run uses the data compiled into the release. The loader refuses anything that would make the data ambiguous, and a path load and an embedded load give the same data and the same content hash <span class="c">(<a href="blis-target-design.html#s3-3">§3.3</a>)</span>.</p>
 
@@ -181,7 +184,7 @@ figcaption { font-size: 8.8pt; color: #3a424a; margin-top: 2px; line-height: 1.3
 <h2>Triggers, automation and versions</h2>
 <p>Each outside event has one playbook with the same fields: detection, a preflight that computes scope, steps, checks, a definition of done, and a size. A new model on existing capabilities is one substrate pull request <span class="c">(<a href="blis-target-design.html#s12-1">§12.1</a>)</span>. A data drop pins a new revision and refits only the families whose fit data changed <span class="c">(<a href="blis-target-design.html#s12-2">§12.2</a>)</span>. A new chip adds its datasheet facts to the catalog, with roofline values as the floor <span class="c">(<a href="blis-target-design.html#s12-8">§12.8</a>)</span>. An accuracy idea carries a pre-registration before any held-out data is read, one change per pull request <span class="c">(<a href="blis-target-design.html#s12-3">§12.3</a>)</span>. An upstream release gets a surface diff, a field demand and a source diff, and only changed functions are re-ported <span class="c">(<a href="blis-target-design.html#s12-4">§12.4</a>)</span>: the old release keeps a release branch, the oracle's pin moves, every new surface item and field is classified, each changed trace is reviewed, and the engine is tagged on the new release <span class="c">(<a href="blis-target-design.html#s12-4">§12.4</a>, <a href="blis-target-design.html#s14-4">§14.4</a>)</span>. An llm-d release is merged into the fork, never rebased, and every new clock, goroutine, random draw or map-order use on a decision path is routed through the runtime interface <span class="c">(<a href="blis-target-design.html#s12-5">§12.5</a>, <a href="blis-target-design.html#s5">§5</a>)</span>. A new engine is a new repository that adds to the contracts <span class="c">(<a href="blis-target-design.html#s12-6">§12.6</a>)</span>.</p>
 <p>Deterministic checks decide what can be decided mechanically. Agents do bounded work from a preflight. People answer the questions that need judgement, approve and set direction <span class="c">(<a href="blis-target-design.html#s13">§13</a>)</span>. A rule is kept as an automated check, a maintainer practice or agent guidance, and the design says which <span class="c">(<a href="blis-target-design.html#s4-kinds">§4.2</a>)</span>. The invariant registry holds every rule with its checks; it generates the design's appendix, each repository's AGENTS.md and the pull-request checklist <span class="c">(<a href="blis-target-design.html#s13-1">§13.1</a>)</span>. Whole-run accuracy gates run the pinned harness <span class="c">(<a href="blis-target-design.html#s13-5">§13.5</a>)</span>. The release bot merges, tags and re-pins bottom-up <span class="c">(<a href="blis-target-design.html#s13-6">§13.6</a>)</span>.</p>
-<p>Versions are written in one place and documents say "the pinned release" <span class="c">(<a href="blis-target-design.html#s4-proc">§4.1</a>)</span>. An engine module models exactly one upstream release, tagged <code>v&lt;upstream&gt;-blis.N</code>; a higher N on the same release is a BLIS-side change, and a plain upstream tag is never made. Each simulator release runs one upstream release of each engine and of llm-d and lists them in <code>stack.json</code>, and a scenario naming another is refused with the newest release that does run it <span class="c">(<a href="blis-target-design.html#s14-1">§14.1</a>, <a href="blis-target-design.html#s14-2">§14.2</a>)</span>. When BLIS moves to a new upstream release, the old one keeps a release branch for fixes <span class="c">(<a href="blis-target-design.html#s14-4">§14.4</a>)</span>. Releases are cut bottom-up, and a manual tag by a person is an annotated tag on the checked commit <span class="c">(<a href="blis-target-design.html#s13-6">§13.6</a>, <a href="blis-target-design.html#s14-2">§14.2</a>)</span>.</p>
+<p>Versions are written in one place and documents say "the pinned release" <span class="c">(<a href="blis-target-design.html#s4-proc">§4.1</a>)</span>. An engine module models exactly one upstream release, tagged <code>v&lt;upstream&gt;-blis.N</code>; a higher N on the same release is a BLIS-side change, and a plain upstream tag is never made. Each simulator release runs one upstream release of each engine, of llm-d and of each KV store and lists them in <code>stack.json</code>, and a scenario naming another is refused with the newest release that does run it <span class="c">(<a href="blis-target-design.html#s14-1">§14.1</a>, <a href="blis-target-design.html#s14-2">§14.2</a>)</span>. When BLIS moves to a new upstream release, the old one keeps a release branch for fixes <span class="c">(<a href="blis-target-design.html#s14-4">§14.4</a>)</span>. Releases are cut bottom-up, and a manual tag by a person is an annotated tag on the checked commit <span class="c">(<a href="blis-target-design.html#s13-6">§13.6</a>, <a href="blis-target-design.html#s14-2">§14.2</a>)</span>.</p>
 
 <h2>Working in a repository</h2>
 <p>Each repository's card in the design gives its purpose, what it owns and must never hold, its interfaces, what triggers a change, how its correctness is shown, and its own invariants <span class="c">(<a href="blis-target-design.html#s5">§5</a>)</span>. The points a contributor meets first:</p>
