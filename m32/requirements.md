@@ -56,8 +56,10 @@ Already fixed in review, merged into the integration branches:
 
 **0.3 M3.1 plan issues the M3.1 set does not close.** Of the 189:
 - 21 are already closed, and 26 close when the set merges;
-- 32 are advanced but stay open;
-- 108 are not yet named by any of the seven bodies.
+- 36 are advanced but stay open (named with a `Part of` line; the bodies moved from 32 as items were added);
+- 106 are not yet named by any of the seven bodies.
+
+One mutually-exclusive outcome per issue, reconciling to the whole: 21 + 26 + 36 + 106 = 189.
 
 Some of the 108 were advanced by item pull requests merged into the integration branches without a closing
 line. Each is checked against the final bodies at the cut, and is closed there if it is done. The rest carry
@@ -86,8 +88,36 @@ into M3.2.
 In C2, SGLang speculation, attention-DP, EP and P/D (sglang #64 to #71) stay refused in M3.1, as blis-sglang#126
 states. A blis-substrate#51 comment says what remains after switch groups. Repositories are `inference-sim/<repo>`.
 
-The per-issue outcome for all 106 is committed in [`m31-carried.tsv`](m31-carried.tsv) (columns: issue, item,
-group, M3.1 PRs, note). Groups 1–2 are body edits; groups 3–4 carry into M3.2.
+The 106 not-yet-named are enumerated with a proposed outcome in [`m31-carried.tsv`](m31-carried.tsv) (columns:
+issue, item, group, M3.1 PRs, note); groups 1–2 are body edits, groups 3–4 carry into M3.2. The authoritative
+artifact is the full 189-row manifest, one mutually-exclusive outcome per issue, generated from `plan/m31_scope.tsv`
+(in the release plan) at the cut; `m31-carried.tsv` is its not-yet-named subset.
+
+**0.4 `blis-config-search#110` disposition.** The old #110 draft is superseded; the M2/M3.1 overlap (`draft_model`,
+acceptance recording, CPU/per-pool offload — already supplied) is out of scope. The remainder is four successor
+workstreams in `blis-config-search`, each with its own PR (to be assigned) and a done-when test: (i) nested native
+speculative settings and recursive provenance (round-trip provenance); (ii) bounded exact-search sharding (exact
+sharded/unsharded multiset equality); (iii) a durable per-attempt journal, passed/refused/incomplete retained
+(interruption / no-truncation); (iv) optional server-series diagnostics (collection that does not change scoring).
+Only (i) depends on the engine's native speculative field list; (ii), (iii) and (iv) are independent.
+
+**0.5 Accuracy items raised in the M3.1 review, carried to M3.2.** None blocks a run.
+- *CPU tier ignores model-resident host memory* (inference-sim#1924, already labelled M3.2). DeepSeek-V4.1's engram
+  pins about 203 GB of host memory per node, but the CPU KV tier is sized as if all host memory were free, which
+  overstates DeepSeek CPU-offload capacity. DeepSeek-V4.1 P/D with CPU offload is one of the internal studies.
+- *Muse DEP8 KV-capacity check* (blis-vllm#253). `muse-gb200-nvl-dep8-dspark.yaml` reports
+  `kv_capacity_tokens_per_replica` = 500,977 against 8.09M for `tep8`, with TPOT p50 39 ms at c4. It may be correct
+  for DP8 ranks of TP1, but check it against the engine's logged KV size. The config-search smoke test on the M3.1
+  head also found DEP8 cannot fit a 1M context (72.5 GiB of KV per rank needed, 40.1 GiB available) — possibly
+  right, but unconfirmed.
+- *CPU-load completion steps* (blis-vllm#305). BLIS reports a load completing at N+3 steps; add a
+  load-to-admission-steps test against real vLLM. Data point: Muse-Spark-Open on 16×GB200, DSpark k=7, uncapped
+  AgentX — real TTFT p50 at c64 is 19.35 s with no CPU tier and 3.04 s with a 600 GiB tier; BLIS must reproduce
+  the tier helping, not hurting.
+- *GB200 custom all-reduce still transferred from GB300* (blis-substrate#116). #373 fixed only the lane (the price
+  now follows the resolved backend); the value is unchanged — 13.16 µs, `transferred_from: gb300`, against a ~7 µs
+  estimate for the custom lane. Measure the GB200 4- and 8-rank custom all-reduce on GB200 itself; keep #116 open
+  until then, or file the measurement as its own issue.
 
 ## 1. New data sources for calibration
 
@@ -113,8 +143,19 @@ else is available to M3.2 for training, fitting and validation, used however ser
   come only from those.
 - *Everything else* is training or validation data: InferenceX's and configiq's fit, select and validate shares,
   AISimulate's sweeps and forward-pass set, the internal experiments, and any source added under 1.3.
-- *No double use.* A source that fits a coefficient never also grades it. Selection between candidate fits uses
-  the select and validate shares, never the held-out points.
+- *Partition at the configuration level.* InferenceX and configiq provide both training and held partitions; the
+  fit/select/validate/held/anchor split is assigned at the role-key (configuration) level — source, model,
+  hardware, precision, framework, benchmark type, configuration hash — not per row, so every concurrency and
+  repetition of one configuration shares a role and correlated repetitions never straddle the fit↔held boundary.
+  A coefficient is never selected or graded on the role-group that fit it; selection uses the select and validate
+  shares, never the held-out points. New sources draw fit, select and validate only.
+
+1.5 **Proposal. Calibration acceptance gates (precommit, X8).** Before any fitting reads these sources, the numeric
+gates are precommitted: the baseline each fit must beat; the error metric and its mandatory slices (engine, chip,
+workload at least); the minimum sample count per slice for a verdict (at least `min_points`); the allowable
+per-engine and per-chip regression elsewhere; the held/anchor verdict, evaluated once after selection; and the
+revise-or-revert rule. The thresholds themselves are still to be set by the maintainer, and are a blocker on
+fitting until they are.
 
 ## 2. Settings identification (apples to apples)
 
@@ -169,8 +210,9 @@ same-release figure is one slice away (3B).
 
 The rest of this section is proposal unless marked.
 
-3A.1 **The ledger follows each source.** Every row InferenceX publishes becomes a ledger unit, not only the
-db-dump/2026-09-28 rows plus hand-pinned supplements. New rows are pinned by record id and content SHA-256, as
+3A.1 **The ledger follows each source.** Every row InferenceX publishes is ingested exactly once and assigned to
+its canonical unit (duplicate and repeated records of one configuration fold into that unit, as the role-key rule
+requires), not only the db-dump/2026-09-28 rows plus hand-pinned supplements. New rows are pinned by record id and content SHA-256, as
 supplements are today, but generated by the ingest tool on a schedule rather than added by hand. New units
 draw their roles by the existing rule, so no partition change is needed. Today 1,287 in-scope rows published
 after the dump are not units at all (794 single-node vLLM/SGLang). Every new source in §1 also joins the ledger
@@ -278,11 +320,13 @@ with every aggregate recomputed from the points that survive (as `filter.ts` alr
 Each slice shows its point count and coverage beside its accuracy, so a small slice can't pass for a strong
 result.
 
-**Proposal.** Make the small-slice guard legible. A figure over fewer than `min_points` points is shown as the
-bare text "too few points" at every level of the summary, while the per-point table below it still lists every
-measurement, so the two read as a contradiction and the text covers most fine slices. Show the held figure as
-its count instead (`n=3 · mean held`), have the per-point table state that no mean is reported below
-`min_points`, and stop applying the guard to a leaf the reader has drilled into. The threshold itself stays.
+**Proposal (decided, colleague review).** Make the small-slice guard legible and unambiguous. A figure over fewer
+than `min_points` (10) points reads as a contradiction with the per-point table below it, and the text covers most
+fine slices. Decision: raw point rows stay visible at every `n`; an aggregate accuracy figure is **always withheld
+below `min_points` at every level** — headline and every drilled-in leaf alike — and a withheld aggregate is
+excluded from every verdict. (The earlier "stop applying the guard at a drilled-in leaf" idea is dropped: it let a
+small slice look like strong evidence.) The threshold (10) stays, and a test pins the behaviour. Show the held
+figure as its count (`n=3 · mean held`), not a bare verdict, and have the per-point table state the rule.
 Tracked in accuracy-dashboard#160.
 
 ## 3C. configiq: settings and closeness
@@ -335,3 +379,13 @@ M3.2 starts, so the window keeps growing instead of rolling off.
 difference (vLLM rows across many nightlies; SGLang traces from before v0.5.23).
 4.3 *Superseded by 1.4:* new sources are not reported on accuracy-dashboard. The dashboard may still show how
 well the fitted model reproduces them, as a training diagnostic labelled as such, never as accuracy.
+
+## 5. CI: a PR text edit must not change merge state
+
+5.1 **Proposal (colleague review, 2026-11-18).** File this for M3.2 in blis-design and in each repo's `ci.yml`:
+- Editing a PR's title or body, without changing its base or head, must never change its merge state.
+- The checks that read the text become their own required checks (for example `pr / description`), triggered on
+  `edited` and nothing else.
+- The heavy ci workflow and its required aggregate do not run on a text-only `edited` event. The retarget case is
+  detected through `github.event.changes.base`, so it stays covered.
+- A test or CI self-check must prove that a body edit leaves `mergeStateStatus` unchanged.
