@@ -86,6 +86,9 @@ into M3.2.
 In C2, SGLang speculation, attention-DP, EP and P/D (sglang #64 to #71) stay refused in M3.1, as blis-sglang#126
 states. A blis-substrate#51 comment says what remains after switch groups. Repositories are `inference-sim/<repo>`.
 
+The per-issue outcome for all 106 is committed in [`m31-carried.tsv`](m31-carried.tsv) (columns: issue, item,
+group, M3.1 PRs, note). Groups 1–2 are body edits; groups 3–4 carry into M3.2.
+
 ## 1. New data sources for calibration
 
 1.1 **Maintainer.** Bring these data sources into BLIS properly for calibration:
