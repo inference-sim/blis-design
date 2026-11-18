@@ -214,7 +214,7 @@ scorable points. Upper bounds from the 2026-11-17 nightly and the ledger:
 |---|---|---|---|
 | InferenceX anchors scored | 199 | about 8,000 | ~7,660 out-of-window vLLM- and SGLang-family anchors (TRT's 4,827 stay refused), the ~490 unscored in-window anchors, about 260 anchors among the 1,287 rows published after the dump |
 | InferenceX held units | not counted on the dashboard | about 1.5 times the anchors | the same levers; held is 30% against anchor's 20% for new units |
-| configiq held-out units | about 0 graded | about 850 of 1,702 (50%) by proportion; about 185 of the 373 forge-written H200/B200 units | §3C's family rule |
+| configiq held-out units | not yet published (below) | about 850 of 1,702 (50%) by proportion; about 185 of the 373 forge-written H200/B200 units | §3C's family rule |
 
 These are ceilings, not forecasts. The real count depends mostly on how many old runs' inputs can still be
 recovered: the API serves only the latest measurement per configuration, and in M3.1, 213 of 573 matched vLLM

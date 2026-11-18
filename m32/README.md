@@ -3,7 +3,9 @@
 Working material for the M3.2 release, started 2026-11-18. It is not yet a design or a plan. This branch is for
 reading and editing only; it is never merged into `main`, which holds only the standing design.
 
-Start with [`requirements.md`](requirements.md). Section 0 lists what carries over from M3.1. Each requirement
+For a one-page overview of the data sources and the calibration process, download
+[`data-and-calibration.html`](data-and-calibration.html) and open it in a browser. GitHub shows HTML files as
+source only. Then read [`requirements.md`](requirements.md). Section 0 lists what carries over from M3.1. Each requirement
 says whether the maintainer stated it or it is a proposal open to correction.
 
 [`evidence/`](evidence/) holds the notes the requirements cite:
