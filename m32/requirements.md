@@ -205,6 +205,25 @@ is a visible number, not an absence.
 3A.7 **configiq.** Waiting on the configiq team's answers (the maintainer asked them). Meanwhile their repos
 are being read to recover each setting (§3C).
 
+3A.8 **Expected effect** (maintainer's expectation, 2026-11-18; the shares stay the same, the counts rise).
+The role proportions do not change: for new units, 30 fit, 10 select, 10 validate, 30 held and 20 anchor, and
+legacy units keep their sides. The held-out points grow because the same proportions now apply to far more
+scorable points. Upper bounds from the 2026-11-17 nightly and the ledger:
+
+| | Today | M3.2 ceiling | What opens it |
+|---|---|---|---|
+| InferenceX anchors scored | 199 | about 8,000 | ~7,660 out-of-window vLLM- and SGLang-family anchors (TRT's 4,827 stay refused), the ~490 unscored in-window anchors, about 260 anchors among the 1,287 rows published after the dump |
+| InferenceX held units | not counted on the dashboard | about 1.5 times the anchors | the same levers; held is 30% against anchor's 20% for new units |
+| configiq held-out units | about 0 graded | about 850 of 1,702 (50%) by proportion; about 185 of the 373 forge-written H200/B200 units | §3C's family rule |
+
+These are ceilings, not forecasts. The real count depends mostly on how many old runs' inputs can still be
+recovered: the API serves only the latest measurement per configuration, and in M3.1, 213 of 573 matched vLLM
+points had their record gone (404). It also depends on the Dynamo router mapping and the not-modelled settings
+tail. **Proposal:** measure it first, with a pull of every anchor that only checks whether its inputs can be
+fetched (no simulation), and report the count before planning.
+configiq's units are not yet in the published anchor and fit lists on `main`, so its held-out set must be
+published before it can be scored.
+
 ## 3B. Slice accuracy by any recorded attribute
 
 **Maintainer.** As more sources come in, accuracy must be sliceable by all their data attributes. There is a
