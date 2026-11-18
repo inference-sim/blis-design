@@ -224,6 +224,27 @@ fetched (no simulation), and report the count before planning.
 configiq's units are not yet in the published anchor and fit lists on `main`, so its held-out set must be
 published before it can be scored.
 
+3A.9 **Proposal. Reconcile the frozen dump against the live API explicitly.** InferenceX stopped publishing
+dumps after `db-dump/2026-09-28` (weekly Apr–Sep 2026, none since), so the pinned dump is a dead, aging
+source: its runs sit on ever older vLLM and SGLang releases, while every fresh run comes only from the API.
+The id-floor rule (the dump owns record ids up to the cutoff, supplements own the ids above it) is a static
+watermark that does not state this. To apply:
+- *Call the dump a frozen genesis archive, not a base to advance.* It is the only copy of pre-2026-09-28
+  history, including measurements the API has superseded and no longer serves, and it will not grow; all
+  forward coverage is 3A.1's auto-pinned API supplements.
+- *One `measured_date` per run across the cutoff.* The date is the earliest over a benchmark run's records,
+  so a run with early records in the dump and later records only on the API computes a different value on
+  each side and splits into two units. Freeze a straddling run's date from the dump side, or drop
+  run-membership-derived fields from the identity.
+- *Grade and route by release distance.* Old-release dump runs carry the 3A.5 grade; by 1.4's draw their
+  fit, select and validate shares feed calibration, and only their held and anchor shares report accuracy,
+  at that lower grade, never as current accuracy.
+- *Make the split visible.* Keep each point's source (`dump` / `api`) and release distance, and have the
+  3A.6 funnel and 3B slices report what share of the held-out set is the frozen dump versus the live API,
+  so a headline dominated by old dump runs is a visible number.
+- *Never re-pull a dump row from the API.* The two print the same row's numbers differently and the API
+  lacks the dump's superseded history; keep the id-floor.
+
 ## 3B. Slice accuracy by any recorded attribute
 
 **Maintainer.** As more sources come in, accuracy must be sliceable by all their data attributes. There is a
