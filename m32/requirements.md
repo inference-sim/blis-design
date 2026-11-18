@@ -265,6 +265,13 @@ with every aggregate recomputed from the points that survive (as `filter.ts` alr
 Each slice shows its point count and coverage beside its accuracy, so a small slice can't pass for a strong
 result.
 
+**Proposal.** Make the small-slice guard legible. A figure over fewer than `min_points` points is shown as the
+bare text "too few points" at every level of the summary, while the per-point table below it still lists every
+measurement, so the two read as a contradiction and the text covers most fine slices. Show the held figure as
+its count instead (`n=3 · mean held`), have the per-point table state that no mean is reported below
+`min_points`, and stop applying the guard to a leaf the reader has drilled into. The threshold itself stays.
+Tracked in accuracy-dashboard#160.
+
 ## 3C. configiq: settings and closeness
 
 Evidence: `evidence/CONFIGIQ-FINDINGS.md` (Red Hat repos read 2026-11-18; parser regex and
