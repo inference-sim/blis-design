@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLIS M3.2 Plan</title>
+<meta name="description" content="A focused view of the BLIS M3.2 cut of M3: brief summaries of what M1 to M3.1 delivered, and the M3.2 plan in full.">
+<style>
+:root{
+  --bg:#fbfaf7; --fg:#1d1d1f; --muted:#5b5b63; --rule:#d9d6cf; --panel:#f2f0ea;
+  --accent:#1f5fbf; --accent-soft:#e3ecfa; --ok:#1b7a43; --ok-soft:#e1f2e7;
+  --warn:#9a5b00; --warn-soft:#fbefd9; --bad:#b3261e; --bad-soft:#f9e1df;
+  --code:#ece9e1; --maxw:46rem;
+  --serif: "Iowan Old Style","Charter","Palatino Linotype","Book Antiqua",Georgia,serif;
+  --sans: system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono: ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16171a; --fg:#e7e5e0; --muted:#a3a19b; --rule:#34363b; --panel:#1f2125;
+    --accent:#7fb0ff; --accent-soft:#1d2a40; --ok:#6fcf97; --ok-soft:#173226;
+    --warn:#f0b65a; --warn-soft:#3a2c14; --bad:#ff8a80; --bad-soft:#3d1c1a; --code:#24262b;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16171a; --fg:#e7e5e0; --muted:#a3a19b; --rule:#34363b; --panel:#1f2125;
+  --accent:#7fb0ff; --accent-soft:#1d2a40; --ok:#6fcf97; --ok-soft:#173226;
+  --warn:#f0b65a; --warn-soft:#3a2c14; --bad:#ff8a80; --bad-soft:#3d1c1a; --code:#24262b;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--serif);font-size:1.0625rem;line-height:1.6}
+.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:0 3rem;max-width:76rem;margin:0 auto;padding:0 16px}
+@media (min-width:1100px){.layout{grid-template-columns:15rem minmax(0,1fr)}}
+nav.toc{display:none}
+@media (min-width:1100px){
+  nav.toc{display:block;position:sticky;top:0;align-self:start;max-height:100vh;overflow:auto;padding:2.5rem 0 2rem;font-family:var(--sans);font-size:.82rem;line-height:1.45}
+}
+nav.toc ol{list-style:none;margin:0;padding:0}
+nav.toc li{margin:.15rem 0}
+nav.toc a{color:var(--muted);text-decoration:none}
+nav.toc a:hover{color:var(--accent)}
+nav.toc .toc-title{font-weight:600;color:var(--fg);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.06em;font-size:.72rem}
+main{max-width:var(--maxw);padding:2.5rem 0 5rem;min-width:0}
+main.wide-ok{max-width:none}
+h1,h2,h3,h4{font-family:var(--sans);line-height:1.25;letter-spacing:-.005em}
+h1{font-size:2rem;margin:0 0 .4rem}
+h2{font-size:1.4rem;margin:3.2rem 0 .8rem;padding-top:.6rem;border-top:1px solid var(--rule)}
+h3{font-size:1.1rem;margin:2rem 0 .5rem}
+h4{font-size:.98rem;margin:1.4rem 0 .4rem}
+.secno{color:var(--muted);font-weight:500;margin-right:.45em}
+p{margin:.7rem 0}
+a{color:var(--accent)}
+code,kbd{font-family:var(--mono);font-size:.86em;background:var(--code);padding:.08em .32em;border-radius:3px}
+pre{font-family:var(--mono);font-size:.82rem;line-height:1.5;background:var(--code);padding:.9rem 1rem;border-radius:6px;overflow-x:auto;margin:1rem 0}
+pre code{background:none;padding:0;font-size:inherit}
+.subtitle{font-family:var(--sans);color:var(--muted);font-size:1.02rem;margin:0 0 1.4rem}
+.meta{font-family:var(--sans);font-size:.85rem;color:var(--muted);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:.6rem 0;margin:0 0 1.6rem;display:flex;flex-wrap:wrap;gap:.4rem 1.6rem}
+.meta b{color:var(--fg);font-weight:600}
+.abstract{background:var(--panel);border-left:3px solid var(--accent);padding:1rem 1.2rem;border-radius:0 6px 6px 0;margin:1.2rem 0}
+.abstract p:first-child{margin-top:0}.abstract p:last-child{margin-bottom:0}
+.callout{border:1px solid var(--rule);border-radius:6px;padding:.8rem 1rem;margin:1rem 0;background:var(--panel)}
+.callout.warn{border-color:var(--warn);background:var(--warn-soft)}
+.callout.def{border-left:3px solid var(--ok);border-radius:0 6px 6px 0}
+.callout h4{margin-top:0}
+.tbl{overflow-x:auto;margin:1rem 0;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-family:var(--sans);font-size:.86rem;line-height:1.45}
+th,td{text-align:left;vertical-align:top;padding:.45rem .6rem;border-bottom:1px solid var(--rule)}
+th{font-weight:600;background:var(--panel);white-space:nowrap}
+td code{font-size:.8rem}
+tbody tr:hover td{background:color-mix(in srgb,var(--accent-soft) 45%,transparent)}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;font-family:var(--sans);font-size:.7rem;font-weight:600;letter-spacing:.03em;padding:.05rem .45rem;border-radius:999px;white-space:nowrap;vertical-align:.08em}
+.pill.ci{background:var(--ok-soft);color:var(--ok)}
+.pill.part{background:var(--warn-soft);color:var(--warn)}
+.pill.rev{background:var(--bad-soft);color:var(--bad)}
+.pill.new{background:var(--accent-soft);color:var(--accent)}
+.inv{font-family:var(--mono);font-size:.8rem;font-weight:600;color:var(--accent);white-space:nowrap}
+ul.invlist{list-style:none;padding:0;margin:.6rem 0}
+ul.invlist>li{padding:.55rem 0 .55rem 0;border-bottom:1px dotted var(--rule)}
+ul.invlist>li:last-child{border-bottom:0}
+ul.invlist .stmt{display:block}
+ul.invlist .enf{display:block;font-family:var(--sans);font-size:.82rem;color:var(--muted);margin-top:.15rem}
+.repo{border:1px solid var(--rule);border-radius:8px;padding:.2rem 1.1rem 1rem;margin:1.6rem 0;background:var(--bg)}
+.repo h3{margin-top:1rem}
+.repo dl{display:grid;grid-template-columns:minmax(0,1fr);gap:.1rem 1rem;margin:.4rem 0 .6rem;font-size:.97rem}
+@media (min-width:640px){.repo dl{grid-template-columns:9.5rem minmax(0,1fr)}}
+.repo dt{font-family:var(--sans);font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding-top:.25rem}
+.repo dd{margin:0 0 .45rem}
+figure{margin:1.8rem 0}
+figure svg{display:block;width:100%;height:auto;max-width:100%;color:var(--fg);font-family:var(--sans)}
+figcaption{font-family:var(--sans);font-size:.84rem;color:var(--muted);margin-top:.6rem;line-height:1.5}
+figcaption b{color:var(--fg)}
+.fig-wide{margin-left:0;margin-right:0}
+.fig-wide figcaption{max-width:var(--maxw)}
+@media (min-width:1100px){.fig-wide{width:min(64rem,calc(100vw - 22rem))}}
+svg .box{fill:var(--bg);stroke:currentColor;stroke-width:1.2}
+svg .box.soft{fill:var(--panel)}
+svg .box.acc{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.6}
+svg .box.ok{fill:var(--ok-soft);stroke:var(--ok)}
+svg .box.bad{fill:var(--bad-soft);stroke:var(--bad)}
+svg .box.dash{stroke-dasharray:4 3}
+svg .edge{fill:none;stroke:currentColor;stroke-width:1.2}
+svg .edge.acc{stroke:var(--accent);stroke-width:1.7}
+svg .edge.bad{stroke:var(--bad)}
+svg .edge.dash{stroke-dasharray:5 4}
+svg text{fill:currentColor;font-size:12.5px}
+svg .t-title{font-weight:600;font-size:13.5px}
+svg .t-small{font-size:11px;fill:var(--muted)}
+svg .t-acc{fill:var(--accent);font-weight:600}
+svg .t-bad{fill:var(--bad);font-weight:600}
+svg .t-ok{fill:var(--ok);font-weight:600}
+svg .mark{fill:var(--bad)}
+svg .mark.ok{fill:var(--ok)}
+svg .grid{stroke:var(--rule);stroke-width:1}
+.matrix td,.matrix th{text-align:center;white-space:nowrap}
+.matrix td:first-child,.matrix th:first-child{text-align:left;white-space:normal;min-width:12rem}
+.m-full{color:var(--bad);font-weight:700}
+.m-cond{color:var(--warn);font-weight:700}
+.m-pin{color:var(--ok);font-weight:700}
+.m-none{color:var(--rule)}
+.legend{font-family:var(--sans);font-size:.82rem;color:var(--muted)}
+.two{display:grid;grid-template-columns:minmax(0,1fr);gap:1rem}
+@media (min-width:760px){.two{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.two>div{border:1px solid var(--rule);border-radius:6px;padding:.4rem 1rem .8rem;background:var(--panel)}
+.two h4{margin-top:.6rem}
+ol.steps{padding-left:1.3rem;margin:.4rem 0}
+ol.steps li{margin:.3rem 0}
+.pb{border-left:3px solid var(--accent);padding:.1rem 0 .4rem 1rem;margin:1.6rem 0}
+.pb h3{margin-top:.4rem}
+.pb .row{display:grid;grid-template-columns:minmax(0,1fr);gap:.1rem 1rem}
+@media (min-width:640px){.pb .row{grid-template-columns:8.5rem minmax(0,1fr)}}
+.pb .k{font-family:var(--sans);font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding-top:.3rem}
+.pb .v{margin-bottom:.5rem}
+.pb .v>ul,.pb .v>ol{margin:.2rem 0;padding-left:1.2rem}
+.small{font-size:.9rem}
+.muted{color:var(--muted)}
+.inferred{font-family:var(--sans);font-size:.72rem;font-weight:600;color:var(--warn);border:1px solid var(--warn);border-radius:3px;padding:0 .3rem;margin-left:.25rem;white-space:nowrap}
+hr{border:0;border-top:1px solid var(--rule);margin:2.5rem 0}
+footer{font-family:var(--sans);font-size:.82rem;color:var(--muted);border-top:1px solid var(--rule);padding-top:1rem;margin-top:3rem}
+@media print{nav.toc{display:none}.layout{display:block}main{max-width:none}h2{break-after:avoid}figure,.repo,.pb{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="toc" aria-label="Contents">
+  <div class="toc-title">Contents</div>
+  <ol>
+    <li><a href="#d">1 Delivered so far (M1–M3.1)</a></li>
+    <li><a href="#m32">2 M3.2</a></li>
+    <li><a href="#open">3 Open questions</a></li>
+  </ol>
+</nav>
+<main>
+<header>
+<h1>BLIS M3.2 plan</h1>
+<p class="subtitle">A focused companion to the full <a href="https://gist.github.com/sriumcp/e2b143f662e2a01398e01fbb4eadfccc">release plan</a>: what is already delivered (M1–M3.1), in brief, and the M3.2 cut in full.</p>
+<div class="meta">
+  <span><b>Status</b> Working capture — not yet a frozen plan</span>
+  <span><b>Scope</b> M3.2, the next cut of M3</span>
+  <span><b>Sources</b> <code>m32/requirements.md</code>, the release-plan gist, and PR&nbsp;#34 review</span>
+  <span><b>Figures</b> as of 2026-11-18</span>
+</div>
+</header>
+
+<div class="abstract">
+<p><b>What this is.</b> The full release plan schedules all four milestones (M1–M4). This companion keeps M1, M2, M3.0 and M3.1 to short delivered summaries (§1) and sets out M3.2 in full (§2): the carry-over from M3.1, new calibration data sources, settings identification, coverage maximisation, accuracy slicing, configiq, and the calibration acceptance gates. The review feedback on PR&nbsp;#34 is folded in, and the decisions still open before calibration begins are collected in §2.8.</p>
+<p><b>Where M3.2 sits.</b> M3 is released as a train of cuts — M3.0, M3.1, M3.2, … — not one release. M3.2 is a cut: an <code>inference-sim</code> PATCH from <code>release-v0.18</code> (v0.18.x), with the lower repositories pinned by commit and needing no tag (blis-design&nbsp;#22). It changes no contract by itself; an incompatible change waits for v0.19.0 (M4). Its goal, as for every cut, is to maximise coverage, accuracy, closeness grade and correctness on the two scored sources — <b>InferenceX</b> and <b>configiq</b> — and to bring the new engine-project data in for calibration only.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="d"><span class="secno">1</span>Delivered so far (M1–M3.1)</h2>
+<p>M1 and M2 each ended with a milestone release. M3.0 (v0.18.0) and M3.1 are cuts of M3. From M3.1 on, only the <code>inference-sim</code> release is required; lower repositories are pinned by commit and need no tag (blis-design&nbsp;#22), and <code>accuracy-dashboard</code> and <code>blis-config-search</code> cut no release but run nightly and on each new <code>inference-sim</code> release.</p>
+
+<div class="tbl">
+<table>
+<thead><tr><th>Milestone</th><th>Release</th><th>What it delivered (brief)</th></tr></thead>
+<tbody>
+<tr>
+  <td><b>M1</b> Foundations <span class="pill ci">done</span></td>
+  <td><code>inference-sim v0.16.0</code><br>substrate v0.12.0→v0.13.0<br>dashboard v0.4.0, config-search v0.1.0</td>
+  <td><code>blis-substrate</code> created from the four lower repositories and they were archived; data loading, document schemas (<code>contracts/spec</code>), the ledger and the invariant registry; the dashboard's scorer moved onto the Result document; deprecated <code>observe</code>/<code>calibrate</code> removed (~9,600 lines).</td>
+</tr>
+<tr>
+  <td><b>M2</b> The engine boundary <span class="pill ci">done</span></td>
+  <td><code>inference-sim v0.17.0</code><br>blis-vllm v0.32.0-blis.N<br>a substrate MINOR</td>
+  <td>Units-as-types contract change; coverage of what InferenceX serves (catalog onboarding, registry pricing of kernel-facing settings); like-with-like comparison on three axes (request pattern, measurement, deployment); P/D coverage; <code>blis-vllm</code> publishes <code>fields.json</code>. No InferenceX point reaches G1 (none ran the simulator's engine release).</td>
+</tr>
+<tr>
+  <td><b>M3.0</b> <span class="pill ci">done</span></td>
+  <td><code>inference-sim v0.18.0</code><br>blis-vllm v0.33.0-blis.1<br>blis-sglang v0.5.23-blis.1<br>router v1.0.0-blis.5, substrate v0.15.0</td>
+  <td>Port to vLLM v0.33.0; refuses a scenario naming vLLM 0.32 (points to v0.17.x) and refuses engine kind <code>sglang</code> (not yet registered); the typed engine-settings carrier deleted. Dashboard: the M3 baseline per lane with each point's grade ceiling, plus pull&nbsp;#105. SGLang points are graded but not scored (scored once #110 lands).</td>
+</tr>
+<tr>
+  <td><b>M3.1</b> <span class="pill part">cut landing</span></td>
+  <td>PATCH on <code>release-v0.18</code> (v0.18.x); lower repos pinned by commit</td>
+  <td>First cut to register and run engine kind <code>sglang</code> (SGLang end-to-end scoring once #110 lands). Seven integration pull requests. Review fixes merged into the integration branches: the all-reduce lane keyed by backend (#116 via #373), p2p at unequal TP, the P/D per-instance measured window, the router check, and the measured Muse DSpark acceptance in the 21 scenarios.</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="m32"><span class="secno">2</span>M3.2</h2>
+<p>M3.2 is a working capture (<code>m32/requirements.md</code>), not yet a frozen plan. The maintainer has accepted the proposals in requirements §1, §2 and §3; §1.3 stays open. Each subsection below cites the requirement it schedules.</p>
+
+<h3 id="m32-0"><span class="secno">2.0</span>Carried from M3.1</h3>
+<p><b>Rule (maintainer).</b> Nothing planned for M3.1 is dropped silently: an issue is either closed by the M3.1 pull requests or carried here. M3.1's plan is 189 issues (<code>plan/m31_scope.tsv</code>).</p>
+
+<p><b>Moved to M3.2 by decision</b> (requirements §0.2): <code>blis-sglang#141</code> (SchedulerRecvSkipper); the GB200 decode cost — <code>blis-vllm#272</code> (Muse Spark fused-kernel launches) and <code>blis-substrate#140</code> (the 3.2&nbsp;µs launch cost still used on GB200), together ~1.35× slow per token until both land; <code>blis-substrate#125</code> (no engine pads a drafter's DP batch yet); <code>blis-vllm#158</code> (Muse KV pool 1.25–2.04× the engine's); <code>blis-substrate#369</code> (pre-registration and held-out verdict for the Blackwell launch fit); smaller settings (<code>moe_backend</code>, <code>mm_encoder_tp</code>, 404-record rows, mooncake-atom rows, the DeepSeek-V4 env bundle); the dashboard chip-split card and SGLang public cards; and scored lanes for the internal studies — none scored yet — which §2.4 covers.</p>
+
+<div class="callout">
+<h4>Review feedback folded in (PR&nbsp;#34)</h4>
+<ul>
+<li><b>config-search&nbsp;#110 disposition</b> (namasl). Separate what M3.1 supplied (<code>draft_model</code>, acceptance recording, CPU/per-pool offload) from the remaining #110 scope: native speculative settings and recursive nested-setting provenance, bounded exhaustive-search sharding, a durable per-attempt journal (passed/refused/incomplete retained), and optional server-series collection. Name the owning PR(s), whether #110 is superseded by a rebased/split successor, and the done-when tests (round-trip provenance, exact sharded/unsharded multiset equality, interruption/no-truncation journal, diagnostic collection that does not change scoring).</li>
+<li><b>GB200 custom all-reduce still transferred from GB300</b> (mtoslalibu; <code>blis-substrate#116</code>). #373 fixed only the lane (the price now follows the resolved backend, custom vs NCCL); the value is unchanged — <code>collective_floor_all_reduce_fp16_8rank_gb200_nvl72</code> = 13.16&nbsp;µs, <code>transferred_from: gb300</code>, against a ~7&nbsp;µs estimate for the custom lane. M3.2: measure the GB200 4- and 8-rank custom all-reduce on GB200 itself; keep #116 open or file the measurement as its own issue. With #140 and <code>blis-vllm#272</code>, this is the rest of the GB200 decode gap.</li>
+<li><b>CPU-load completion test</b> (mtoslalibu; <code>blis-vllm#305</code>). BLIS reports a load completing at N+3 steps; add a load-to-admission-steps test against real vLLM. Data point: Muse-Spark-Open on 16×GB200, DSpark k=7, uncapped AgentX — real TTFT p50 at c64 is 19.35&nbsp;s with no CPU tier and 3.04&nbsp;s with a 600&nbsp;GiB tier; BLIS must reproduce the tier helping, not hurting.</li>
+<li><b>CPU tier ignores model-resident host memory</b> (mtoslalibu; <code>inference-sim#1924</code>). DeepSeek-V4.1's engram pins ~203&nbsp;GB of host memory per node, but the CPU KV tier is sized as if all host memory were free, overstating CPU-offload capacity. List it — DeepSeek-V4.1 P/D + CPU offload is an internal study.</li>
+<li><b>Muse DEP8 KV-capacity check</b> (mtoslalibu). <code>muse-gb200-nvl-dep8-dspark</code> reports <code>kv_capacity_tokens_per_replica</code> = 500,977 against 8.09M for TEP8; its c4 TPOT p50 is 39&nbsp;ms against ~8&nbsp;ms for TP8. It may be correct for DP8 ranks of TP1, but add a check against the engine's logged KV size (<code>blis-vllm#253</code>).</li>
+</ul>
+</div>
+
+<p><b>M3.1 plan issues not closed</b> (requirements §0.3): of the 189, 21 are already closed, 26 close when the set merges, 32 are advanced but open, and <b>108 are not yet named</b> by any of the seven pull-request bodies. <b>Action</b> (mtoslalibu): name all 108 — each with its outcome (closed by M3.1 / carried to M3.2 / backlog) — or point to a generated file; §0's own rule forbids a silent drop. The requirements group them by theme (P1 release-by-commit … T2 KV tiers under P/D); that grouping is the starting point.</p>
+
+<h3 id="m32-1"><span class="secno">2.1</span>New data sources — for calibration only <span class="pill new">§1, §1.4</span></h3>
+<p><b>Maintainer.</b> Bring three engine-project sources into BLIS: SGLang nightly profiler traces (<code>sgl-project/ci-data</code> — step/host overhead, kernels); the vLLM CI perf API (<code>ci.vllm.ai/api/perf</code> with the <code>perf-eval</code> recipes — current vLLM on H200/B200); and SGLang nightly job logs plus <code>consolidated-metrics</code> (scheduler behaviour, resolved server arguments). Licence is not a blocker — the data is queried, not redistributed — so none is committed to a public repo (D6); units are built from a pinned fetch at fit time, and a public figure cites the source URL and fetch date. Whether the rest of the inventory (Tritonbench, SGLang AMD P/D, llm-d Prism, blog step tables, MoE tuning configs, AgentX launch configs) is also in scope stays open (§1.3).</p>
+<div class="callout def">
+<h4>§1.4 (maintainer, 2026-11-18) — the key framing</h4>
+<p>The new data sets are used <b>entirely for fitting and calibration</b>. Accuracy on the dashboard is reported <b>only on InferenceX and configiq points held out for it</b>. Each new source's ledger rule draws only <b>fit / select / validate</b> roles — no held or anchor share; InferenceX and configiq keep their held and anchor shares untouched. <b>No double use</b>: a source that fits a coefficient never also grades it, and selection between candidate fits uses the select and validate shares, never the held-out points.</p>
+</div>
+
+<h3 id="m32-2"><span class="secno">2.2</span>Settings identification (apples to apples) <span class="pill new">§2</span></h3>
+<p>For every point used, the run's settings — workload, cluster, GPU, model, engine — must be recoverable; getting them right is what makes the comparison like-for-like, and it is part of the calibration process, not a one-off. Every value comes from the run's own records; a value no record holds is a named substitution with its source and lowers the grade; never a BLIS default. Each source's scenario writer has a test that checks every field against the record it came from (the per-source record that settles each setting is in <code>SETTINGS-PROVENANCE.md</code>). To confirm before any fit: the statistic <code>aggregate_perf.py</code> uses over repetitions, the <code>vllm bench</code> seed and range ratio at each commit, and how a recipe revision is matched to a row's date when the recipe changed that day.</p>
+
+<h3 id="m32-3"><span class="secno">2.3</span>Which engine the data improves <span class="pill new">§3</span></h3>
+<p>Calibration improves both SGLang and vLLM; data that can only improve one engine is still used, not ignored. <b>Kernel coefficients</b> stay keyed by kernel implementation, so SGLang data fits vLLM's value wherever both run the same implementation. <b>Engine-path costs</b> (host, scheduler, launch, CUDA-graph replay) are keyed by the identity of the code that does the work, so each engine has its own value with no engine name in substrate (X2). Host overheads are scoped by hardware and model today; this is a design change that lands before the plan.</p>
+
+<h3 id="m32-4"><span class="secno">2.4</span>Maximise scorable coverage <span class="pill new">§3A</span></h3>
+<p>Today <b>199 of 20,364</b> InferenceX anchors are scored and <b>~0 of 1,702</b> configiq units; the losses are mostly policy and a frozen ledger, not missing data (<code>COVERAGE-FUNNEL.md</code>). The levers:</p>
+<ul class="invlist">
+<li><span class="stmt"><b>3A.1 The ledger follows each source.</b> Every row a source publishes becomes a unit — auto-pinned by record id and content SHA-256 on a schedule — not only the <code>db-dump/2026-09-28</code> rows plus hand-pinned supplements.</span></li>
+<li><span class="stmt"><b>3A.2 No age limit on scoring.</b> The 180-day window stops being a gate; every anchor whose inputs can be recovered is scored, at its grade. A date range becomes a slice (§2.5).</span></li>
+<li><span class="stmt"><b>3A.3 Recover inputs from durable records; keep the ones that expire.</b> <code>/server-log</code> for single-turn; the job log or the recipe at the run's commit for SGLang and P/D; the dump for superseded measurements; a private archive (D6) for the ~90-day GitHub artifacts, pulled as they are published. Inputs truly gone → G5 with a reason.</span></li>
+<li><span class="stmt"><b>3A.4 Engine and table gaps, ranked by points held back.</b> SGLang field list; the router table (Dynamo's router); the not-modelled settings tail (<code>data_parallel_rpc_port</code>, NCCL/FlashInfer envs, …), each modelled, proven inert, or given an estimation rule. TRT-LLM stays refused — BLIS has no TRT engine.</span></li>
+<li><span class="stmt"><b>3A.5 Older engine releases are scored, not refused</b> — a named release difference at a lower grade, for both engines.</span></li>
+<li><span class="stmt"><b>3A.6 Coverage is a funnel per source, every release</b> — held by the source → units → in scope → inputs recoverable → scored, by grade, with the top blockers by points they alone hold back.</span></li>
+<li><span class="stmt"><b>3A.7 configiq</b> — waiting on the team's answers; see §2.6.</span></li>
+</ul>
+
+<div class="callout">
+<h4>3A.8 Expected effect — ceilings, not forecasts</h4>
+<p>The role proportions do not change (new units: 30 fit, 10 select, 10 validate, 30 held, 20 anchor); the held-out counts grow because the same proportions apply to far more scorable points.</p>
+<div class="tbl"><table>
+<thead><tr><th></th><th class="num">Today</th><th>M3.2 ceiling</th><th>What opens it</th></tr></thead>
+<tbody>
+<tr><td>InferenceX anchors scored</td><td class="num">199</td><td class="num">~8,000</td><td>~7,660 out-of-window vLLM/SGLang anchors (TRT's 4,827 stay refused), ~490 in-window unscored, ~260 among the 1,287 post-dump rows</td></tr>
+<tr><td>InferenceX held units</td><td class="num">—</td><td>~1.5× the anchors</td><td>same levers; held is 30% vs anchor's 20%</td></tr>
+<tr><td>configiq held-out units</td><td class="num">—</td><td>~850 of 1,702</td><td>§3C's family rule; ~185 of the 373 forge-written H200/B200 units</td></tr>
+</tbody>
+</table></div>
+<p>The real count depends mostly on how many old runs' inputs can still be fetched — the API serves only the latest measurement per configuration, and in M3.1, 213 of 573 matched vLLM points had their record gone (404). <b>Measure it first</b>, with a pull of every anchor that only checks whether its inputs can be fetched (no simulation), and report the count before planning. configiq's units must be published to the anchor and fit lists before they can be scored.</p>
+</div>
+
+<div class="callout">
+<h4>3A.9 Reconcile the frozen dump against the live API (added on PR&nbsp;#34)</h4>
+<p>InferenceX stopped publishing dumps after <code>db-dump/2026-09-28</code> (weekly Apr–Sep 2026, none since), so the pinned dump is a dead, aging source on ever-older vLLM/SGLang releases while every fresh run comes only from the API. Therefore: the dump is a <b>frozen genesis archive</b>, not a base to advance — it is the only copy of pre-09-28 history, including measurements the API has superseded and no longer serves; all forward coverage is 3A.1's auto-pinned supplements. A run that straddles the cutoff must resolve to <b>one <code>measured_date</code> and one unit</b> (freeze from the dump side, or drop run-membership-derived fields from the identity), with a regression test. Old-release runs carry the §3A.5 grade and feed calibration by §1.4's draw. The funnel and slices show the dump-vs-API share of the held-out set. A dump row is never re-pulled from the API (the two print numbers differently and the API lacks the superseded history) — the id-floor stays.</p>
+</div>
+
+<h3 id="m32-5"><span class="secno">2.5</span>Slice accuracy, and the small-slice guard <span class="pill new">§3B</span></h3>
+<p>Every scored point carries its attributes, and the dashboard filters and groups by any of them — source, role, model, precision, chip, node count, interconnect, engine, release distance, topology (TP/DP/EP/P-D pools), speculative method, offload and KV tiers, router, workload type, ISL/OSL, concurrency, arrival process, prefix sharing, measured date, grade, and each named substitution — with every aggregate recomputed from the surviving points. Each slice shows its point count and coverage beside its accuracy.</p>
+<div class="callout warn">
+<h4>Small-slice guard — corrected per review (namasl)</h4>
+<p>The guard (<code>min_points</code> = 10) and the "stop applying it at a drilled-in leaf" idea are <b>not equivalent</b>, and the latter conflicts with the rule that a small slice must not look like strong evidence. Settle on one behaviour and require a test: <b>raw point rows stay visible at every <code>n</code></b>, but an <b>aggregate accuracy figure either stays withheld below <code>min_points</code> at every level</b>, or a below-threshold leaf aggregate is <b>explicitly exploratory and excluded from every verdict</b>. The threshold (10) itself stays. The UI legibility of the guard — show the count (<code>n=3 · mean held</code>) rather than a bare verdict, and have the points table state the rule — is tracked in <code>accuracy-dashboard#160</code>.</p>
+</div>
+
+<h3 id="m32-6"><span class="secno">2.6</span>configiq <span class="pill new">§3C</span></h3>
+<p>Classify each row by writer: Family A (forge, prefix-caching on) 779 units, Family C (manual imports) 128, Family D (Model Furnace and older imports) 803 — the family decides how a blank is read (a blank is <code>value_not_recorded</code> → G5 unless a launcher preset matches). <b>Family A</b>: fill every blank from forge's own records (the CPT matrix and presets at the run-date commit; vLLM defaults for flags forge never passes; the forge frame — concurrent profile, 275&nbsp;s window, warm-up/ramp, GuideLLM release, seed 42). <b>Family D</b>: fill only what the public guide and furnace defaults support, as named estimated substitutions at a lower grade; TP=1 rows may have used data parallelism and stay unscored. Check each filled frame against the data (the Little's-law window from the concurrency-1 row). Model the multi-turn and prefix workloads as they ran.</p>
+<p><b>Pin the dataset revision</b> — it is not append-only (444 rows were removed between revisions), so configiq is <b>hand-adopted per revision</b>, unlike InferenceX's auto-pin. <b>Ask Red Hat</b> (maintainer owns the conversation): publish an allow-listed <code>runtime_args</code>, the image tag, the GuideLLM version, the cluster tag, start/end times, DP and the turn index; fix the case mismatch that drops DP; publish more of the ~52 models the CSV holds. configiq's settings recovery stays provisional until these land.</p>
+
+<h3 id="m32-7"><span class="secno">2.7</span>Calibration acceptance gates — precommit <span class="pill new">review</span></h3>
+<p>§1.4 separates fit/select/validate from held/anchor, but the requirements do not yet say <b>what numerical result accepts a fit</b> (namasl). Before any fitting reads these sources, precommit: the baseline, the error metrics and required slices, the minimum sample counts, the allowable per-engine/chip regressions, the held/anchor verdict, and the revise-or-revert rule. Otherwise the selection procedure can be finalised after seeing its outcomes — exactly what X8 (precommitment) is intended to prevent.</p>
+
+<h3 id="m32-8"><span class="secno">2.8</span>Open decisions to settle before calibration</h3>
+<div class="callout warn">
+<ul>
+<li><code>blis-config-search#110</code> disposition — supplied vs remaining scope, owning PR(s), done-when tests (§2.0).</li>
+<li>Calibration acceptance gates precommitted (§2.7).</li>
+<li>The <code>min_points</code> rule made unambiguous and tested (§2.5).</li>
+<li>The 108 unlisted M3.1 issues named with outcomes (§2.0).</li>
+<li>Scope of the remaining §1.3 sources (§2.1).</li>
+<li>configiq — the Red Hat answers (§2.6).</li>
+<li>The GB200 custom all-reduce measured on GB200 (§2.0).</li>
+</ul>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="open"><span class="secno">3</span>Open questions and not-yet-discussed proposals <span class="pill new">§4</span></h2>
+<ul>
+<li><b>Start harvesting the 90-day sources now</b> (SGLang job logs and metrics artifacts; Tritonbench), before M3.2 starts, so the window keeps growing instead of rolling off.</li>
+<li>Points on engine releases other than the one each engine repo models are scored as a named release difference (§3A.5) — vLLM rows across many nightlies; SGLang traces from before v0.5.23.</li>
+<li>Each new source shows on <code>accuracy-dashboard</code> beside InferenceX and configiq, graded the same way.</li>
+</ul>
+
+<footer>
+<p>Focused companion to the full BLIS release plan. Delivered summaries from the plan's §3 milestone train; M3.2 content from <code>m32/requirements.md</code> (§0–§4, §1.4, §3A.1–§3A.9, §3B, §3C) with the PR&nbsp;#34 review feedback folded in. Figures as of 2026-11-18; the M3.1 status is refreshed from the final pull-request bodies at the cut.</p>
+</footer>
+</main>
+</div>
+
+</body>
+</html>
