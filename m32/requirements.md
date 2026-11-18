@@ -239,13 +239,16 @@ watermark that does not state this. To apply:
 - *Call the dump a frozen genesis archive, not a base to advance.* It is the only copy of pre-2026-09-28
   history, including measurements the API has superseded and no longer serves, and it will not grow; all
   forward coverage is 3A.1's auto-pinned API supplements.
-- *One `measured_date` per run across the cutoff.* The date is the earliest over a benchmark run's records,
-  so a run with early records in the dump and later records only on the API computes a different value on
-  each side and splits into two units. Freeze a straddling run's date from the dump side, or drop
-  run-membership-derived fields from the identity.
-- *Grade and route by release distance.* Old-release dump runs carry the 3A.5 grade; by 1.4's draw their
-  fit, select and validate shares feed calibration, and only their held and anchor shares report accuracy,
-  at that lower grade, never as current accuracy.
+- *Keep one `measured_date` per run across the cutoff, as 3A.1's automation runs.* A benchmark run's date is
+  the earliest over all its records. Ingest already reads the dump and the API supplements together, so a run
+  with early records in the dump and later ones on the API keeps one date and one unit
+  (blis-substrate `ledger/cmd/ledger/main.go`, which appends supplement rows before `inferencex.Ingest`; the
+  dashboard pull takes the date from the ledger). The constraint is on the automation: it must never ingest
+  new API rows apart from the dump. A test should pin it, with a run whose records straddle the cutoff and
+  one unit and date on both sides.
+- *Grade and route by release distance.* Old-release dump runs carry the 3A.5 grade. Under 1.4's draw, their
+  fit, select and validate shares feed calibration. Their held and anchor shares count in the headline at that
+  lower grade (3A, the maintainer's decision), and the same-release figure is the release-distance slice (3B).
 - *Make the split visible.* Keep each point's source (`dump` / `api`) and release distance, and have the
   3A.6 funnel and 3B slices report what share of the held-out set is the frozen dump versus the live API,
   so a headline dominated by old dump runs is a visible number.
