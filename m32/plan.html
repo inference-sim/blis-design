@@ -220,7 +220,17 @@ footer{font-family:var(--sans);font-size:.82rem;color:var(--muted);border-top:1p
 </ul>
 </div>
 
-<p><b>M3.1 plan issues not closed</b> (requirements §0.3): of the 189, 21 are already closed, 26 close when the set merges, 32 are advanced but open, and <b>108 are not yet named</b> by any of the seven pull-request bodies. <b>Action</b> (mtoslalibu): name all 108 — each with its outcome (closed by M3.1 / carried to M3.2 / backlog) — or point to a generated file; §0's own rule forbids a silent drop. The requirements group them by theme (P1 release-by-commit … T2 KV tiers under P/D); that grouping is the starting point.</p>
+<p><b>M3.1 plan issues now named</b> (requirements §0.3, resolved in the PR&nbsp;#34 review). Of the 189: 21 were already closed and 26 close on merge. The issues that no M3.1 pull-request body named — 108 at §0.3's count, 106 once the bodies moved — now have a proposed outcome in every case:</p>
+<div class="tbl"><table>
+<thead><tr><th>Group</th><th class="num">#</th><th>Outcome</th></tr></thead>
+<tbody>
+<tr><td>A merged M3.1 PR closes it</td><td class="num">6</td><td><b>Done in M3.1</b> — add a <code>Closes</code> line to the body (or close it), once checked against the issue's criteria.</td></tr>
+<tr><td>A merged M3.1 PR advances it</td><td class="num">16</td><td><b>Partially done</b> — add a <code>Part of</code> line; the remainder carries to M3.2.</td></tr>
+<tr><td>Only an open/unmerged PR references it</td><td class="num">3</td><td><b>Carry to M3.2</b>.</td></tr>
+<tr><td>No M3.1 PR references it</td><td class="num">81</td><td><b>Carry to M3.2</b>, unless the item's owner says it is already done (e.g. <code>blis-substrate#51</code>, switch-group pricing, is likely closable).</td></tr>
+</tbody>
+</table></div>
+<p>So groups 1–2 are body edits; <b>~84 issues (groups 3–4) carry whole into M3.2's §0</b>, plus the remainders of the 16 partially-done ones. The per-issue list — each with its advancing M3.1 pull requests, grouped by theme (A1 launch/step cost … T2 KV tiers under P/D) — is the generated list §0.3 asks for, in the PR&nbsp;#34 review comment.</p>
 
 <h3 id="m32-1"><span class="secno">2.1</span>New data sources — for calibration only <span class="pill new">§1, §1.4</span></h3>
 <p><b>Maintainer.</b> Bring three engine-project sources into BLIS: SGLang nightly profiler traces (<code>sgl-project/ci-data</code> — step/host overhead, kernels); the vLLM CI perf API (<code>ci.vllm.ai/api/perf</code> with the <code>perf-eval</code> recipes — current vLLM on H200/B200); and SGLang nightly job logs plus <code>consolidated-metrics</code> (scheduler behaviour, resolved server arguments). Licence is not a blocker — the data is queried, not redistributed — so none is committed to a public repo (D6); units are built from a pinned fetch at fit time, and a public figure cites the source URL and fetch date. Whether the rest of the inventory (Tritonbench, SGLang AMD P/D, llm-d Prism, blog step tables, MoE tuning configs, AgentX launch configs) is also in scope stays open (§1.3).</p>
