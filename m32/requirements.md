@@ -382,7 +382,7 @@ well the fitted model reproduces them, as a training diagnostic labelled as such
 
 ## 5. CI: a PR text edit must not change merge state
 
-5.1 **Proposal (colleague review, 2026-11-18).** File this for M3.2 in blis-design and in each repo's `ci.yml`:
+5.1 **Maintainer (2026-11-18).** File this for M3.2 in blis-design and in each repo's `ci.yml`:
 - Editing a PR's title or body, without changing its base or head, must never change its merge state.
 - The checks that read the text become their own required checks (for example `pr / description`), triggered on
   `edited` and nothing else.
