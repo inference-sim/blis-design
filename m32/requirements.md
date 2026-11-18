@@ -212,13 +212,20 @@ scorable points. Upper bounds from the 2026-11-17 nightly and the ledger:
 
 | | Today | M3.2 ceiling | What opens it |
 |---|---|---|---|
-| InferenceX anchors scored | 199 | about 8,000 | ~7,660 out-of-window vLLM- and SGLang-family anchors (TRT's 4,827 stay refused), the ~490 unscored in-window anchors, about 260 anchors among the 1,287 rows published after the dump |
+| InferenceX anchors scored | 199 | about 2,700, up to about 4,600 | the ~490 unscored in-window anchors; out-of-window anchors measured from 2026-02 on (1,143 vLLM-family, 850 SGLang-family); about 260 anchors among the 1,287 rows published after the dump; up to 1,913 more SGLang-family anchors from before 2026-02 if their recipes at the run's commit still resolve. TRT's 4,827 stay refused. |
 | InferenceX held units | not counted on the dashboard | about 1.5 times the anchors | the same levers; held is 30% against anchor's 20% for new units |
 | configiq held-out units | not yet published (below) | about 850 of 1,702 (50%) by proportion; about 185 of the 373 forge-written H200/B200 units | §3C's family rule |
 
 These are ceilings, not forecasts. The real count depends mostly on how many old runs' inputs can still be
-recovered: the API serves only the latest measurement per configuration, and in M3.1, 213 of 573 matched vLLM
-points had their record gone (404). It also depends on the Dynamo router mapping and the not-modelled settings
+recovered. The API serves only the latest measurement per configuration, and in M3.1, 213 of 573 matched vLLM
+points had their record gone (404).
+
+**Measured 2026-11-18:** the API's `/server-log` was queried for 33 vLLM single-turn records that only the dump
+holds, three per month. Every record from 2025-09 to 2026-01 returned 404, and every record from 2026-02 to
+2026-07 returned 200. So the 3,758 vLLM-family anchors measured before 2026-02 cannot be rebuilt from their
+logs. They stay G5 with that reason unless another record of their settings is found. SGLang points take their
+launch command from the recipe at the run's commit, not from this endpoint, so the older SGLang anchors are
+counted as "up to" until that path is checked. It also depends on the Dynamo router mapping and the not-modelled settings
 tail. **Proposal:** measure it first, with a pull of every anchor that only checks whether its inputs can be
 fetched (no simulation), and report the count before planning.
 configiq's units are not yet in the published anchor and fit lists on `main`, so its held-out set must be

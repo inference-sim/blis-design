@@ -73,7 +73,7 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   </table></div>
   <p class="note">Still to decide: Tritonbench kernel nightlies, SGLang's AMD P/D nightly, the llm-d Prism archive and the vLLM blog's step tables. Licences are not a blocker: the data is queried, never redistributed.</p>
 
-  <p>The role shares do not change. For InferenceX and configiq, half of every new unit's draw is held out (30% held, 20% anchor) and half is training (30% fit, 10% select, 10% validate). What grows is the number of points those shares apply to. Today 199 InferenceX anchors are scored. With the M3.2 coverage work the ceiling is about 8,000 anchors, plus roughly 1.5 times as many held units, and about half of configiq's 1,702 units. These are upper bounds. The real count depends mostly on how many old runs' inputs can still be fetched, and M3.2 measures that first.</p>
+  <p>The role shares do not change. For InferenceX and configiq, half of every new unit's draw is held out (30% held, 20% anchor) and half is training (30% fit, 10% select, 10% validate). What grows is the number of points those shares apply to. Today 199 InferenceX anchors are scored. With the M3.2 coverage work the ceiling is about 2,700 anchors, and up to about 4,600, plus roughly 1.5 times as many held units, and about half of configiq's 1,702 units. It is not higher because vLLM runs from before February 2026 no longer have server logs to rebuild them from. These are upper bounds, and M3.2 measures the real count first.</p>
 
   <h2>How calibration works</h2>
   <ol class="flow">
