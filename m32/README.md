@@ -1,8 +1,7 @@
 # BLIS M3.2: working requirements
 
-Working material for the M3.2 release, started 2026-11-18. It is not yet a design or a plan. This branch is never
-merged into `main`, which holds only the standing design. When M3.2 is planned, these requirements become
-blis-design pull requests and the release plan's M3.2 section, and the branch is retired.
+Working material for the M3.2 release, started 2026-11-18. It is not yet a design or a plan. This branch is for
+reading and editing only; it is never merged into `main`, which holds only the standing design.
 
 Start with [`requirements.md`](requirements.md). Section 0 lists what carries over from M3.1. Each requirement
 says whether the maintainer stated it or it is a proposal open to correction.
@@ -20,5 +19,4 @@ Figures are as of 2026-11-18. Raw downloads behind the notes are not in the repo
 
 ## How to contribute
 
-Comment on the draft pull request, or push to the `m32` branch. For a change you want reviewed, open a pull
-request into `m32`. Mark a new requirement as **Maintainer.** (decided) or **Proposal.** (open).
+Push to the `m32` branch. Mark a new requirement as **Maintainer.** (decided) or **Proposal.** (open).
