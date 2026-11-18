@@ -212,7 +212,7 @@ footer{font-family:var(--sans);font-size:.82rem;color:var(--muted);border-top:1p
 <div class="callout">
 <h4>Review feedback folded in (PR&nbsp;#34)</h4>
 <ul>
-<li><b>config-search&nbsp;#110 disposition</b> (namasl). Separate what M3.1 supplied (<code>draft_model</code>, acceptance recording, CPU/per-pool offload) from the remaining #110 scope: native speculative settings and recursive nested-setting provenance, bounded exhaustive-search sharding, a durable per-attempt journal (passed/refused/incomplete retained), and optional server-series collection. Name the owning PR(s), whether #110 is superseded by a rebased/split successor, and the done-when tests (round-trip provenance, exact sharded/unsharded multiset equality, interruption/no-truncation journal, diagnostic collection that does not change scoring).</li>
+<li><b><code>blis-config-search#110</code> — disposition.</b> The old #110 draft is <b>superseded</b>; the M2/M3.1 overlap (<code>draft_model</code>, acceptance recording, CPU/per-pool offload — already supplied) is removed from its scope. The remainder becomes four successor workstreams, all owned by <code>blis-config-search</code>, each needing its own PR (numbers to be assigned) and a done-when test: (i) <b>nested native speculative settings + recursive provenance</b> — round-trip identity/provenance test; (ii) <b>bounded exact-search sharding</b> — exact sharded/unsharded multiset equality; (iii) <b>durable per-attempt journal</b> (passed/refused/incomplete retained) — interruption/no-truncation test; (iv) <b>optional server-series diagnostics</b> — collection that does not change scoring. (i) and (ii) depend on the engine's native speculative field list; (iv) is independent. Sequenced in §2.10.</li>
 <li><b>GB200 custom all-reduce still transferred from GB300</b> (mtoslalibu; <code>blis-substrate#116</code>). #373 fixed only the lane (the price now follows the resolved backend, custom vs NCCL); the value is unchanged — <code>collective_floor_all_reduce_fp16_8rank_gb200_nvl72</code> = 13.16&nbsp;µs, <code>transferred_from: gb300</code>, against a ~7&nbsp;µs estimate for the custom lane. M3.2: measure the GB200 4- and 8-rank custom all-reduce on GB200 itself; keep #116 open or file the measurement as its own issue. With #140 and <code>blis-vllm#272</code>, this is the rest of the GB200 decode gap.</li>
 <li><b>CPU-load completion test</b> (mtoslalibu; <code>blis-vllm#305</code>). BLIS reports a load completing at N+3 steps; add a load-to-admission-steps test against real vLLM. Data point: Muse-Spark-Open on 16×GB200, DSpark k=7, uncapped AgentX — real TTFT p50 at c64 is 19.35&nbsp;s with no CPU tier and 3.04&nbsp;s with a 600&nbsp;GiB tier; BLIS must reproduce the tier helping, not hurting.</li>
 <li><b>CPU tier ignores model-resident host memory</b> (mtoslalibu; <code>inference-sim#1924</code>). DeepSeek-V4.1's engram pins ~203&nbsp;GB of host memory per node, but the CPU KV tier is sized as if all host memory were free, overstating CPU-offload capacity. List it — DeepSeek-V4.1 P/D + CPU offload is an internal study.</li>
@@ -243,7 +243,7 @@ footer{font-family:var(--sans);font-size:.82rem;color:var(--muted);border-top:1p
 <p>For every point used, the run's settings — workload, cluster, GPU, model, engine — must be recoverable; getting them right is what makes the comparison like-for-like, and it is part of the calibration process, not a one-off. Every value comes from the run's own records; a value no record holds is a named substitution with its source and lowers the grade; never a BLIS default. Each source's scenario writer has a test that checks every field against the record it came from (the per-source record that settles each setting is in <code>SETTINGS-PROVENANCE.md</code>). To confirm before any fit: the statistic <code>aggregate_perf.py</code> uses over repetitions, the <code>vllm bench</code> seed and range ratio at each commit, and how a recipe revision is matched to a row's date when the recipe changed that day.</p>
 
 <h3 id="m32-3"><span class="secno">2.3</span>Which engine the data improves <span class="pill new">§3</span></h3>
-<p>Calibration improves both SGLang and vLLM; data that can only improve one engine is still used, not ignored. <b>Kernel coefficients</b> stay keyed by kernel implementation, so SGLang data fits vLLM's value wherever both run the same implementation. <b>Engine-path costs</b> (host, scheduler, launch, CUDA-graph replay) are keyed by the identity of the code that does the work, so each engine has its own value with no engine name in substrate (X2). Host overheads are scoped by hardware and model today; this is a design change that lands before the plan.</p>
+<p>Calibration improves both SGLang and vLLM; data that can only improve one engine is still used, not ignored. <b>Kernel coefficients</b> stay keyed by kernel implementation, so SGLang data fits vLLM's value wherever both run the same implementation. <b>Engine-path costs</b> (host, scheduler, launch, CUDA-graph replay) are keyed by the identity of the code that does the work, so each engine has its own value with no engine name in substrate (X2). Host overheads are scoped by hardware and model today; this is a design change that must land before the plan — it needs a <code>blis-design</code> issue and a <code>blis-substrate</code> PR, and neither exists yet (workstream 1 in §2.10).</p>
 
 <h3 id="m32-4"><span class="secno">2.4</span>Maximise scorable coverage <span class="pill new">§3A</span></h3>
 <p>Today <b>199 of 20,364</b> InferenceX anchors are scored and <b>~0 of 1,702</b> configiq units; the losses are mostly policy and a frozen ledger, not missing data (<code>COVERAGE-FUNNEL.md</code>). The levers:</p>
@@ -263,37 +263,45 @@ footer{font-family:var(--sans);font-size:.82rem;color:var(--muted);border-top:1p
 <div class="tbl"><table>
 <thead><tr><th></th><th class="num">Today</th><th>M3.2 ceiling</th><th>What opens it</th></tr></thead>
 <tbody>
-<tr><td>InferenceX anchors scored</td><td class="num">199</td><td class="num">~8,000</td><td>~7,660 out-of-window vLLM/SGLang anchors (TRT's 4,827 stay refused), ~490 in-window unscored, ~260 among the 1,287 post-dump rows</td></tr>
+<tr><td>InferenceX anchors scored</td><td class="num">199</td><td class="num">~2,700 (up to ~4,600)</td><td>~490 in-window unscored; out-of-window anchors measured from 2026-02 on (1,143 vLLM-family, 850 SGLang-family); ~260 among the 1,287 post-dump rows; up to 1,913 more pre-2026-02 SGLang-family anchors if their recipes still resolve. TRT's 4,827 stay refused.</td></tr>
 <tr><td>InferenceX held units</td><td class="num">—</td><td>~1.5× the anchors</td><td>same levers; held is 30% vs anchor's 20%</td></tr>
 <tr><td>configiq held-out units</td><td class="num">—</td><td>~850 of 1,702</td><td>§3C's family rule; ~185 of the 373 forge-written H200/B200 units</td></tr>
 </tbody>
 </table></div>
-<p>The real count depends mostly on how many old runs' inputs can still be fetched — the API serves only the latest measurement per configuration, and in M3.1, 213 of 573 matched vLLM points had their record gone (404). <b>Measure it first</b>, with a pull of every anchor that only checks whether its inputs can be fetched (no simulation), and report the count before planning. configiq's units must be published to the anchor and fit lists before they can be scored.</p>
+<p>These are ceilings, not forecasts; the real count depends on how many old runs' inputs can still be fetched. <b>Measured 2026-11-18:</b> the API's <code>/server-log</code> returns 404 for every vLLM single-turn record from 2025-09 to 2026-01 and 200 from 2026-02 on, so the <b>3,758 vLLM-family anchors measured before 2026-02 cannot be rebuilt from their logs</b> and stay G5 unless another record of their settings is found; the older SGLang anchors take their launch command from the recipe at the run's commit, so they are counted "up to" until that path is checked. <b>Measure it first</b> — a pull of every anchor that only checks whether its inputs can be fetched (no simulation), reported before planning. configiq's units must be published to the anchor and fit lists before they can be scored.</p>
 </div>
 
 <div class="callout">
 <h4>3A.9 Reconcile the frozen dump against the live API (added on PR&nbsp;#34)</h4>
-<p>InferenceX stopped publishing dumps after <code>db-dump/2026-09-28</code> (weekly Apr–Sep 2026, none since), so the pinned dump is a dead, aging source on ever-older vLLM/SGLang releases while every fresh run comes only from the API. Therefore: the dump is a <b>frozen genesis archive</b>, not a base to advance — it is the only copy of pre-09-28 history, including measurements the API has superseded and no longer serves; all forward coverage is 3A.1's auto-pinned supplements. A run that straddles the cutoff must resolve to <b>one <code>measured_date</code> and one unit</b> (freeze from the dump side, or drop run-membership-derived fields from the identity), with a regression test. Old-release runs carry the §3A.5 grade and feed calibration by §1.4's draw. The funnel and slices show the dump-vs-API share of the held-out set. A dump row is never re-pulled from the API (the two print numbers differently and the API lacks the superseded history) — the id-floor stays.</p>
+<p>InferenceX stopped publishing dumps after <code>db-dump/2026-09-28</code> (weekly Apr–Sep 2026, none since), so the pinned dump is a dead, aging source on ever-older vLLM/SGLang releases while every fresh run comes only from the API. Therefore: the dump is a <b>frozen genesis archive</b>, not a base to advance — it is the only copy of pre-09-28 history, including measurements the API has superseded and no longer serves; all forward coverage is 3A.1's auto-pinned supplements. A run that straddles the cutoff keeps <b>one <code>measured_date</code></b> (the earliest over its records) and <b>one unit</b>, because the ingest tool reads the dump and the API supplements together before building units; the binding constraint is that the automation <b>never ingests new API rows apart from the dump</b>, pinned by a test with a straddling run. Old-release runs carry the §3A.5 grade and feed calibration by §1.4's draw. The funnel and slices show the dump-vs-API share of the held-out set. A dump row is never re-pulled from the API (the two print numbers differently and the API lacks the superseded history) — the id-floor stays.</p>
 </div>
 
 <h3 id="m32-5"><span class="secno">2.5</span>Slice accuracy, and the small-slice guard <span class="pill new">§3B</span></h3>
 <p>Every scored point carries its attributes, and the dashboard filters and groups by any of them — source, role, model, precision, chip, node count, interconnect, engine, release distance, topology (TP/DP/EP/P-D pools), speculative method, offload and KV tiers, router, workload type, ISL/OSL, concurrency, arrival process, prefix sharing, measured date, grade, and each named substitution — with every aggregate recomputed from the surviving points. Each slice shows its point count and coverage beside its accuracy.</p>
 <div class="callout warn">
-<h4>Small-slice guard — corrected per review (namasl)</h4>
-<p>The guard (<code>min_points</code> = 10) and the "stop applying it at a drilled-in leaf" idea are <b>not equivalent</b>, and the latter conflicts with the rule that a small slice must not look like strong evidence. Settle on one behaviour and require a test: <b>raw point rows stay visible at every <code>n</code></b>, but an <b>aggregate accuracy figure either stays withheld below <code>min_points</code> at every level</b>, or a below-threshold leaf aggregate is <b>explicitly exploratory and excluded from every verdict</b>. The threshold (10) itself stays. The UI legibility of the guard — show the count (<code>n=3 · mean held</code>) rather than a bare verdict, and have the points table state the rule — is tracked in <code>accuracy-dashboard#160</code>.</p>
+<h4>Small-slice guard — decided per review</h4>
+<p><b>Decision:</b> raw point rows are <b>always visible at every <code>n</code></b>; an aggregate accuracy figure is <b>always withheld below <code>min_points</code> (10) at every level</b> — headline and every drilled-in leaf alike — and a withheld aggregate is excluded from every verdict. (The earlier "stop applying it at a drilled-in leaf" alternative is dropped: it let a small slice look like strong evidence.) The threshold (10) stays, and a test pins the behaviour. The guard's UI legibility — show the count (<code>n=3 · mean held</code>) rather than a bare verdict, and have the points table state the rule — is tracked in <code>accuracy-dashboard#160</code>.</p>
 </div>
 
 <h3 id="m32-6"><span class="secno">2.6</span>configiq <span class="pill new">§3C</span></h3>
 <p>Classify each row by writer: Family A (forge, prefix-caching on) 779 units, Family C (manual imports) 128, Family D (Model Furnace and older imports) 803 — the family decides how a blank is read (a blank is <code>value_not_recorded</code> → G5 unless a launcher preset matches). <b>Family A</b>: fill every blank from forge's own records (the CPT matrix and presets at the run-date commit; vLLM defaults for flags forge never passes; the forge frame — concurrent profile, 275&nbsp;s window, warm-up/ramp, GuideLLM release, seed 42). <b>Family D</b>: fill only what the public guide and furnace defaults support, as named estimated substitutions at a lower grade; TP=1 rows may have used data parallelism and stay unscored. Check each filled frame against the data (the Little's-law window from the concurrency-1 row). Model the multi-turn and prefix workloads as they ran.</p>
-<p><b>Pin the dataset revision</b> — it is not append-only (444 rows were removed between revisions), so configiq is <b>hand-adopted per revision</b>, unlike InferenceX's auto-pin. <b>Ask Red Hat</b> (maintainer owns the conversation): publish an allow-listed <code>runtime_args</code>, the image tag, the GuideLLM version, the cluster tag, start/end times, DP and the turn index; fix the case mismatch that drops DP; publish more of the ~52 models the CSV holds. configiq's settings recovery stays provisional until these land.</p>
+<p><b>Pin one dataset revision and hash, and regenerate every count from it</b> — the three writer families (779 + 128 + 803 = 1,710) and the 1,702 headline differ by 8, which the pinned revision must reconcile. It is not append-only (444 rows were removed between revisions), so configiq is <b>hand-adopted per revision</b>, unlike InferenceX's auto-pin. <b>Ask Red Hat</b> (maintainer owns the conversation): publish an allow-listed <code>runtime_args</code>, the image tag, the GuideLLM version, the cluster tag, start/end times, DP and the turn index; fix the case mismatch that drops DP; publish more of the ~52 models the CSV holds. configiq's settings recovery stays provisional until these land.</p>
 
 <h3 id="m32-7"><span class="secno">2.7</span>Calibration acceptance gates — precommit <span class="pill new">review</span></h3>
-<p>§1.4 separates fit/select/validate from held/anchor, but the requirements do not yet say <b>what numerical result accepts a fit</b> (namasl). Before any fitting reads these sources, precommit: the baseline, the error metrics and required slices, the minimum sample counts, the allowable per-engine/chip regressions, the held/anchor verdict, and the revise-or-revert rule. Otherwise the selection procedure can be finalised after seeing its outcomes — exactly what X8 (precommitment) is intended to prevent.</p>
+<p>§1.4 separates fit/select/validate from held/anchor, but the requirements do not yet say <b>what numerical result accepts a fit</b>. Before any fitting reads these sources, precommit (X8):</p>
+<ul>
+<li>the <b>baseline</b> each fit must beat (the current released coefficients);</li>
+<li>the <b>error metric</b> and the <b>mandatory slices</b> it is evaluated on (engine, chip, workload at least);</li>
+<li>the <b>minimum sample count</b> per slice for a verdict (at least the §2.5 <code>min_points</code>);</li>
+<li>the <b>allowable per-engine / per-chip regression</b> a fit may cause elsewhere;</li>
+<li>the <b>held/anchor verdict</b> (evaluated once, after selection) and the <b>revise-or-revert</b> rule.</li>
+</ul>
+<p><b>Partition rule</b> (replacing the loose "a source never both fits and grades"): InferenceX and configiq deliberately provide <b>both</b> training and held partitions. The split is assigned at the <b>role-key (configuration) level</b> — source, model, hardware, precision, framework, benchmark type and configuration hash — not per row, so every concurrency and repetition of one configuration shares a role and <b>correlated repetitions never straddle the fit↔held boundary</b>. A coefficient is never selected or graded on the role-group that fit it; selection uses the select/validate shares only. New sources (§1.4) draw fit/select/validate only. Without these, the selection procedure can be finalised after seeing its outcomes — exactly what X8 prevents.</p>
 
 <h3 id="m32-8"><span class="secno">2.8</span>Open decisions to settle before calibration</h3>
 <div class="callout warn">
 <ul>
-<li><code>blis-config-search#110</code> disposition — supplied vs remaining scope, owning PR(s), done-when tests (§2.0).</li>
+<li><code>blis-config-search#110</code> — PR numbers and owners assigned for the four successor workstreams named in §2.0.</li>
 <li>Calibration acceptance gates precommitted (§2.7).</li>
 <li>The <code>min_points</code> rule made unambiguous and tested (§2.5).</li>
 <li>The 108 unlisted M3.1 issues named with outcomes (§2.0).</li>
@@ -303,16 +311,44 @@ footer{font-family:var(--sans);font-size:.82rem;color:var(--muted);border-top:1p
 </ul>
 </div>
 
+<h3 id="m32-9"><span class="secno">2.9</span>Prerequisites — start now</h3>
+<div class="callout warn">
+<ul>
+<li><b>Harvest the expiring sources immediately</b> (not as a later proposal): the SGLang nightly job logs and <code>consolidated-metrics</code>, and Tritonbench, expire at ~90 days. Begin the pinned private archive now, so the window keeps growing instead of rolling off before M3.2 starts.</li>
+<li><b>Reconcile "no new GPU or cluster runs."</b> The companion calibration page says M3.2 calibrates on existing data only. Two requested items are measurements: the real-vLLM load-timing test (<code>blis-vllm#305</code>) uses the <b>already-posted</b> real data, so it is not a new run; the <b>GB200 custom all-reduce</b> (<code>blis-substrate#116</code>) is a genuinely new micro-measurement on GB200 and is the <b>one exception</b> — filed as its own issue, with the companion page corrected to name it.</li>
+</ul>
+</div>
+
+<h3 id="m32-10"><span class="secno">2.10</span>Execution — ownership and sequence</h3>
+<p>This capture is still requirements, not an executable plan. The carried M3.1 issues are now dispositioned (<a href="m31-carried.tsv"><code>m31-carried.tsv</code></a>), but the M3.2 work still needs an ordered PR sequence and a dependency graph. The workstreams and their owners, in dependency order (PR numbers to be assigned at the cut):</p>
+<div class="tbl"><table>
+<thead><tr><th class="num">#</th><th>Workstream</th><th>Owner repo(s)</th><th>Depends on</th></tr></thead>
+<tbody>
+<tr><td class="num">1</td><td>Engine-path coefficient contract — host/scheduler/launch/replay keyed by code identity (§2.3)</td><td>blis-design, blis-substrate</td><td>— &nbsp;<b>(no issue/PR yet; gates every per-engine cost)</b></td></tr>
+<tr><td class="num">2</td><td>Ingestion: ledger-follows-source auto-pin + dump/API reconciliation (§2.4: 3A.1, 3A.9)</td><td>blis-substrate</td><td>—</td></tr>
+<tr><td class="num">3</td><td>Archival of the expiring sources (§2.9)</td><td>blis-substrate</td><td>2</td></tr>
+<tr><td class="num">4</td><td>New calibration sources ingested, fit-only roles (§2.1)</td><td>blis-substrate</td><td>2, 3</td></tr>
+<tr><td class="num">5</td><td>Input-recoverability census, no simulation (§2.4, 3A.8)</td><td>accuracy-dashboard</td><td>2</td></tr>
+<tr><td class="num">6</td><td>Engine/table coverage: SGLang field list, router table, settings tail (§2.4, 3A.4)</td><td>blis-sglang, blis-substrate</td><td>1</td></tr>
+<tr><td class="num">7</td><td>Scoring: no age gate, release-distance grades, funnel per source (§2.4: 3A.2/3A.5/3A.6)</td><td>accuracy-dashboard</td><td>2, 5</td></tr>
+<tr><td class="num">8</td><td>configiq as a ledger source, family rule, pinned revision (§2.6)</td><td>blis-substrate, accuracy-dashboard</td><td>2</td></tr>
+<tr><td class="num">9</td><td>Calibration acceptance gates + partition rule precommitted (§2.7)</td><td>blis-substrate</td><td>1, 4 — before any fit</td></tr>
+<tr><td class="num">10</td><td>Dashboard UI: slicing + small-slice guard (§2.5), min_points legibility</td><td>accuracy-dashboard</td><td>7</td></tr>
+<tr><td class="num">11</td><td>config-search #110 successors — the four workstreams (§2.0)</td><td>blis-config-search</td><td>6</td></tr>
+</tbody>
+</table></div>
+<p>Workstream 9's gates must be written and merged <b>before</b> any fitting reads the new sources (§2.7, X8). Workstream 1 has no design issue or PR yet and blocks every per-engine cost; it should be filed first.</p>
+
 <!-- ============================================================ -->
 <h2 id="open"><span class="secno">3</span>Open questions and not-yet-discussed proposals <span class="pill new">§4</span></h2>
 <ul>
-<li><b>Start harvesting the 90-day sources now</b> (SGLang job logs and metrics artifacts; Tritonbench), before M3.2 starts, so the window keeps growing instead of rolling off.</li>
 <li>Points on engine releases other than the one each engine repo models are scored as a named release difference (§3A.5) — vLLM rows across many nightlies; SGLang traces from before v0.5.23.</li>
-<li>Each new source shows on <code>accuracy-dashboard</code> beside InferenceX and configiq, graded the same way.</li>
+<li>Each new source appears on <code>accuracy-dashboard</code> only as a training/calibration diagnostic, <b>never as graded accuracy</b> — only InferenceX and configiq held-out points report accuracy (§1.4, §2.1).</li>
+<li>Whether the remaining §1.3 sources (Tritonbench, SGLang AMD P/D, llm-d Prism, blog step tables, MoE tuning configs, AgentX launch configs) are in scope.</li>
 </ul>
 
 <footer>
-<p>Focused companion to the full BLIS release plan. Delivered summaries from the plan's §3 milestone train; M3.2 content from <code>m32/requirements.md</code> (§0–§4, §1.4, §3A.1–§3A.9, §3B, §3C) with the PR&nbsp;#34 review feedback folded in. Figures as of 2026-11-18; the M3.1 status is refreshed from the final pull-request bodies at the cut.</p>
+<p>Focused companion to the full BLIS release plan. Delivered summaries from the plan's §3 milestone train; M3.2 content from <code>m32/requirements.md</code> (§0–§4, §1.4, §3A.1–§3A.9, §3B, §3C) with the PR&nbsp;#34 review feedback folded in. Figures as of 2026-11-18; the M3.1 status is refreshed from the final pull-request bodies at the cut. This page is a hand-maintained <b>derived view</b> of <code>requirements.md</code> (the source of truth); because it has drifted before, it should be generated from the requirements or gain a parity check.</p>
 </footer>
 </main>
 </div>
