@@ -19,7 +19,8 @@ The implementations the design drives must:
 - maximise the closeness grades (G1 to G5).
 
 The text must meet the writing bar: no AI flourishes; clear to the standard of Knuth, Lamport, Healy and Bostock;
-readable by engineers of every level. v2.0.0 must not be more complicated than v1.0.0, and should be simpler.
+readable by engineers of every level. It must also clear expert audits by top inference engineers (vLLM, SGLang,
+llm-d, NVIDIA) and by experts in discrete-event simulation. v2.0.0 must not be more complicated than v1.0.0, and should be simpler.
 
 ## What v2.0.0 must make easy, now and later
 
@@ -80,10 +81,11 @@ readable by engineers of every level. v2.0.0 must not be more complicated than v
        §9.2), and the point names it;
      - each run's settings come from its own records.
    - Release-specific content (dates, counts, milestones) stays out, as `standcheck.py` enforces.
-6. **Summaries.** v2.0.0 ships the full design and a three-page overview. The seven-page middle document is
-   dropped, because it repeated both and cost upkeep.
+6. **Summaries (maintainer, 2026-11-19).** v2.0.0 keeps all three documents, as v1.0.0 has them: the design in three
+   pages, the design in seven pages, and the full design. Each is rewritten from v2.0.0 and held to the same bar.
 7. **Checks before release.**
-   - Independent audits against both bars.
+   - Independent audits against both bars, including one from the stance of top inference engineers and one from
+     the stance of discrete-event-simulation experts.
    - A pull request to blis-design `main`.
    - The maintainer is asked before that pull request merges, and before v2.0.0 is tagged.
 8. **`m32`.** Section DC becomes "adopted in design v2.0.0", and the requirements cite v2.0.0's rule IDs.
@@ -112,8 +114,8 @@ maintainer's correction in the pull request.
    - The old root URLs stay as redirect stubs to their v1.0.0 copies, keeping the `#anchor`. Repository READMEs
      and pull requests cite those URLs for the rules they were written against.
    - The root `index.html` opens the latest version. New citations use versioned URLs.
-5. **The three-page overview.** It is rewritten from v2.0.0, with its source in `v2.0.0/src/`, and the same
-   checks apply.
+5. **The three-page and seven-page summaries.** Both are rewritten from v2.0.0, with their sources in
+   `v2.0.0/src/`, and the same checks apply.
 6. **No transition text.** v2.0.0 states the consolidated layout as the standing rule. Which design version a
    release implements is the release plan's business, as the README's versioning rule says. So v2.0.0 carries no
    transition note.
