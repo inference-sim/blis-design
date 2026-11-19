@@ -1,21 +1,21 @@
 <h1>BLIS design</h1>
-<p class="lead">BLIS simulates an LLM serving cluster. It runs the router of llm-d unchanged, and Go ports of the vLLM and SGLang engines. These pages explain how its repositories are divided, what each one owns, and the rules that keep them correct.</p>
+<p class="lead">BLIS simulates an LLM serving cluster. It runs the router of llm-d, hosted in simulated time with no change to any routing decision, and Go ports of the vLLM and SGLang engines, each modelling an upstream commit. These pages explain how its code is divided into components, what each owns, and the rules that keep them correct.</p>
 
 <h2>Read in this order</h2>
 <p>The three documents say the same thing at three depths. Stop when you have what you need.</p>
 <ol class="steps">
 <li><a href="blis-design-3-pages.html">The design in three pages</a> <span class="len">(3 printed pages)</span><br>
-The shape of the simulator, for a reader who already knows llm-d and vLLM: the repositories, what each owns, and how a simulated step flows between them.</li>
+The shape of the simulator, for a reader who already knows llm-d and vLLM: the components, what each owns, and how a simulated step flows between them.</li>
 <li><a href="blis-design-7-pages.html">The design in seven pages</a> <span class="len">(7 printed pages)</span><br>
 The same account with the detail a contributor needs before changing code.</li>
-<li><a href="blis-target-design.html">The full target design</a> <span class="len">(about 90 printed pages)</span><br>
+<li><a href="blis-target-design.html">The full target design</a> <span class="len">(the reference)</span><br>
 The authority. Every rule, how it is checked, and why it exists. Each claim in the summaries links to the section here that states it.</li>
 </ol>
 
 <h2>What the design is</h2>
-<p>The design is a standing document. Every statement in it holds for every release: it says what must be true, not what is true at the moment, and it has no dates or milestones. Where a page says what a release schedules, that belongs to a separate release plan, which is not part of these pages.</p>
+<p>The design is a standing document. Every statement in it holds for every release: it says what must be true, and it has no dates or milestones. Release plans are separate and are not part of these pages. The design has a version number, and the rule for numbering versions is in the <a href="https://github.com/inference-sim/blis-design#version-numbers">README of blis-design</a>.</p>
 
 <h2>The code</h2>
-<p>The repositories live under <a href="https://github.com/inference-sim">github.com/inference-sim</a>. Start with <a href="https://github.com/inference-sim/inference-sim">inference-sim</a>, the simulator, and follow the repository table in the design to the others. To ask for a feature or report a problem, open an issue in the repository that owns the behaviour.</p>
+<p>The code lives under <a href="https://github.com/inference-sim">github.com/inference-sim</a>. Start with <a href="https://github.com/inference-sim/inference-sim">inference-sim</a>: the simulator, the substrate and one directory for each engine. The router fork, accuracy-dashboard and blis-config-search are separate repositories, and the component table of the design lists them all. To ask for a feature or report a problem, open an issue in the repository that owns the behaviour.</p>
 
 <footer>Each page is a single self-contained HTML file and prints to US Letter.</footer>
