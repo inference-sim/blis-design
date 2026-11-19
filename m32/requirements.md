@@ -1,16 +1,18 @@
 # BLIS M3.2 requirements
 
-These are the working requirements for M3.2, the release after M3.1, captured with the maintainer from
-2026-11-18. They are not yet a plan, and more will be added. The design they build on is
-[design v4.1.0](https://inference-sim.github.io/blis-design/v4.1.0/blis-target-design.html).
+These are the requirements for M3.2, the release after M3.1, captured with the maintainer from 2026-11-18. The
+design they build on is [design v4.1.0](https://inference-sim.github.io/blis-design/v4.1.0/blis-target-design.html).
+Table W gives the order in which they are built.
 
 **Labels.** Each item carries one label:
-- **Decided**: stated, decided or accepted by the maintainer.
-- **Proposal**: open to correction.
-- **Open**: not yet decided. An Open item names its owner and what decides it.
+- **Decided**: stated, decided or accepted by the maintainer. It is in scope.
+- **Proposal**: the plan's default. It is built as written unless review corrects it. When Red Hat's answers
+  (§3A.7) contradict a Proposal, they replace it and the affected row is redone.
+- **Open**: not yet decided. It names its owner, what decides it and a default that applies until the maintainer
+  decides.
 
 Section DC lists what M3.2 builds for design v4.1.0. It comes first because the maintainer asked that design
-changes be the first requirement. It cites later sections.
+changes be the first requirement.
 
 **Evidence.** The notes in `evidence/`, next to this file, back the figures:
 - what vLLM, SGLang and PyTorch publish as performance data (`INVENTORY.md`);
@@ -18,6 +20,8 @@ changes be the first requirement. It cites later sections.
 - why so few InferenceX and configiq points are scored (`COVERAGE-FUNNEL.md`);
 - how configiq rows are produced (`CONFIGIQ-FINDINGS.md`);
 - what the two models a team requested need on GB200 (`NEW-MODELS-GB200.md`).
+
+No evidence note backs §5; its inputs are the design and the catalog.
 
 Figures are as of 2026-11-18, except the M3.1 status in §0, which is as of 2026-11-19 04:10 UTC. Every repository
 named here is under `github.com/inference-sim/` unless another owner is shown.
@@ -42,7 +46,7 @@ Until the migration lands, the three repositories below still exist, and the iss
 **Data sources.**
 - **InferenceX**: SemiAnalysis's public end-to-end serving benchmarks, with server logs and recipes.
 - **configiq**: Red Hat's public dataset of GuideLLM results for upstream vLLM releases. GuideLLM is a load
-  generator for LLM servers. It is not yet documented well enough to train on, so every unit is an anchor unit.
+  generator for LLM servers. It is **anchor-only** (see Role below).
 - **AISimulate**: NVIDIA's operator sweeps (one kernel at a time over many shapes) and forward-pass measurements.
 - **forge**: Red Hat's open-source benchmark launcher (`openshift-psap/forge`), which wrote most of configiq's
   recent rows (§3C).
@@ -57,17 +61,13 @@ Until the migration lands, the three repositories below still exist, and the iss
   InferenceX rows published after the dump and added to the ledger one by one, each pinned by its row id and the
   SHA-256 of its content.
 
-**Design rules, sections and terms.** IDs such as X7, SUB-15, LIF-5, COV-6, T-M1 or D6 name rules of design v4.1.0.
-The letters group them: X across components, SUB substrate, LIF versions and releases, COV accuracy coverage, VAL
-coefficients, D the ledger, T a trigger's test. A design section is written "design §n.m" and links to the design.
-A bare § number is this file's own section (§0 to §4, §3A to §3C); the design changes are DC1 to DC3 and the team
-request is DC4, without a §. The design's glossary, [Appendix B](https://inference-sim.github.io/blis-design/v4.1.0/blis-target-design.html#appB),
-defines these terms, which keep its sense here: anchor, commit distance, drafter, engine module, engine upgrade,
-funnel, graph handler, graph vocabulary, headline, held-out unit, lowering, model backport (written "backport"),
-model support, named substitution (an **estimated substitution** is one whose value comes from a stated rule rather
-than a record), onboarding a model, oracle, primitive family, role key, router table, slice, training data and
-upgrade report. The design's term "lane" has a wider sense than this file needs, so the dashboard's per-engine groups
-are called groups here.
+**Design rules, sections and terms.** IDs such as X7, SUB-15, COV-6, T-M1 or D6 name rules of design v4.1.0
+([Appendix A](https://inference-sim.github.io/blis-design/v4.1.0/blis-target-design.html#appA)). "Design §n.m" is a
+design section and links to it. A bare "§n" is a section of this file (§0 to §5, including §3A to §3C). DC1 to DC3 are
+the design changes and DC4 is the team request. Terms not defined here are defined in the design's
+[Appendix B](https://inference-sim.github.io/blis-design/v4.1.0/blis-target-design.html#appB) and keep its sense,
+including "lane". A model backport is written "backport". An **estimated substitution** is a named substitution whose
+value comes from a stated rule rather than a record.
 
 **The ledger and roles.**
 - **Ledger**: blis-substrate's list of every measured unit from every data source, with each unit's role
@@ -84,11 +84,12 @@ are called groups here.
   seeded rule (design §10.2). Fit units fit coefficients, select units choose between fits, validate units check a
   fit. **Held-out** units are held (one evaluation per pre-registration; InferenceX only) and anchor (the
   **headline**, the dashboard's accuracy figure). **Anchor-only** means every unit of a source is an anchor unit:
-  scored on the dashboard, never training data, never held, and never used to judge a change. **Training data** is
-  every fit, select or validate unit and all data from a source with no held or anchor role.
-- New InferenceX units draw 30% fit, 10% select, 10% validate, 30% held and 20% anchor. Older units
-  were first split into a fit group and a held group; each stays in its group, and the ledger's rules split each
-  group into roles (fit and select; held and anchor). configiq is anchor-only: all of its units are anchor units.
+  scored on the dashboard, never training data, never held, and never used to judge a change. configiq is
+  anchor-only because it is not yet documented well enough to train on. **Training data** is every fit, select or
+  validate unit and all data from a source with no held or anchor role.
+- New InferenceX units draw 30% fit, 10% select, 10% validate, 30% held and 20% anchor (the cut-points in
+  `substrate/catalog/ledger/ledger.yaml`, which also holds the older 60/40 cut-points of the held group). Units from
+  before the ledger keep their old fit or held side (design §10.2).
 
 **Grades.** G1 (exact) to G5 (not scored), as design
 [§11.3](https://inference-sim.github.io/blis-design/v4.1.0/blis-target-design.html#s11-3) defines them. G1 and G2
@@ -105,7 +106,8 @@ need the run's own engine commit; G3 and G4 are other commits, by commit distanc
 - **P/D**: prefill/decode disaggregation, where separate GPU pools run the prefill and decode phases.
 - **Abbreviations**: TP, DP and EP are tensor, data and expert parallelism. TTFT is time to first token and TPOT
   time per output token. ISL and OSL are input and output lengths in tokens.
-- **Age limit**: the dashboard's rule, today, that scores only runs measured in the last 180 days (§3A.2).
+- **Age limit**: the dashboard's rule, until M3.2 removes it, that scores only runs measured in the last 180 days
+  (§3A.2).
 - **Speculative decoding** uses a small drafter model to propose tokens. **DSpark** is one drafting method.
   **Acceptance** is the share of drafted tokens the target model keeps.
 
@@ -116,9 +118,9 @@ The design states the rules. DC1 to DC3 are **Decided**: the design adopts them,
 Table DC lists what M3.2 builds. Rule IDs and sections are those of v4.1.0. The lowering work of DC2, planned
 for M4, is part of M3.2.
 
-**Why.** Changes crossed repositories in sequence: the per-pool offload fix took blis-substrate#402, blis-vllm#302
-and inference-sim#2252, with full CI at each. And the new data (§1) is pinned to engine commits, not releases, which
-BLIS could not model.
+**Why.** Changes crossed repositories in sequence: a per-pool offload fix needed three pull requests in three
+repositories, with full CI at each. And the new data (§1) is pinned to engine commits, not releases, which BLIS could
+not model.
 
 ### The decisions
 
@@ -152,19 +154,21 @@ other groups are easier in one repository.**
 | Group | What M3.2 builds | Rule |
 |---|---|---|
 | **Migration (DC3), in this order** | Table W rows 1 and 2 | |
-| Sizing | Size the migration from the actual workflows, checks and open issues before it starts. It is not sized yet. Output: a list of workflows, checks and open issues per repository, and the pull-request sequence for the migration and the two groups that follow it (Table W rows 2, 3 and 5) | |
-| Hosting contract | Move `contracts/embed` and `contracts/conformance/embedtest` (about 2,300 lines of Go; 12 commits of history touch them) into the router fork as new files in `blisembed/`. New files cost none of the fork's patch budget (`hack/hosting-lint/budget.txt`); the edits to its `go.mod` and `go.sum` do. The fork's import test (`TestImportsOnlySubstrateContracts`) then forbids every `github.com/inference-sim/` package. Update the checks that name blis-substrate as the contract's home: `hack/embed-apidiff.sh` and its test, `hack/fork-policy/main.go` and `.github/workflows/hosting-lint.yml` in the fork; `contracts/architecture_test.go` and the SUB-1 API-diff check in blis-substrate. The conformance suite runs in the fork's CI. inference-sim imports the contract through its one `replace`, under llm-d's module path (`github.com/llm-d/llm-d-router/blisembed`) | X7, X11, SUB-1, RTR-3 |
+| Sizing | Size the migration from the actual workflows, checks and open issues before it starts. Output: Table W row 1 | |
+| Hosting contract | Move `contracts/embed` and `contracts/conformance/embedtest` (about 2,300 lines of Go) into the router fork as new files in `blisembed/`. The fork's import test (`TestImportsOnlySubstrateContracts`) then forbids every `github.com/inference-sim/` package. Update every check that names blis-substrate as the contract's home (Table W row 1 lists them). The conformance suite runs in the fork's CI. inference-sim imports the contract through its one `replace`, under `github.com/llm-d/llm-d-router/blisembed` | X7, X11, SUB-1, RTR-3 |
 | Subtree merge | Merge blis-substrate, blis-vllm and blis-sglang into inference-sim as `substrate/`, `engines/vllm` and `engines/sglang`, with a subtree merge that keeps their history. Every moved directory becomes a package of the one Go module | SUB-13 |
-| Issues | Transfer the open issues of the three repositories and map the old numbers to the new. Re-map §0 and `m31-carried.tsv` when they land | |
+| Issues | A maintainer transfers the open issues of the three repositories and map the old numbers to the new. Re-map §0 and `m31-carried.tsv` when they land (Table W rows 2 and 24) | |
 | Checks | Replace the repository boundaries with an import-graph lint over directories (`go list`, required in CI) and the path-reference lint of X7 (no file under `substrate/` names a path under `engines/`). Consolidate each repository's merge rules, checks and workflows. Make heavy CI path-filtered, so a change runs only the jobs of the directories it touches. Restate each invariant's "Runs in" by directory in `substrate/contracts/invariants`. Add the module-size check | X2, X7, SUB-13, design §3.4 |
 | Releases | Per-engine release branches become release branches of inference-sim, which already cuts `release-v0.18`. Re-point the pins of accuracy-dashboard and blis-config-search | design §14.4, X11 |
-| Retire | Archive blis-substrate, blis-vllm and blis-sglang with a pointer to inference-sim, once the issues are transferred | |
+| Retire | A maintainer archives blis-substrate, blis-vllm and blis-sglang with a pointer to inference-sim, once the issues are transferred | |
 | **Lowering (DC2)** | Table W row 5 | |
-| Deriver | Move all vLLM lowering out of the catalog's graph deriver into `engines/vllm`; the deriver writes checkpoint facts only, and its `--check` and rederivation test stay | SUB-15 |
+| Deriver | Move all lowering out of the catalog's graph deriver into the engine modules (`engines/vllm`, and `engines/sglang` if the deriver holds any SGLang lowering); the deriver writes checkpoint facts only, and its `--check` and rederivation test stay | SUB-15 |
 | Rules layer | Remove `contracts/rules/` and move model values into graph fields; each engine module's refusal is the engine layer of validation | SUB-12 |
-| Compatibility code | blis-vllm's current engine (`vllmengine`, modelling v0.33.0) still depends on `compat/`, the old v0.31 compatibility engine: `compat/kernelmodel` opens the pool, prices steps and sizes the KV budget, and through it `compat/engine`, `compat/lowering`, `compat/quantization`, `compat/vllmsettings`, `compat/tokenid` and `compat/internal/util`, and blis-vllm's own `rules/` package. Move what the engine uses into `core/` as v0.33.0 code, ported against v0.33.0 and checked by the oracle tiers, not copied unchanged. Then delete `compat/` and `rules/`. Done before the migration, so the old code is not carried into inference-sim. Done when `go list -deps ./...` lists no `compat/` or `rules/` package and every oracle tier passes | [LIF-5](https://inference-sim.github.io/blis-design/v4.1.0/blis-target-design.html#s14-2), DC2, SUB-12 |
+| Onboarding command | Remove `onboard --plan` with its tests and docs. Simulating the requested scenario and the upgrade report answer the same questions | T-M2 |
+| **Compatibility code (DC2)** | Table W row 27 | |
+| Compatibility code | blis-vllm's engine (`vllmengine`, v0.33.0) still depends on `compat/`, the old v0.31 engine, and on blis-vllm's own `rules/` package (not `contracts/rules/`). Port what the engine uses into `core/` against v0.33.0 and check it with the oracle tiers; do not copy it unchanged. Then delete `compat/` and `rules/`. Do this before the migration, so the old code does not move into inference-sim | [LIF-5](https://inference-sim.github.io/blis-design/v4.1.0/blis-target-design.html#s14-2), DC2, SUB-12 |
 | **Any commit (DC1), all engines** | Table W row 3 | |
-| Generators | Make `gen_surface.py`, `gen_kernel_impls.py` and `gen_fields.py` work at any commit. Today `gen_surface.py` refuses a checkout at another commit, `gen_kernel_impls.py` needs one `kernels/<tag>/attention.json` per release, and `gen_fields.py` holds release-specific paths. Lock the oracle environment to the commit | X9, FID-2, T-E3 |
+| Generators | Make `gen_surface.py`, `gen_kernel_impls.py` and `gen_fields.py` work at any commit. At M3.1 `gen_surface.py` refuses a checkout at another commit, `gen_kernel_impls.py` needs one `kernels/<tag>/attention.json` per release, and `gen_fields.py` holds release-specific paths. Lock the oracle environment to the commit | X9, FID-2, T-E3 |
 | Upgrade report | Generate the report of design §12.4 (surface diff, field demand, source diff, and for each model the catalog entry, model support and missing coefficients). Every new surface entry gets a status. The dashboard uses the same diff generator to grade a run. Include the Transformers-backed fallback paths of vLLM and SGLang as surface-list items, and list the models that run only through them | X9, design §12.4, design §11.3 |
 | Commit identity | Name commits in `stack.json` and in each Result only; accept an on-demand commit in the release watcher; grade by commit distance in the dashboard | LIF-6, SIM-3, COV-6 |
 | No version in a scenario | Remove `engine.version` from the scenario schema and the simulator; a version field is refused as an unknown field. A scenario states no version of an engine or of llm-d: the build fixes them (`stack.json`) and every Result records them. A user who needs another upstream commit uses the inference-sim release that runs it. `inference-sim version` prints the commits a build runs. The dashboard's scenario writer stops writing an engine version and records the run's commit on the point, for commit distance | LIF-6, SIM-1, design §11.2 |
@@ -186,24 +190,24 @@ other groups are easier in one repository.**
 | Kernel lists | Generate each engine's `kernel_impls.json` as an engine-neutral copy under `substrate/registry/inputs/` with a freshness check, and move the VAL-8 cross-check into a simulator-package test. Connector and backend names of the vLLM and SGLang KV trees live only in each engine's surface list, with the NIXL storage plugins (GDS, POSIX and object) | X7, VAL-8, design §7.5 |
 | Cross-generation transfer | Validate the GB200 (Blackwell) to Hopper transfer rules (leave one generation out) before use. Until then a cross-generation transfer ranks as roofline | VAL-5, design §9.2 |
 | Ledger multiples | Record InferenceX's client multiples (10 measured, 2 warm-up, 12 in all) for `measurement_contaminated` in the ledger's source record | design §10.2 |
-| **Held-out gate (design v4.0.0)** | Table W rows 25 and 26 | |
-| Whole-run gate | Build the whole-run landing gate in accuracy-dashboard. A candidate job with no secret builds the candidate and runs the pinned harness on every unit not on the published fit or anchor lists. The secret-holding gate job computes roles, scores held units only and returns aggregates over at least `min_points` role keys, with VAL-6's statistics: a non-inferiority margin, a one-sided 95% BCa interval from 10,000 resamples by role key, Holm over lanes and criteria, and the merging of small lanes. It gives one evaluation per pre-registration and counts each against the partition version's budget. It reports on the pull request, runs nightly, and runs before each release against the previous release and the best published release | [VAL-6](https://inference-sim.github.io/blis-design/v4.1.0/blis-target-design.html#s9-4), D7, design §12.3, design §13.5 |
-| Gate as the path | Every M3.2 change that moves accuracy goes through the whole-run gate: each refit, each coefficient change and each engine upgrade. The calibration of the new sources (row 18) lands only through it | VAL-6, T-A1, T-A2 |
+| **Held-out gate** | Table W rows 25 and 26 | |
+| Whole-run gate | Build the gate of design §13.5 in accuracy-dashboard. A candidate job with no secret builds the candidate and runs the pinned harness. The gate job, which holds the secret, scores held units only and returns aggregates over at least `min_points` role keys, judged as VAL-6 states. It gives one evaluation per pre-registration and counts it against the partition version's budget. It reports on the pull request, runs nightly, and runs before each release against the previous release and the best published release | [VAL-6](https://inference-sim.github.io/blis-design/v4.1.0/blis-target-design.html#s9-4), D7, design §12.3, design §13.5 |
+| Gate as the path | Every M3.2 change that moves accuracy goes through the whole-run gate: each refit, each coefficient change and each engine upgrade. The refit of both engines (row 29) lands only through it | VAL-6, T-A1, T-A2 |
 | Operator-level evidence | Remove the operator-level held-out gate from the ledger workflow. The error job keeps reporting each method's error on validate units nightly, as method error, never as accuracy; it informs review and never decides a landing | VAL-5, VAL-11, design §13.5 |
-| Partition version | Write a new partition version that changes AISimulate's cut-points to training roles (fit 0 to 69, select 70 to 84, validate 85 to 99) and configiq's cut-points to anchor 0 to 99, and keeps the partition secret. Before switching, the D2 join must confirm that no consumer read a configiq unit under a training role; any unit read that way is left out, not made an anchor. No InferenceX unit changes role, and no secret is published | D2, D4, D7, D9 |
+| Partition version | Write a new partition version that changes AISimulate's cut-points to training roles (fit 0 to 69, select 70 to 84, validate 85 to 99) and configiq's cut-points to anchor 0 to 99, and keeps the partition secret. Before switching, the D2 join must confirm that no consumer read a configiq unit under a training role and no consumer read an AISimulate held unit under a training role; any configiq unit read that way is left out, not made an anchor. No InferenceX unit changes role, and no secret is published. An agent prepares the change and the join report; a maintainer with write access writes and approves the new partition version (design §10.2, §13.7) | D2, D4, D7, D9 |
 | **Cluster matrix (§5)** | Table W row 28 | |
 | Fabrics | Add RoCE 400G and 800G network entries to the catalog from vendor specifications | design §9.2, SUB-3 |
 | Matrix test | Generate one small scenario per model, engine, chip, fabric and serving mode, and assert that each simulates or is refused with the upstream's reason, and that every price names its method. Run it nightly and on pull requests that change the catalog, the coefficient registry or an engine's lowering | design X1, X9, VAL-2 |
 | Support matrix | Publish, with each release, whether each cell runs and the share of predicted time by method | design VAL-3, §9.2 |
-| **Simplifications (design v2.1.0 to v2.4.0, and v4.1.0)** | Table W rows 8 and 22 | |
-| Simulator commands | Remove the `ledger`, `invariants` and `compose` commands from inference-sim, with their tests and docs pages, and the `blis invariants` mention in the README. Nothing calls them: the dashboard reads the ledger from the release checkout, and the substrate's own tool renders the invariant blocks | COV-2, X29, DEV-7 |
+| **Simplifications** | Table W rows 8 and 22 | |
+| Simulator commands | Remove the `ledger`, `invariants` and `compose` commands from inference-sim, with their tests and docs pages, and the `blis invariants` mention in the README. Nothing calls them: the dashboard reads the ledger from the release checkout, and the substrate's own tool renders the invariant blocks | COV-2, design §5.6 |
 | Ledger embedding | Stop embedding `catalog/ledger/published/` in the simulator's data; the loader ignores everything under `catalog/ledger/` | design §3.3, design §10.2 |
-| Dashboard nightly | Delete the stale "TEMPORARY until `blis ledger --list anchor`" comment in `api-nightly.yml`. It already reads the anchor list from the pinned checkout | COV-2 |
-| Gated-config nightly | Delete the substrate's `nightly-fetch-configs.yml` and its entries in `.github/check-runs.yaml`; remove the `config-fetch` environment and its `HF_TOKEN` secret. Keep `fetch_pinned_configs.py` and `derive_graph.py --check --fetched`, which a maintainer runs. Add the gated-model step to the catalog README and a checkbox to the pull-request template, outside the generated block | X12 |
+| Dashboard nightly | Delete the "TEMPORARY until `blis ledger --list anchor`" comment in `api-nightly.yml`. It already reads the anchor list from the pinned checkout | COV-2 |
+| Gated-config nightly | Delete the substrate's `nightly-fetch-configs.yml` and its entries in `.github/check-runs.yaml`; remove the `config-fetch` environment and its `HF_TOKEN` secret (a maintainer with repository admin does this). Keep `fetch_pinned_configs.py` and `derive_graph.py --check --fetched`, which a maintainer runs. Add the gated-model step to the catalog README and a checkbox to the pull-request template, outside the generated block | X12 |
 | InferenceX unit regeneration | Delete the Postgres regeneration step ("Regenerate the InferenceX units from the pinned dump") from the `gate-nightly` job of the substrate's `ledger.yml`. Keep the D2 join and the configiq regeneration. Add the local regeneration step (restore the dump, export, `ledger check-generated`) to the ledger README and a checkbox to the pull-request template, for a change to the dump pin or the ingest tool | D4 |
 | Process checks | Retire the checks that design v2 made maintainer practice. Delete `shared-nightly.yml` in the substrate (cited issues, quarantine list, private names in issue text) and the `schedule` trigger of the `blis` workflow in inference-sim, blis-substrate, blis-vllm, blis-sglang and blis-config-search. Delete the `tags.lock` check. From `shared-pr-checks.yml`, delete the pull-request body fetch and the description, commit-policy, review-thread, cited-issue and quarantine steps; signing and sign-off are set in branch protection. Keep the workflow lint, version literals, documentation references, licence and notice files, the generated copies and the selected-version lint. The VLM-3 field-list check stops reading issues | X28, X25, X14, X20, X24, LIF-1, LIF-3, VLM-3, design §4.2 |
 | Intervals on request | Make one replication the default for every run, reported as a point estimate that says it has no interval. Add a request for an interval (replications from five under the stopping rule of design §8.8). The dashboard scores one run per point; blis-config-search requests intervals when it declares a winner | DEV-11, COV-10, design §8.8 |
-| Report role | Remove `RoleReport` from the ledger (`roles.go` and the published-list loops in `assign.go` and the ledger command), delete `catalog/ledger/published/report.yaml`, and update their tests. No unit holds the role, so no unit moves | design §10.2, D4, D7 |
+| Report role | Remove `RoleReport` from the ledger (`roles.go` and the published-list loops in `assign.go` and the ledger command), delete `catalog/ledger/published/report.yaml`, and update their tests. No unit holds the role, so no unit moves | design §10.2 (the five roles) |
 | Stale citations | Update the citations of closed issues that the nightly reports: 1 in inference-sim, 4 in blis-sglang, 4 in blis-config-search and 25 in blis-substrate. Where the gap is fixed, remove the comment; where it is not, cite an open issue that tracks it. No issue is reopened only to clear a check | X28 |
 | **A future engine (TensorRT-LLM)** | The first cases for the native-code step of design §12.6. Not built in M3.2; the sites are recorded in the surface list, with Table W row 4: the eviction policy's steady-clock read, the `getenv` of the window-size shares, the native and Python capacity schedulers (the oracle runs both), the pool allocation sites, an instrumented build for branch coverage, and, because the engine-plan path has no meta-tensor dispatch mode, a per-layer launch and shape dump or an instrumented native run for it | FID-1, FID-2, FID-4, FID-7, FID-11 |
 ### DC4. Support requested by a team: Mistral-Large-4 and Inkling-2-Small on GB200
@@ -212,7 +216,8 @@ other groups are easier in one repository.**
 
 **Request.** A GB200 configuration for both models on 16 GPUs, the capacity of Muse Spark (a model already in the
 catalog; its open checkpoint is Muse-Spark-Open), for the team to use and verify. DC4 is done when each scenario
-simulates on GB200 with every coefficient's method named, and the team's verification run is recorded.
+simulates on GB200 with every coefficient's method named (Table W row 9). BLIS runs no experiment (§1.6). If the team
+shares measured runs of these models, they are added as a source under §1.3's rules.
 
 **Facts** (checked 2026-11-18; `evidence/NEW-MODELS-GB200.md`).
 - **Mistral-Large-4.** `MistralLarge4ForCausalLM`, with a DSpark drafter. It is in vLLM v0.34.0, released
@@ -260,9 +265,9 @@ is as of 2026-11-19 04:10 UTC. Issue numbers of blis-substrate, blis-vllm and bl
 the issues; this section and `m31-carried.tsv` are re-mapped then, and the pin sequences behind several of the
 items go away.
 
-**0.1 Still open from the M3.1 review.** blis-substrate#307 (per-pool KV connector and offload): the code merged
-(blis-substrate#402, blis-vllm#302, inference-sim#2252). Close #307, or say what remains. CPU-offload sweeps on
-P/D (blis-config-search#94) carry into M3.2. The other review items were fixed in M3.1 (Table M).
+**0.1 Still open from the M3.1 review.** blis-substrate#307 (per-pool KV connector and offload) has merged code; its
+note in `m31-carried.tsv` says what to do. CPU-offload sweeps on P/D (blis-config-search#94) carry into M3.2. The other
+review items were fixed in M3.1 (Table M).
 
 **0.2 Moved to M3.2 by decision.**
 - blis-sglang#141, SGLang's SchedulerRecvSkipper (draft, checks failing).
@@ -272,20 +277,30 @@ P/D (blis-config-search#94) carry into M3.2. The other review items were fixed i
 - blis-vllm#158: BLIS's KV pool for Muse Spark is 1.25 to 1.30 times the size vLLM logs at TP8, and 1.88 to 2.04
   times with DSpark, against a target within 5% of vLLM's.
 - blis-substrate#369: the pre-registration and held-out verdict for the Blackwell launch fit.
-- Smaller items: the `moe_backend` and `mm_encoder_tp` settings, rows whose record returns 404, the rows from
-  frameworks BLIS does not model, the DeepSeek-V4 environment-variable bundle, and the "same kernels" wording in
-  blis-substrate#294 and blis-vllm#298 (a wording fix, separate from what those pull requests closed).
-- On the dashboard: the chip-split card, and SGLang rows on the public cards.
-- Closed at the M3.1 merge, but worth a check: blis-substrate#125 (no engine pads a drafter's DP batch yet).
+- Smaller items, each with its action and its test:
+  - the `moe_backend` and `mm_encoder_tp` settings: decide for each whether to model it, prove it inert or refuse it
+    by name; test: the setting is in the engine's surface list with that status;
+  - rows whose record returns 404: grade G5 with a reason that names the missing record (§3A.3); test: no such
+    row is scored or silently dropped;
+  - rows from frameworks BLIS does not model: refuse them by name (§3A.4); test: each is in the funnel with that
+    reason;
+  - the DeepSeek-V4 environment-variable bundle: decide to model it, prove it inert or refuse it by name; test: as
+    for `moe_backend`;
+  - the "same kernels" wording in blis-substrate#294 and blis-vllm#298 (separate from what those pull requests
+    closed): reword it to say which kernels are shared; test: the text names them;
+  - the dashboard's chip-split card and SGLang rows on the public cards: build them; test: each renders, with the
+    point count beside every figure (COV-13).
+- Closed at the M3.1 merge, but worth a check: blis-substrate#125 (no engine pads a drafter's DP batch yet). Check
+  the engines and record the result on the issue.
 
 **0.3 Dropped by decision.** Accuracy figures for the internal experiments, raised in the accuracy-dashboard#133
 review. Under §1.4 the internal experiments are training data, so they get no accuracy figure. How well BLIS
 reproduces them is reported as a labelled training diagnostic (§1.4).
 
 **0.4 The M3.1 plan issues still open.** Of the 189 issues, 39 are closed and 150 are open. All 150 carry into
-M3.2, for closing or for work. [`m31-carried.tsv`](m31-carried.tsv) lists them, with each one's plan item and any
-note from the review. A few are done in code and only need closing, such as inference-sim#2079 (fixed by
-inference-sim#2250) and inference-sim#2214 (fixed by inference-sim#2251).
+M3.2, for closing or for work. [`m31-carried.tsv`](m31-carried.tsv) lists them, with each one's plan item, the Table W
+row that owns it and any note from the review (some are done in code and only need closing). Table W row 24 closes
+each issue or moves it into its row.
 
 **Table 0.4. The 150 M3.1 plan issues still open, by plan item; SGLang end to end (C2) and data-parallel serving
 (T1) are the largest groups. `m31-carried.tsv` lists the issues.**
@@ -305,6 +320,20 @@ inference-sim#2250) and inference-sim#2214 (fixed by inference-sim#2251).
 In C2, SGLang speculation, attention data parallelism, expert parallelism and P/D (blis-sglang #64 to #71) stayed
 refused in M3.1, as blis-sglang#126 states. A comment on blis-substrate#51 says what remains after switch groups.
 
+**Table 0.4b. The 150 issues by the Table W row that owns them.** Row 24 holds the issues that fit no row: 5 to close
+and 27 to triage (maintainer).
+
+| Table W row | Issues | Table W row | Issues |
+|---|---|---|---|
+| 2 Migration | 6 | 16 Scoring | 21 |
+| 3 Engines model a commit | 1 | 20 Config-search #110, first | 2 |
+| 4 Engine particulars | 5 | 22 CI | 4 |
+| 5 Lowering | 5 | 23 Moved by decision | 8 |
+| 6 Code identity | 2 | 24 Close or triage | 32 |
+| 8 Simplifications | 2 | 28 Cluster matrix | 9 |
+| 10 Ingestion | 1 | 29 Refit | 18 |
+| 15 Engine and table coverage | 34 |  |  |
+
 **0.5 What becomes of blis-config-search#110.** The old #110 draft is superseded. The parts M2 and M3.1 already
 supply (`draft_model`, acceptance recording, CPU and per-pool offload) are out of its scope. The remainder becomes
 four workstreams in blis-config-search, each with its own pull request (to be assigned) and a test that says when
@@ -320,19 +349,21 @@ Only the first depends on the engine's native speculative field list.
 the named issues.
 - *The CPU tier ignores host memory the model holds* (inference-sim#1924). DeepSeek-V4.1's engram, a host-resident
   memory table, holds about 203 GB per node, but the CPU KV tier is sized as if all host memory were free. That
-  overstates DeepSeek's CPU-offload capacity for P/D with CPU offload.
+  overstates DeepSeek's CPU-offload capacity for P/D with CPU offload. Test: the tier's capacity falls by the
+  memory the model holds.
 - *Muse DEP8 KV capacity* (blis-vllm#253). `muse-gb200-nvl-dep8-dspark.yaml` (Muse Spark, DEP8: 8 data-parallel ranks with expert parallelism for the experts; TEP8 shards attention 8-way and the experts with expert parallelism) reports
   `kv_capacity_tokens_per_replica` of 500,977 tokens, against 8.09 million for TEP8, with a median TPOT of 39 ms at
-  concurrency 4. It may be correct for 8 data-parallel ranks; check it against the engine's logged KV size. The
-  config-search smoke test on the M3.1 head also found that DEP8 cannot fit a 1M-token context: it needs 72.5 GiB
-  of KV per rank and has 40.1 GiB. This is unconfirmed.
+  concurrency 4. It may be correct for 8 data-parallel ranks. Test: compare it with the engine's logged KV size, within
+  5% as for blis-vllm#158, or explain the difference. The config-search smoke test on the M3.1 head also found that
+  DEP8 cannot fit a 1M-token context: it needs 72.5 GiB of KV per rank and has 40.1 GiB. This is unconfirmed; the same
+  comparison settles it.
 - *CPU-load completion steps* (blis-vllm#305). BLIS reports a load completing N+3 engine steps after it starts.
-  Add a test of the steps from load to admission against recorded vLLM runs. One recorded run: Muse-Spark-Open on
-  16 GB200 GPUs, DSpark with 7 draft tokens, the uncapped AgentX workload. Its median TTFT at concurrency 64 is
-  19.35 s with no CPU tier and 3.04 s with a 600 GiB tier. BLIS must reproduce that improvement.
+  Add a test of the steps from load to admission against recorded vLLM runs. The recorded run of blis-vllm#305 shows
+  the median TTFT falling when a CPU tier is added. Test: BLIS reproduces both recorded medians within the tolerance
+  that the change's pre-registration states before BLIS is run (design §12.3).
 - *The GB200 custom all-reduce is transferred from GB300* (blis-substrate#116, closed by blis-substrate#373).
-  blis-substrate#373 fixed the lane: the price now follows the backend the engine resolved. The value did not
-  change: 13.16 µs, `transferred_from: gb300`, against an estimate of about 7 µs for the custom lane. If a source
+  blis-substrate#373 fixed the lookup: the price now follows the backend the engine resolved. The value did not
+  change: 13.16 µs, `transferred_from: gb300`, against an estimate of about 7 µs for the custom all-reduce. If a source
   named in §1 measures the GB200 4- and 8-rank custom all-reduce, use it. Otherwise the value stays transferred,
   with its source and rationale, and the points it prices name it (§1.6).
 
@@ -345,46 +376,61 @@ the named issues.
 - SGLang's nightly job logs and `consolidated-metrics` artifacts (scheduler behaviour, resolved server
   arguments).
 
-1.2 **Decided.** Licence is not a blocker, because BLIS queries the data and does not redistribute it. So none of
-it is committed to a public repository (design rule D6: only redistributable artefacts are committed). Units are
-built from a pinned fetch at fit time, as the private internal data is, and a public figure cites the source URL and
-the fetch date.
+1.2 **Decided.** Licence is not a blocker, because BLIS queries the data and does not redistribute it. So no record or
+measurement of it is committed. The ledger commits unit identities and role keys only, as it does for InferenceX
+(design D6, §10.2). Units are built from a pinned fetch at fit time, as the private internal data is, and a public
+figure cites the source URL and the fetch date.
 
 1.3 **Open.** Whether the rest of the inventory is also in M3.2's scope: Tritonbench nightlies (PyTorch's kernel
 benchmarks), SGLang's AMD P/D nightly, the llm-d Prism archive, the vLLM blog's step tables, MoE tuning configs and
-AgentX launch configs. Owner: the maintainer, who decides before Table W row 13 ingests the new sources. Default if no
-decision: out of M3.2.
+AgentX launch configs. Owner: the maintainer, who decides before Table W row 13 ingests the new sources. Default until
+the maintainer decides: out of M3.2. A source brought in later follows the rules of this section.
 
 1.4 **Decided (2026-11-18; configiq revised 2026-11-19).** The new data sets are used only for fitting and
-calibration. Accuracy on accuracy-dashboard is reported on the InferenceX units held out for it and on configiq's
-anchor units. configiq is anchor-only: it is not yet documented well enough to train on. Everything else is
-training data for M3.2, used however serves accuracy best. Applied as follows:
+calibration. The dashboard publishes accuracy on anchor units, from InferenceX and configiq. Held InferenceX units
+judge pre-registered changes and return only aggregates (design D9). Everything else is training data for M3.2, used
+however serves accuracy best. Applied as follows:
 - *Roles for new sources.* Each new source's ledger rule draws only training shares (design D9); the split among
-  fit, select and validate is chosen per source. A new source is never reported as accuracy; the dashboard may show
-  how well the fitted model reproduces it, as a training diagnostic labelled as such.
-- *What stays held out.* InferenceX keeps its held and anchor shares unchanged. Every configiq unit is an anchor
-  unit: scored on the dashboard, never fit, selected, validated or held, and never used to judge a change. Accuracy
-  figures come only from these.
+  fit, select and validate is chosen per source (Table 1.4). A new source is never reported as accuracy; the
+  dashboard may show how well the fitted model reproduces it, as a training diagnostic labelled as such.
+- *What stays held out.* InferenceX keeps its held and anchor shares unchanged. configiq is anchor-only (Terms): it
+  is never fit, selected, validated or held, and accuracy figures come only from anchor units.
 - *Everything else is training data* (design D9): the training shares of InferenceX, the internal
   experiments, any source added under §1.3, and all of AISimulate, its sweeps and its forward-pass set. AISimulate's
-  sweeps lose their held share (20% of files today) to training roles (Table DC "Partition version").
+  sweeps lose their held share (20% of files at M3.1) to training roles (Table DC "Partition version").
 - *The landing gate is whole-run.* Changes land on held InferenceX units only, through the whole-run gate
-  (design VAL-6, §13.5). A worse lane fails the change; a maintainer may land it only after recording the regression as a defect in another
-  term (VAL-11). Operator-level method error on validate units is reported nightly and never decides a landing.
+  (design VAL-6, §13.5). A worse lane fails the change; a maintainer may land it only after recording the regression
+  as a defect in another term (VAL-11). Operator-level method error on validate units is reported nightly and never
+  decides a landing.
 - *No double use* (X8). A coefficient is never selected or graded on the units that fit it, and selection uses the
   select and validate shares only.
 
-1.5 **Decided (rule); Open (thresholds).** Calibration acceptance gates are fixed before any fit (VAL-6: the split
-and the success criteria are committed first; design §12.3: a pre-registration is committed before any held-out data
-is read). Before any fitting reads these sources, fix:
-- the baseline each fit must beat;
+**Proposal. The unit of each new source** (design §12.2, "Define the unit"), from `evidence/INVENTORY.md` and
+`evidence/SETTINGS-PROVENANCE.md`. The cut-points allot training roles only; start from AISimulate's forward-pass
+shares (fit 0 to 69, select 70 to 84, validate 85 to 99; `substrate/catalog/ledger/ledger.yaml`). If the evidence
+shows that near-copies fall in different roles (T-D2), widen the role key before any fit.
+
+**Table 1.4. The unit and role key of each new source.**
+
+| Source | Unit | Role key |
+|---|---|---|
+| vLLM CI perf API | one row per benchmark configuration at one commit (the row's model, device, `tp`, `conc`, `isl`, `osl` and precision, with the recipe's `serve_args`) | commit, model, hardware, benchmark name and configuration hash |
+| SGLang nightly metrics and logs | one test case in one nightly run, with its batch-size rows | commit, test name, model and hardware |
+| SGLang traces | one trace file (`traces/<run_id>/...`: one batch size and input length, rank 0) | the file |
+
+1.5 **Decided (rule); Open (thresholds), with a default.** Calibration acceptance gates are fixed before any fit
+(VAL-6: the split and the success criteria are committed first; design §12.3: a pre-registration is committed before
+any held-out data is read). **Default until the maintainer sets others:** the non-inferiority margins and thresholds
+of design VAL-6 and of the invariant registry, with the success criteria committed in each pre-registration. That
+default fixes:
+- the baseline each fit must beat (the registry at the previous release);
 - the error metric, and the slices it must be reported on (at least engine, chip and workload);
 - the minimum number of role keys per slice for a verdict (`min_points`, design COV-13);
-- the largest accuracy loss allowed on any other engine or chip;
+- the largest accuracy loss allowed on any other engine or chip (the margin d);
 - the held-out verdict, evaluated once, after selection;
-- the rule for revising or reverting.
-The thresholds are **Open**. Owner: the maintainer, who sets them in a pull request merged before any fit reads the
-new sources (Table W row 18). No fit starts before then.
+- the rule for revising or reverting (one pre-registered retry, then revert).
+Owner: the maintainer, who may set other thresholds in a pull request merged before any fit reads the new sources
+(Table W row 18). Row 18 does not wait for that decision.
 
 1.6 **Decided (2026-11-18). No new GPU or cluster experiments, with no exceptions.** M3.2 fits, selects,
 validates and evaluates only on data that already exists: the sources this section names. Where no source
@@ -423,7 +469,8 @@ traces' job logs have expired.**
 
 2.4 **Decided.** Confirm these before any fit (Table W row 14): the statistic `aggregate_perf.py` takes over
 repetitions; `vllm bench`'s seed and range ratio at each commit; and how a recipe's revision is matched to a row's
-date when the recipe changed on that day.
+date when the recipe changed on that day. Record each in the cell of Table 2.3 that it settles, citing the file and
+commit read.
 
 ## 3. Which engine the data improves
 
@@ -434,7 +481,7 @@ others are not.
 3.2 **Decided.** Kernel coefficients stay keyed by kernel implementation, so SGLang data fits vLLM's
 value wherever both engines run the same implementation. Engine-path costs (host, scheduler, launch, CUDA-graph
 replay) are keyed by the identity of the code that does the work, so each engine has its own value without an
-engine name in the substrate (X2: no engine name or policy in the substrate). Today host overheads are scoped by
+engine name in the substrate (X2: no engine name or policy in the substrate). In M3.1 host overheads are scoped by
 hardware and model only; M3.2 builds the key (design §9.2, VAL-8; Table DC, code identity and host CPU).
 
 ## 3A. Maximise scorable coverage
@@ -464,7 +511,7 @@ kept, otherwise the recipe at the run's commit; a private archive; never committ
 - 949 in-scope anchor units inside the age limit are missing from the dashboard nightly because the API no longer
   serves their superseded measurement; the dump supplies them;
 - inputs that expire (GitHub job logs and artifacts, about 90 days; SGLang's job logs and metrics artifacts; agentic
-  exports) are archived privately as they are pulled, starting now, before M3.2 starts, so their history keeps
+  exports) are archived privately as they are pulled, before any other row starts, so their history keeps
   growing instead of rolling off (Table W row 11). Tritonbench (90 days) and SGLang's AMD P/D artifacts (30 days)
   join the archive if §1.3 brings them in.
 
@@ -497,20 +544,22 @@ points. Table 3A.8 gives upper bounds from the dashboard nightly of 2026-11-18 a
 **Table 3A.8. Scored InferenceX anchor units could grow from 238 to about 2,800, or up to about 4,700; configiq's
 anchor units could grow from none to between about 373 and about 1,257.**
 
-| | Today | M3.2 ceiling | What opens it |
+| | On 2026-11-18 | M3.2 ceiling | What opens it |
 |---|---|---|---|
-| InferenceX anchor units scored | 238 | about 2,800; up to about 4,700 | the list below |
+| InferenceX anchor units scored | 238 | about 2,800; up to about 4,700 (the sum below) | the sum below |
 | InferenceX held units | not on the dashboard | about 1.5 times the anchor units | the same sources; held units are 1.5 times anchor units both for new units (30% and 20%) and within the older held group (60% and 40%) |
-| configiq anchor units (all configiq units are anchor units) | none, until they are published (below) | about 373 if only forge-written H200 and B200 units are scored (current revision, §3C.1); about 1,257 if all H200 and B200 units are (pinned revision). Every configiq unit is an anchor unit, so these are the full counts | §3C's rule for each writer; the points are provisional (below). Every unit is an anchor, so no draw applies |
+| configiq anchor units | none, until they are published (below) | about 373 if only forge-written H200 and B200 units are scored (family A, current revision, §3C.1); about 1,257 if all H200 and B200 units are (pinned revision, §3C.6) | §3C's rule for each writer; the points are provisional (below) |
 
-The InferenceX anchor ceiling adds up as follows:
-- the 238 scored today;
-- 329 unscored anchor units inside the age limit that are not TRT-LLM;
-- 1,143 vLLM-family and 863 SGLang-family anchor units from 2026-02 on that are older than the age limit or
-  superseded;
-- about 220 anchor units among the post-dump rows (20% of about 1,090 vLLM- and SGLang-family units);
-- that gives about 2,800. Up to 1,913 more SGLang-family anchor units from before 2026-02 count if their recipes at
-  the run's commit still resolve, for about 4,700.
+**The InferenceX anchor ceiling.**
+
+| Part | Anchor units |
+|---|---|
+| scored on 2026-11-18 | 238 |
+| unscored, inside the age limit, not TRT-LLM | 329 |
+| vLLM-family 1,143 and SGLang-family 863, from 2026-02 on, older than the age limit or superseded | 2,006 |
+| post-dump rows (20% of about 1,090 vLLM- and SGLang-family units) | about 220 |
+| **Ceiling** | **about 2,800** |
+| SGLang-family units from before 2026-02, if their recipes at the run's commit still resolve | up to 1,913 more, for about 4,700 |
 
 TRT-LLM's 4,938 in-scope anchor units stay refused.
 
@@ -549,7 +598,7 @@ rule: the attribute list, the point count, role-key count and coverage beside ea
 **role keys** (not points), below which no aggregate is shown at any level. M3.2 builds it in accuracy-dashboard
 (accuracy-dashboard#160; Table W row 19).
 
-Today the dashboard nightly's summary breaks counts down by engine, engine release, chip and grade, and the dashboard
+At M3.1 the dashboard nightly's summary breaks counts down by engine, engine release, chip and grade, and the dashboard
 filters only on multi-node runs and on the estimate tier (whether a point's values were estimated), over a fixed
 grouping by model, hardware and framework. It shows a bare "too few points" for any figure over fewer than 10 points,
 while the per-point table still lists every measurement. The test is COV-13's: ten points from two role keys render no
@@ -571,7 +620,7 @@ from a free-text `runtime_args` field with a regular expression, which misses sp
 flags. So a blank in a manually imported or earlier-launcher row can hide a value the run set. A blank
 `prefix_caching` never means "on".
 
-configiq is anchor-only (§1.4). Its settings are needed to score its anchor points, never to calibrate.
+Its settings are needed to score its anchor points, never to calibrate.
 
 The rules 3C.1 to 3C.7 are **Proposal**, pending the team's answers. The correction above is a finding from the code, checked by hand.
 
@@ -587,7 +636,7 @@ is the earlier launcher and older manual imports: 803 units. No family B was fou
   `max_num_batched_tokens`, precision);
 - the run's frame from forge's history: a concurrent load profile, a measurement duration of 275 s from 2026-09-22,
   the warm-up and ramp-up then in force, the GuideLLM release, seed 42, `ignore_eos`, and streaming.
-This replaces today's preset match, which misses `cpt.yaml`. The points are provisional (design COV-7; §3A.8).
+This replaces the preset match of M3.1, which misses `cpt.yaml`. The points are provisional (design COV-7; §3A.8).
 
 3C.3 **Proposal. Family D: fill only what the public benchmark guide and the earlier launcher's defaults support.** That is prefix
 caching off, and a measurement duration of 450 s or 600 s, when `max_seq_len` is 8192 or 10000 and memory
@@ -600,8 +649,10 @@ concurrency-1 row must agree with the frame used. Only successful requests are c
 3C.5 **Proposal. Model each configiq workload as it ran**: the multi-turn shapes (`benchconf`'s `interactive-chat`, with a
 first prompt of about 4,000 tokens and 45 s between turns) and the prefix workloads.
 
-3C.6 **Proposal. Pin the dataset revision.** The dataset is not append-only: 444 rows were removed between two
-revisions. Treat the 63 duplicated units as possibly from different clusters.
+3C.6 **Proposal. Pin the dataset revision the ledger already pins: `21cc6eb`, with 1,702 units** (Table W row 17).
+The dataset is not append-only: 444 rows were removed between two revisions. Treat the 63 duplicated units as possibly
+from different clusters. Score family A first; families C and D follow under 3C.3 and the answers of §3A.7. Recount
+the families on the pinned revision, since 3C.1 counts the current one.
 
 3C.7 **Proposal. Ask Red Hat**, beyond the questions the maintainer already sent (§3A.7), to:
 - publish an allow-listed `runtime_args`, the image tag, the GuideLLM version, the cluster tag, the start and end
@@ -616,7 +667,7 @@ state, and no CI check reads that text (design process rule). Workflows trigger 
 `opened`, `synchronize` and `reopened`, and on a change of base. An `edited` event triggers nothing (Table W row 22).
 
 4.2 **Decided (2026-11-19).** CI checks product correctness only. The process checks that design v2 made maintainer
-practice are retired, and no check reads an issue (design v2.3.0, X28 and VLM-3; Table DC "Process checks" and
+practice are retired, and no check reads an issue (X28 and VLM-3; Table DC "Process checks" and
 "Stale citations", Table W row 22).
 
 ## 5. Every supported model on every cluster the team uses

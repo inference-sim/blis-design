@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Generate m32/plan.html from its sources, so the plan never drifts from the requirements.
 
-plan.html = plan.preamble.md  (delivered M1-M3.1 summary + abstract, plan-authored)
+plan.html = plan.preamble.md  (objectives and deliverables, plan-authored)
+          + plan.appendix.md   (the execution order, Table W and its notes, and the delivered M1-M3.1 summary;
+                                plan-authored)
           + requirements.md    (THE SOURCE OF TRUTH for every M3.2 number and rule)
-          + plan.appendix.md   (plan-authored execution table)
 
 all rendered to the release-plan gist's HTML style (tools/plan.css).
 
@@ -197,8 +198,8 @@ def build() -> str:
 
     body = "\n".join([
         render(pre_body, headings),
-        render(requirements, headings),
         render(appendix, headings),
+        render(requirements, headings),
     ])
     toc = "\n".join(f'    <li><a href="#{sid}">{html.escape(txt)}</a></li>' for sid, txt in headings)
 
@@ -208,7 +209,7 @@ def build() -> str:
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title)}</title>
-<meta name="description" content="Generated M3.2 plan: delivered M1-M3.1 summary, the requirements body (source of truth), and execution order.">
+<meta name="description" content="Generated M3.2 plan: objectives, deliverables, execution order (Table W), the delivered M1-M3.1 summary, and the requirements (source of truth).">
 {css}
 </head>
 <body>
