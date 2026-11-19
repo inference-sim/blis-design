@@ -31,7 +31,8 @@ Figures are as of 2026-11-18, except the M3.1 status in §0, which is as of 2026
   (`catalog/`), the coefficient registry (`registry/`) and the ledger (`catalog/ledger/`).
 - **blis-vllm** and **blis-sglang**: Go models of the vLLM and SGLang engines, each ported from one upstream
   version. Each is an **engine module**.
-- **blis-kvstore**: reserved for models of KV-cache store packages such as Mooncake and LMCache. It is empty.
+- **blis-kvstore**: reserved for models of external KV-cache stores such as Mooncake and LMCache. It is empty, and
+  stays outside M3.2 and design v2.0.0 (maintainer, 2026-11-19); a later MINOR design version can add it.
 - **The router fork**: inference-sim's fork of llm-d's router (`llm-d-router`, branch `llm-d-r`).
 - **accuracy-dashboard**: scores simulated runs against measured runs and publishes accuracy.
 - **blis-config-search**: searches deployment configurations with the simulator.
@@ -55,9 +56,9 @@ Figures are as of 2026-11-18, except the M3.1 status in §0, which is as of 2026
   InferenceX rows published after the dump and added to the ledger one by one, each pinned by its row id and the
   SHA-256 of its content.
 
-**Standing-design rules and sections.** IDs such as X7, SUB-15, LIF-5, COV-6, KVS-2, T-M1 or D6 name rules of the
+**Standing-design rules and sections.** IDs such as X7, SUB-15, LIF-5, COV-6, T-M1 or D6 name rules of the
 standing design (blis-design `main`). The letters group them: X across repositories, SUB substrate, LIF versions and
-releases, COV accuracy coverage, KVS KV stores, VAL coefficients, D the ledger, T a trigger's test. Each citation
+releases, COV accuracy coverage, VAL coefficients, D the ledger, T a trigger's test. Each citation
 here says what the rule requires where that matters. A standing-design section is written "design §n". A bare
 § number is this file's own section (§0 to §5, §3A to §3C); the design changes are DC1 to DC5, without a §.
 
@@ -246,11 +247,12 @@ no new primitive family.
 **Effect.** A new architecture built from existing kinds of layer is onboarded with a graph handler and data, and
 each engine lowers it with the lowering it already has. A new kind of layer still needs new engine lowering.
 
-### DC3. Consolidate blis-substrate, blis-vllm, blis-sglang and blis-kvstore into inference-sim
+### DC3. Consolidate blis-substrate, blis-vllm and blis-sglang into inference-sim
 
-**Proposal.** Move the four repositories into inference-sim as top-level directories. Keep their history with a
+**Proposal.** Move the three repositories into inference-sim as top-level directories. Keep their history with a
 subtree merge, and transfer their open issues.
-- Every moved directory becomes a package of inference-sim's one Go module, the engines and blis-kvstore included.
+- Every moved directory becomes a package of inference-sim's one Go module, the engines included. blis-kvstore,
+  which is empty, stays a separate repository and is not part of DC3 (maintainer, 2026-11-19).
   An engine module is then a directory, not a repository.
 - One part of `contracts/` moves to the router fork instead: the hosting contract, below.
 - These stay separate repositories:
@@ -309,7 +311,7 @@ file or a rule that does not change.**
 
 | Rule | Kept by |
 |---|---|
-| No engine name or policy in blis-substrate (X2); the cost model imports no engine module; no engine module imports another (the blis-sglang card) or blis-kvstore (KVS-2) | an import-graph lint over directories (`go list`), required in CI |
+| No engine name or policy in blis-substrate (X2); the cost model imports no engine module; no engine module imports another (the blis-sglang card) | an import-graph lint over directories (`go list`), required in CI |
 | The router fork depends on no BLIS module (X7, the router card) | the fork's import test, extended to forbid every `github.com/inference-sim/` package |
 | Each area's heavy CI (oracles, mutation sweeps, byte gate) | path-filtered workflows, so a change runs only the jobs of the directories it touches |
 | Review ownership | a `CODEOWNERS` file per directory, and the review agent's questions per area |
@@ -376,9 +378,9 @@ The standing design and the release plan both change. Each row of Table DC5 is o
 
 | Design area | Change | For |
 |---|---|---|
-| design §2 Shape, §2.2 ownership table, the repository tree | the four repositories become directories of inference-sim; the hosting contract moves to the router fork | DC3 |
-| design §5 repository cards | merge the blis-substrate, blis-vllm, blis-sglang and blis-kvstore cards into inference-sim's; the router card gains the hosting contract; restate each check's "Runs in" by directory; move the lowering statements of the engine cards (DC2) | DC2, DC3 |
-| design §6 engine boundary (design §6.1 the rule), X2, KVS-2 | lowering stays engine-only; the same import rules, checked by an import-graph lint over directories | DC2, DC3 |
+| design §2 Shape, §2.2 ownership table, the repository tree | the three repositories become directories of inference-sim; the hosting contract moves to the router fork | DC3 |
+| design §5 repository cards | merge the blis-substrate, blis-vllm and blis-sglang cards into inference-sim's; the blis-kvstore card and the KVS rules leave the design until a MINOR version adds external KV stores; the router card gains the hosting contract; restate each check's "Runs in" by directory; move the lowering statements of the engine cards (DC2) | DC2, DC3 |
+| design §6 engine boundary (design §6.1 the rule), X2 | lowering stays engine-only; the same import rules, checked by an import-graph lint over directories | DC2, DC3 |
 | X7 and the router card | the router fork depends on no BLIS module, and owns the hosting contract and its conformance suite | DC3 |
 | SUB-1 and RTR-3 (contracts change only compatibly; the router's API diff) | the hosting contract's compatibility check and API diff run in the router fork, against its own history | DC3 |
 | X11 (pins are exact commits; engines use only the router contract in `contracts/embed`) | the router contract's new home in the fork; the one pin among the repositories that build together | DC3 |

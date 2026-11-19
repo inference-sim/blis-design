@@ -25,7 +25,7 @@ its review closes, and row 1 changes the owner of most other rows if adopted.**
 
 | # | Workstream | Owner repositories | Depends on rows |
 |---|---|---|---|
-| 1 | *If DC3 is adopted:* consolidate blis-substrate, blis-vllm, blis-sglang and blis-kvstore into inference-sim (DC3) | blis-design, the four repositories, inference-sim, the router fork | a sizing first |
+| 1 | *If DC3 is adopted:* consolidate blis-substrate, blis-vllm and blis-sglang into inference-sim (DC3) | blis-design, the three repositories, inference-sim, the router fork | a sizing first |
 | 2 | *If DC1 is adopted:* engines model an upstream commit; model backports; the upgrade report (DC1) | blis-design, blis-vllm, blis-sglang | 1, if adopted |
 | 3 | *If DC2 is adopted:* lowering out of the graph deriver; the `contracts/rules/` removal if Q3 brings it in (DC2) | blis-design, blis-substrate, blis-vllm, blis-sglang | 1, if adopted |
 | 4 | Mistral-Large-4 and Inkling-2-Small on GB200: engine upgrade, catalog entries, model support, coefficients (DC4) | blis-vllm, blis-substrate | 2, or the v0.34.0 and v0.35 upgrades |
