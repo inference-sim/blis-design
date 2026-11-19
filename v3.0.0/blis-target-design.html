@@ -1810,7 +1810,7 @@ Every step keeps the category and thinking mode, apart from a fallback category 
 <li>If the pull request changes only files under <code>substrate/catalog/</code> and <code>substrate/registry/</code>, both trees load under the released simulator&rsquo;s validators, and the code outside those directories at the merge base is identical to the code of the release, the gate runs the released simulator twice, once per tree. No rebuild is needed. If <code>main</code> carries unreleased code changes, the next case applies, so the data are judged with the code they will ship with.</li>
 <li>Otherwise, as when the pull request changes the cost model or an engine module, or uses a data field the released simulator cannot read, the job builds one simulator from the base and one from the candidate, and each runs on its own tree.</li>
 </ul>
-<p>Before a release is cut, the whole-run gate job runs once more, comparing the release candidate with the previous release, and with the best published release for each lane, on held units. A lane that fails the test of <span class="inv">VAL-6</span> against either fails the check, unless <span class="inv">VAL-11</span> applies.</p>
+<p>Before a release is cut, the whole-run gate job runs once more, comparing the release candidate with the previous release, and with the best published release for each lane, on held units. A lane that fails the test of <span class="inv">VAL-6</span> against either fails the check. A maintainer may still cut the release only after recording each such lane as one defect in another term (<span class="inv">VAL-11</span>).</p>
 <p>The gate job runs on pull requests that carry a pre-registration, and again nightly on the full data. </p>
 
 <h3 id="s13-6">13.6 Releases</h3>
