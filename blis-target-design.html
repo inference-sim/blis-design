@@ -450,7 +450,7 @@ footer{font-family:var(--sans);font-size:.82rem;color:var(--muted);border-top:1p
 <li><b>What stays fixed.</b> A model runs only if it is in the catalog in use, and it is resolved from its <code>graph.yaml</code>. A missing model is refused with the catalog's source (the embedded release, or a path) and the relative path its entry belongs at. No run creates or changes catalog or coefficient registry files, no run fetches anything from the network, and the deployment always comes from a required scenario.</li>
 </ul>
 <p>The two flags are independent. A run may, for example, use the embedded catalog with a candidate coefficient registry.</p>
-<p><b>Private additions.</b> To run a private model against released data, <code>--catalog-overlay &lt;dir&gt;</code> and <code>--registry-overlay &lt;dir&gt;</code> add entries to the data in use. An entry is identified as follows:</p>
+<p><b>Private additions.</b> To run a private model against a pinned catalog and registry, <code>--catalog-overlay &lt;dir&gt;</code> and <code>--registry-overlay &lt;dir&gt;</code> add entries to the data in use. An entry is identified as follows:</p>
 <ul>
 <li>In the catalog, a whole model directory (<code>models/&lt;name&gt;/</code>), or a whole hardware, device, network or workload file.</li>
 <li>In the coefficient registry, one coefficient, identified by its set, its name, its scope and its method.</li>
@@ -477,14 +477,14 @@ footer{font-family:var(--sans);font-size:.82rem;color:var(--muted);border-top:1p
 <li>its content hash;</li>
 <li>the hash of each overlay, and the hash of the combined data. With no overlay the combined hash is the base hash. Otherwise it is the SHA-256 of the line <code>&lt;base hash&gt;  base</code> followed by one line <code>&lt;overlay hash&gt;  overlay</code> for each overlay in the order applied, each line ending in a line feed, so it names the base and every overlay and their order.</li>
 </ul>
-<p>It also records the build the simulator came from: an <code>inference-sim</code> release, or <code>unreleased</code>.</p>
-<p>A run uses released data when all of these hold:</p>
+<p>It also records the build the simulator came from: the <code>inference-sim</code> release tag, or the commit it was built from.</p>
+<p>A run is exactly pinned when all of these hold:</p>
 <ul>
-<li>the simulator is an <code>inference-sim</code> release, whose <code>stack.json</code> names the substrate commit it pins;</li>
-<li>the catalog and coefficient registry hashes equal that substrate release's embedded hashes;</li>
-<li>no overlay is used.</li>
+<li>the simulator is an <code>inference-sim</code> release tag or a full commit of it, and its <code>stack.json</code> names the commit of every module it pins (<span class="inv">X11</span>); a tag is one way to name a commit, a pseudo-version another, and a branch names none;</li>
+<li>the catalog and coefficient registry hashes equal the embedded hashes of the substrate commit that <code>stack.json</code> names;</li>
+<li>no overlay is used, and the simulator was built from a committed tree with no uncommitted change.</li>
 </ul>
-<p>Every other run is experimental, including every run from stack CI, a local build or <code>go run</code>. Only released-data results are published (<span class="inv">X8</span>).</p>
+<p>Every other run is experimental, including every run with an overlay and every run from a tree with uncommitted changes. Only exactly pinned results are published (<span class="inv">X8</span>). An <code>inference-sim</code> tag still names a release, which the dashboard scores once (<span class="inv">COV-9</span>); a commit pin is not a release, and a published number records the commit it came from.</p>
 
 <h4>Checking data at load</h4>
 <p>Whatever its source, the data is validated when it is loaded, by the same validators CI runs. That includes the checks <em>between</em> the catalog and the coefficient registry, for example that every chip a coefficient names exists in the catalog in use. A candidate coefficient registry that does not fit the catalog it runs with is refused.</p>
@@ -600,12 +600,12 @@ footer{font-family:var(--sans);font-size:.82rem;color:var(--muted);border-top:1p
 <span class="enf"><b>Review guidance.</b> Does this change give a second home to a fact another repository owns? <b>Expertise:</b> expertise in the changed repository. <b>Applies when:</b> a pull request adds a literal list or table, or a constant that cites another repository.</span></li>
 
 <li><span class="inv">X8</span> <b>Every number is reproducible, and no data point both fits and judges.</b>
-<span class="stmt">Every number records the exact versions and data it came from, and can be regenerated from them. A <em>published</em> number, meaning one on the dashboard or in a committed report, is computed from released data only (§3.3). No data point used to fit or choose a value is used to evaluate it (<a href="#s10">§10</a>).</span>
+<span class="stmt">Every number records the exact versions and data it came from, and can be regenerated from them. A <em>published</em> number, meaning one on the dashboard or in a committed report, is computed from exactly pinned versions and data only (§3.3): a tag or a full commit for every module and data source, and no overlay or uncommitted change. No data point used to fit or choose a value is used to evaluate it (<a href="#s10">§10</a>).</span>
 <div class="tbl"><table><thead><tr><th>Check</th><th>Runs in</th></tr></thead><tbody>
 <tr><td>No ledger unit is cited under two roles by any fit, gate or dashboard point.</td><td>the nightly run of <code>blis-substrate</code>'s gate job, over every consumer's recorded unit reads (<span class="inv">D2</span>)</td></tr>
 <tr><td>Every data source is pinned to an exact revision.</td><td>blis-substrate</td></tr>
-<tr><td>Every <code>Result</code> records the module versions, the source and content hash of the catalog and the coefficient registry, any overlay hashes, and whether the run used released data.</td><td>inference-sim</td></tr>
-<tr><td>The dashboard and committed config-search reports accept only released-data results; an experimental result is refused.</td><td>accuracy-dashboard, blis-config-search</td></tr>
+<tr><td>Every <code>Result</code> records the module versions (a tag or a full commit), the source and content hash of the catalog and the coefficient registry, and any overlay hashes.</td><td>inference-sim</td></tr>
+<tr><td>The dashboard and committed config-search reports accept only exactly pinned results (§3.3); an experimental result is refused.</td><td>accuracy-dashboard, blis-config-search</td></tr>
 <tr><td>Every published number carries its data units.</td><td>accuracy-dashboard, blis-config-search</td></tr>
 <tr><td>Published numbers regenerate: on redistributable fixtures on every pull request, on the full data nightly.</td><td>blis-substrate, blis-config-search, accuracy-dashboard</td></tr>
 <tr><td>An accuracy change's success criteria are committed before any commit that reads its held-out data.</td><td>any repository landing an accuracy change</td></tr>
@@ -1554,9 +1554,9 @@ type Store interface {
 <tr><td>CI, for a pull request declared a refactor</td><td>the recorded configurations of every ledger unit, with no measured values read</td><td>for each point, only whether the simulation is identical to the base (<span class="inv">X13</span>)</td></tr>
 <tr><td>the select job, for a candidate</td><td><code>select</code> units</td><td>aggregates only</td></tr>
 <tr><td>the gate job, for a pre-registered change</td><td><code>held</code> units</td><td>aggregates only; one evaluation per pre-registration, and any further one is counted (§10.2)</td></tr>
-<tr><td>the nightly dashboard run</td><td><code>anchor</code> units, for released data</td><td>the published dashboard</td></tr>
+<tr><td>the nightly dashboard run</td><td><code>anchor</code> units, for exactly pinned data</td><td>the published dashboard</td></tr>
 </tbody></table></div>
-<p>A figure computed on a branch is labelled with its build and its data, as every <code>Result</code> is (<span class="inv">X8</span>), and is labelled experimental unless both are released. So it can be posted on a pull request, but never published as BLIS's accuracy.</p>
+<p>A figure computed on a branch is labelled with its build and its data, as every <code>Result</code> is (<span class="inv">X8</span>), and is labelled experimental unless both are exactly pinned and no overlay was used. So it can be posted on a pull request, but never published as BLIS's accuracy.</p>
 
 <h3 id="s11-8">11.8 Invariants</h3>
 <ul class="invlist">
@@ -2102,7 +2102,7 @@ type Store interface {
 <tr><td><b>Release branch</b></td><td>A branch <code>release-&lt;upstream&gt;</code> in an upstream-tracking repository, or <code>release-vX.Y</code> in <code>inference-sim</code>, kept for fixes to an upstream release after <code>main</code> moves to the next one (<a href="#s14-4">§14.4</a>).</td></tr>
 <tr><td><b>Release owner</b></td><td>A person with write access to a repository who cuts a release by the manual procedure when the release bot is unavailable (§13.6), with standard git or the hosting service's interface.</td></tr>
 <tr><td><b>Release watcher</b></td><td>The scheduled job in each upstream-tracking repository that detects new upstream releases and opens the upgrade pull request (§12.4).</td></tr>
-<tr><td><b>Released data, experimental data</b></td><td>A run uses released data when the simulator is a tagged <code>inference-sim</code> release, its catalog and coefficient registry hashes equal the embedded hashes of that release's substrate, and it uses no overlay. Any other run is experimental. Only released-data results are published.</td></tr>
+<tr><td><b>Exactly pinned, experimental</b></td><td>A run is exactly pinned when the simulator is an <code>inference-sim</code> release tag or a full commit, its <code>stack.json</code> names the commit of every module, its catalog and coefficient registry hashes equal the embedded hashes of that substrate commit, and it uses no overlay and no uncommitted change. Any other run is experimental. Only exactly pinned results are published.</td></tr>
 <tr><td><b>Replication</b></td><td>One run of a scenario with its own scenario seed. Several replications give a confidence interval (§8.8).</td></tr>
 <tr><td><b>Result</b></td><td>The structured output of one run, written as JSON, including everything the run used (§3.3).</td></tr>
 <tr><td><b>Review question</b></td><td>A yes/no question, attached to an invariant, that the review agent applies to a pull request and answers in a review comment with the files and lines that support the answer (§13.2). It is guidance and never a check: it fails no CI job and waits for no person. Its expertise line names the knowledge the agent brings, and its applies-when line says which changes it covers.</td></tr>
