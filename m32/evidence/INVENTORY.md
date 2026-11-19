@@ -12,7 +12,7 @@ is concurrency 128; ISL/OSL are input and output lengths in tokens.
     on AMD parts; none on H100.
   - Workload: `vllm bench serve` with random prompts and `--ignore-eos`, mostly ISL 8192 and OSL 1024 at c128, some
     ISL 50000 and OSL 1000 at concurrency 2 to 64.
-  - Metrics: mean, median and p99 of TTFT, TPOT and ITL, in seconds (verified in `perf-eval`'s ingest code), and
+  - Metrics: mean, median and p99 of TTFT, TPOT and ITL (inter-token latency), in seconds (verified in `perf-eval`'s ingest code), and
     throughput.
   - Engine commit: the row's image tag names a vLLM commit, except a few rows tagged `nightly` or `v0.25.0`.
   - Data, expert parallelism, MTP and KV dtype are only in `vllm-project/perf-eval`'s

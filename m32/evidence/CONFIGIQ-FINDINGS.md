@@ -96,27 +96,5 @@ ledger's pinned revision, `21cc6eb`, has 1,702 units.
   `config.yaml` until commit `117e2386`. Older rows come from Model Furnace or manual imports; the only public
   description of those runs is `LLM-inference-benchmark-guide`.
 
-## What can be recovered
-
-- **Family A** (779 units, 373 on H200 or B200): every blank, from the CPT and from vLLM's defaults per release and
-  device, and the frame from `cpt.yaml`'s history (a 275 s duration).
-- **Family D**, where `max_seq_len` is 8192 or 10000 and memory utilisation is 0.92: prefix caching off, and a 450 s
-  or 600 s duration (medium confidence).
-- **Not recoverable:** data parallelism in families C and D, the cluster, the image as opposed to the label, and the
-  actual first-turn prompt length of configiq's multi-turn workloads.
-
-## What would raise coverage and closeness
-
-1. Read blanks by family, instead of refusing every blank.
-2. Treat `cpt.yaml` and the presets as presets, matched on model, TP, KV dtype and request type, and dated by
-   forge's commits.
-3. Never read a blank `prefix_caching` as on.
-4. Derive each unit's duration from its concurrency-1 row, and compare successful requests only: the 8000/800 rows
-   have many errored requests.
-5. Model the multi-turn workloads with their actual shapes (`benchconf`'s `configs/configiq/interactive-chat.yaml`:
-   a first prompt of about 4,000 tokens, and 45 s between turns).
-6. Treat a family C or D row with TP 1 as possibly data-parallel.
-7. Ask Red Hat to publish an allow-listed `runtime_args`, the image tag, the GuideLLM version, the cluster tag, the
-   start and end times, DP and the turn index; to fix the case mismatch that drops DP; and to publish more of the
-   roughly 52 models the CSV holds (10 are published).
-8. Pin a revision, and treat the 63 duplicated units as possibly from different clusters.
+Not recoverable: data parallelism in families C and D, the cluster, the image as opposed to the label, and the actual
+first-turn prompt length of configiq's multi-turn workloads.

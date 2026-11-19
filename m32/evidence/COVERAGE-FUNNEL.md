@@ -1,7 +1,7 @@
 # Why few InferenceX and configiq units are scored
 
 Checked 2026-11-18 and 2026-11-19. Sources:
-- the accuracy-dashboard summary of the nightly `2026-11-18_blis-v0.18.0_ix-api-2026-11-18` (inference-sim v0.18.0,
+- the accuracy-dashboard summary of the dashboard nightly `2026-11-18_blis-v0.18.0_ix-api-2026-11-18` (inference-sim v0.18.0,
   the M3.0 release);
 - blis-substrate's ledger on `main` (`catalog/ledger/`);
 - the InferenceX API, fetched 2026-11-18.
@@ -19,12 +19,12 @@ Checked 2026-11-18 and 2026-11-19. Sources:
 | Scored | 238 | all G4 |
 | Not scored: older than the 180-day age limit | 11,555 | measured before 2026-05-23 |
 | Not scored: inside the age limit, but the API no longer serves the row | 949 | a newer measurement of the configuration superseded it |
-| Not scored: in the nightly's pull, refused for another reason | 440 | see Table F3 |
+| Not scored: in the dashboard nightly's pull, refused for another reason | 440 | see Table F3 |
 
 238 + 11,555 + 949 + 440 = 13,182. The dashboard records the second and third causes under one reason,
 `value_not_recorded:not_in_pull_window`.
 
-**Table F2. The in-scope anchor units the nightly did not pull, by engine family and measurement date.**
+**Table F2. The in-scope anchor units the dashboard nightly did not pull, by engine family and measurement date.**
 
 | Family | Before 2026-02 | 2026-02 to the age limit | Inside the age limit, superseded | Total |
 |---|---|---|---|---|
@@ -39,7 +39,7 @@ the 3,758 vLLM-family units before 2026-02 have no server log on the API. Whethe
 checked. SGLang points take their launch command from the recipe at the run's commit, so the 1,913 older
 SGLang-family units may still be recoverable.
 
-**Table F3. The 440 in-scope anchor units the nightly pulled but did not score, by first reason.**
+**Table F3. The 440 in-scope anchor units the dashboard nightly pulled but did not score, by first reason.**
 
 | First reason | Units |
 |---|---|
@@ -71,5 +71,6 @@ would make; 728 of the rows are single-node and not disaggregated. None is a led
   current revision only by coincidence: family A is recognised by prefix caching on.) The run's frame (stop rule, warm-up, measurement duration,
   client version) is never recorded.
 - Today a blank counts as "not recorded" unless the row matches a forge preset. In M3.1, 213 of configiq's training
-  and validation units could be simulated on that basis.
+  and validation units could be simulated on that basis. This 213 is unrelated to the 213 of the 573 vLLM points in AISimulate's
+  matched set that had lost their record (404).
 - configiq's units are not in the published anchor and fit lists on blis-substrate `main`.

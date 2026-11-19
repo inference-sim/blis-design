@@ -18,7 +18,7 @@ Checked 2026-11-18. It backs requirements DC4. Sources:
   - NVFP4 experts, with MXFP8 on some layers;
   - softcaps on the MoE gate and up projections, and a final logit softcap of 30;
   - value normalisation, and clips on the q, k and relative-position projections;
-  - an MTP drafter with a Markov head (`rnn_hidden`, block size 8), run as DSpark.
+  - an MTP (multi-token prediction, a form of drafting) drafter with a Markov head (`rnn_hidden`, block size 8), run as DSpark.
 - **Graph vocabulary.** None is expected to be new at v1's level of detail. The attention residuals and the softcaps
   fit as elementwise nodes, and the drafter follows the catalog's other DSpark drafters. So the catalog work is a
   branch of the existing handler, and does not depend on the engine work.
