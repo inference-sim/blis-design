@@ -1,7 +1,7 @@
 <!-- ============================================================ -->
 <h2 id="s11"><span class="secno">11</span>Accuracy coverage</h2>
 
-<p>When <code>inference-sim</code> releases, the accuracy dashboard scores the new release at its next nightly run, with no change to its own code. It scores every anchor unit and grades how close each comparison is. InferenceX often runs older, nightly or custom engine builds, so an exact comparison is not always possible. BLIS maximises the share of points scored, their accuracy and their closeness to the run, and <span class="inv">COV-15</span> makes this an obligation of every release.</p>
+<p>When <code>inference-sim</code> releases, the accuracy dashboard scores the new release at its next nightly run, with no change to its own code. It scores every anchor unit and grades how close each comparison is. InferenceX often runs older, nightly or custom engine builds, so an exact comparison is not always possible. BLIS maximises the share of points scored, their accuracy and their closeness to the run, and <span class="inv">COV-9</span> makes this an obligation of every release.</p>
 
 <h3 id="s11-1">11.1 Why settings must not be classified by the dashboard</h3>
 <p>A dashboard that keeps its own table of which engine settings are modelled will disagree with the engine. The engine changes, and the table does not. So the dashboard never classifies a setting. The engine module does, in its field list (<span class="inv">VLM-3</span>), and the dashboard reads that list.</p>

@@ -1457,7 +1457,7 @@ Every step keeps the category and thinking mode, apart from a fallback category 
 <!-- ============================================================ -->
 <h2 id="s11"><span class="secno">11</span>Accuracy coverage</h2>
 
-<p>When <code>inference-sim</code> releases, the accuracy dashboard scores the new release at its next nightly run, with no change to its own code. It scores every anchor unit and grades how close each comparison is. InferenceX often runs older, nightly or custom engine builds, so an exact comparison is not always possible. BLIS maximises the share of points scored, their accuracy and their closeness to the run, and <span class="inv">COV-15</span> makes this an obligation of every release.</p>
+<p>When <code>inference-sim</code> releases, the accuracy dashboard scores the new release at its next nightly run, with no change to its own code. It scores every anchor unit and grades how close each comparison is. InferenceX often runs older, nightly or custom engine builds, so an exact comparison is not always possible. BLIS maximises the share of points scored, their accuracy and their closeness to the run, and <span class="inv">COV-9</span> makes this an obligation of every release.</p>
 
 <h3 id="s11-1">11.1 Why settings must not be classified by the dashboard</h3>
 <p>A dashboard that keeps its own table of which engine settings are modelled will disagree with the engine. The engine changes, and the table does not. So the dashboard never classifies a setting. The engine module does, in its field list (<span class="inv">VLM-3</span>), and the dashboard reads that list.</p>
@@ -1719,7 +1719,7 @@ The next engine upgrade drops the backport when the new commit contains it. A ru
 </ol></div></div>
 <div class="row"><div class="k">Done when</div><div class="v"><ul>
 <li><span class="inv">T-B1</span> The capability is engine-independent in the substrate.</li>
-<li><span class="inv">T-B2</span> Each engine models it or refuses it by name, every coefficient it needs has a method, and <span class="inv">COV-15</span> holds.</li>
+<li><span class="inv">T-B2</span> Each engine models it or refuses it by name, every coefficient it needs has a method, and <span class="inv">COV-9</span> holds.</li>
 <li><span class="inv">T-B3</span> Maintainer practice: it is one capability per pull request, never bundled with a model.</li>
 </ul></div></div>
 </div>
@@ -1942,11 +1942,11 @@ The next engine upgrade drops the backport when the new commit contains it. A ru
 <tr><td>Cross-component</td><td><span class="inv">X1</span>–<span class="inv">9</span></td><td>all</td><td><a href="#s4">§4</a></td></tr>
 <tr><td>Other cross-component</td><td><span class="inv">X11</span>–<span class="inv">29</span></td><td>all</td><td><a href="#s4-proc">§4.1</a></td></tr>
 <tr><td>Per component</td><td><span class="inv">SUB-1</span>–<span class="inv">22</span>, <span class="inv">VLM-1</span>–<span class="inv">8</span>, <span class="inv">SGL-1</span>–<span class="inv">7</span>, <span class="inv">RTR-1</span>–<span class="inv">7</span>, <span class="inv">SIM-1</span>–<span class="inv">18</span>, <span class="inv">CFG-1</span>–<span class="inv">6</span></td><td>the named component</td><td><a href="#s5">§5</a></td></tr>
-<tr><td>Fidelity</td><td><span class="inv">FID-1</span>–<span class="inv">14</span></td><td>engine modules</td><td><a href="#s7-7">§7.7</a></td></tr>
-<tr><td>Simulation method</td><td><span class="inv">DEV-1</span>–<span class="inv">13</span></td><td><code>inference-sim</code>, engine modules, router fork, applications</td><td><a href="#s8-10">§8.10</a></td></tr>
+<tr><td>Fidelity</td><td><span class="inv">FID-1</span>–<span class="inv">12</span>, <span class="inv">FID-14</span></td><td>engine modules</td><td><a href="#s7-7">§7.7</a></td></tr>
+<tr><td>Simulation method</td><td><span class="inv">DEV-1</span>–<span class="inv">14</span></td><td><code>inference-sim</code>, engine modules, router fork, applications</td><td><a href="#s8-10">§8.10</a></td></tr>
 <tr><td>Coefficient values</td><td><span class="inv">VAL-1</span>–<span class="inv">11</span></td><td><code>substrate/</code></td><td><a href="#s9-4">§9.4</a></td></tr>
 <tr><td>Data</td><td><span class="inv">D1</span>–<span class="inv">11</span></td><td><code>substrate/</code>, <code>accuracy-dashboard</code></td><td><a href="#s10-4">§10.4</a></td></tr>
-<tr><td>Coverage</td><td><span class="inv">COV-1</span>–<span class="inv">13</span></td><td><code>accuracy-dashboard</code></td><td><a href="#s11-8">§11.8</a></td></tr>
+<tr><td>Coverage</td><td><span class="inv">COV-1</span>–<span class="inv">13</span></td><td><code>accuracy-dashboard</code></td><td><a href="#s11-9">§11.9</a></td></tr>
 <tr><td>Versions</td><td><span class="inv">LIF-1</span>–<span class="inv">3</span>, <span class="inv">LIF-5</span>–<span class="inv">7</span></td><td>all</td><td><a href="#s14-2">§14.2</a></td></tr>
 <tr><td>Trigger outcomes</td><td><span class="inv">T-M1</span>–5, <span class="inv">T-D1</span>–5, <span class="inv">T-A1</span>–4, <span class="inv">T-E1</span>–6, <span class="inv">T-R1</span>–5, <span class="inv">T-N1</span>–3, <span class="inv">T-B1</span>–3, <span class="inv">T-C1</span>, <span class="inv">T-F1</span>, <span class="inv">T-K1</span>, <span class="inv">T-G1</span>–2, <span class="inv">T-S1</span>, <span class="inv">T-L1</span></td><td>one trigger each</td><td><a href="#s12">§12</a></td></tr>
 </tbody></table></div>
@@ -2304,7 +2304,7 @@ The next engine upgrade drops the backport when the new commit contains it. A ru
 <tr><td><code>T-N1</code></td><td>changed</td><td><span class="inv">T-N1</span></td><td>Additions to contracts, catalog and registry that name no engine; every kernel the engine lowers to is priced.</td></tr>
 <tr><td><code>T-N2</code></td><td>kept</td><td><span class="inv">T-N2</span></td><td>Unchanged.</td></tr>
 <tr><td><code>T-B1</code></td><td>kept</td><td><span class="inv">T-B1</span></td><td>Unchanged.</td></tr>
-<tr><td><code>T-B2</code></td><td>changed</td><td><span class="inv">T-B2</span></td><td>Each engine models or refuses the capability; its coefficients have methods; COV-15 holds.</td></tr>
+<tr><td><code>T-B2</code></td><td>changed</td><td><span class="inv">T-B2</span></td><td>Each engine models or refuses the capability; its coefficients have methods; COV-9 holds.</td></tr>
 <tr><td><code>T-B3</code></td><td>changed</td><td><span class="inv">T-B3</span></td><td>One capability per pull request is maintainer practice.</td></tr>
 <tr><td><code>T-C1</code></td><td>kept</td><td><span class="inv">T-C1</span></td><td>Unchanged.</td></tr>
 <tr><td><code>T-P1</code></td><td>merged</td><td><span class="inv">T-E2</span></td><td>An upstream patch release is one more commit under the engine-upgrade procedure (12.4), which T-E2 states; per-engine tags retire.</td></tr>

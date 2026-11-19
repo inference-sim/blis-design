@@ -31,7 +31,7 @@ COV-10	changed	COV-10	No error is zeroed inside measurement noise, and noise is 
 COV-11	changed	COV-11	Every reported value has a role-key count and a 95% cluster-bootstrap interval (11.8); ranking validity is published per workload
 COV-13	new	COV-13	Slicing by any recorded attribute; min_points counts role keys
 T-N1	changed	T-N1	Additions to contracts, catalog and registry that name no engine; every kernel the engine lowers to is priced
-T-B2	changed	T-B2	Each engine models or refuses the capability; its coefficients have methods; COV-15 holds
+T-B2	changed	T-B2	Each engine models or refuses the capability; its coefficients have methods; COV-9 holds
 D1	changed	D1	The review guidance block leaves
 T-M3	changed	T-M3	The Size line leaves
 T-A4	changed	T-A4	The Size line leaves
