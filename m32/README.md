@@ -3,7 +3,8 @@
 Working material for the M3.2 release, started 2026-11-18. This branch is for
 reading and editing; it is never merged into `main`, which holds the standing design.
 
-Start with [`requirements.md`](requirements.md). Its Terms section defines the project's terms. Section DC lists what
+Start with [`plan.html`](plan.html): the objectives, the deliverables and Table W, the execution order. The rules and
+figures are in [`requirements.md`](requirements.md), whose Terms section defines the project's terms. Section DC lists what
 M3.2 builds for [design v4.1.0](https://inference-sim.github.io/blis-design/v4.1.0/blis-target-design.html).
 Section 0 lists what M3.1 left for M3.2. Each requirement carries one of three labels, defined in the requirements.
 
@@ -21,13 +22,15 @@ source only.
 | [`evidence/CONFIGIQ-FINDINGS.md`](evidence/CONFIGIQ-FINDINGS.md) | How Red Hat's configiq rows are produced, and which settings can be recovered (§3C) |
 | [`evidence/NEW-MODELS-GB200.md`](evidence/NEW-MODELS-GB200.md) | What Mistral-Large-4 and Inkling-2-Small need on GB200: no new kinds of layer expected, and kernels with no GB200 measurement (DC4) |
 
+No evidence note backs §5.
+
 The raw downloads behind the notes are not in the repository.
 
 Also here:
-- [`plan.html`](plan.html): the M3.2 plan, generated from `plan.preamble.md`, `requirements.md` and
-  `plan.appendix.md` by [`tools/build_plan.py`](tools/README.md). Never edit it by hand.
-- [`m31-carried.tsv`](m31-carried.tsv): the 150 M3.1 plan issues still open, each with its plan item and any note
-  from the M3.1 review (§0.4).
+- [`plan.html`](plan.html): the M3.2 plan, generated from `plan.preamble.md`, `plan.appendix.md` and
+  `requirements.md` by [`tools/build_plan.py`](tools/README.md). Never edit it by hand.
+- [`m31-carried.tsv`](m31-carried.tsv): the 150 M3.1 plan issues still open, each with its plan item, the Table W row
+  that owns it and any note from the M3.1 review (§0.4).
 
 ## How to contribute
 

@@ -1,151 +1,151 @@
-issue	item	note
-blis-substrate#193	P1	
-blis-substrate#204	P1	
-blis-substrate#340	P1	
-blis-substrate#343	P1	
-blis-substrate#345	P1	
-inference-sim#2145	P1	
-inference-sim#2149	P1	
-inference-sim#2215	P1	
-blis-substrate#331	P2	
-blis-substrate#332	P2	
-blis-substrate#335	P2	
-blis-substrate#337	P2	
-blis-substrate#338	P2	
-inference-sim#1493	H1	#2197 was taken out of the M3.0 build (inference-sim#2137 body); confirm it is in the M3.1 build before closing
-inference-sim#1495	H1	same as #1493
-inference-sim#2052	H1	
-inference-sim#2129	H1	
-accuracy-dashboard#100	B1	
-blis-config-search#129	B1	
-blis-config-search#133	B1	
-blis-sglang#55	B1	
-blis-sglang#91	B1	
-blis-substrate#310	B1	
-blis-vllm#214	B1	
-inference-sim#2152	B1	
-inference-sim#2201	B1	
-inference-sim#2214	B1	fixed by inference-sim#2251 (merged 2026-11-18); confirm the unequal-TP transfer uses the NIC, then close
-blis-substrate#93	A1	
-blis-substrate#114	A1	
-blis-substrate#115	A1	
-blis-substrate#121	A1	
-blis-substrate#134	A1	
-blis-substrate#136	A1	
-blis-substrate#140	A1	
-blis-substrate#152	A1	
-blis-substrate#242	A1	
-blis-vllm#72	A1	
-blis-vllm#161	A1	
-blis-vllm#191	A1	
-accuracy-dashboard#22	C1	
-accuracy-dashboard#58	C1	
-accuracy-dashboard#62	C1	
-accuracy-dashboard#63	C1	
-accuracy-dashboard#65	C1	
-accuracy-dashboard#79	C1	
-accuracy-dashboard#83	C1	
-accuracy-dashboard#87	C1	
-accuracy-dashboard#89	C1	
-accuracy-dashboard#90	C1	
-accuracy-dashboard#110	C1	
-accuracy-dashboard#111	C1	
-blis-sglang#32	C2	
-blis-sglang#38	C2	
-blis-sglang#40	C2	
-blis-sglang#44	C2	
-blis-sglang#49	C2	
-blis-sglang#56	C2	
-blis-sglang#57	C2	
-blis-sglang#61	C2	
-blis-sglang#62	C2	
-blis-sglang#63	C2	
-blis-sglang#64	C2	
-blis-sglang#65	C2	
-blis-sglang#66	C2	
-blis-sglang#67	C2	
-blis-sglang#68	C2	
-blis-sglang#70	C2	
-blis-sglang#71	C2	
-blis-sglang#73	C2	
-blis-sglang#74	C2	
-blis-sglang#75	C2	
-blis-sglang#76	C2	
-blis-sglang#77	C2	
-blis-sglang#84	C2	
-blis-sglang#94	C2	
-blis-config-search#93	S1	
-blis-config-search#94	S1	
-blis-config-search#125	S1	
-blis-config-search#138	S1	
-inference-sim#2216	R1	
-blis-substrate#75	A2	
-blis-substrate#94	A2	
-inference-sim#2094	A2	
-blis-substrate#73	A3	
-blis-substrate#76	A3	
-blis-substrate#132	A3	
-blis-substrate#255	A3	
-blis-substrate#281	A3	
-blis-substrate#294	A3	
-blis-vllm#73	A3	
-blis-vllm#129	A3	
-blis-vllm#158	A3	
-inference-sim#1969	A3	
-accuracy-dashboard#53	C3	
-blis-substrate#41	C3	
-blis-substrate#43	C3	
-inference-sim#2101	C3	
-inference-sim#2103	C3	
-accuracy-dashboard#7	C5	
-blis-substrate#91	C5	
-blis-substrate#105	C5	
-blis-substrate#106	C5	
-blis-substrate#109	C5	
-blis-substrate#126	C5	
-blis-substrate#179	C5	
-blis-substrate#188	C5	
-blis-substrate#245	C5	
-blis-substrate#258	C5	
-blis-substrate#317	C5	
-blis-substrate#118	A4	
-blis-substrate#123	A4	
-blis-substrate#146	A4	
-blis-substrate#150	A4	
-blis-vllm#74	A4	
-blis-vllm#75	A4	
-blis-vllm#108	A4	
-accuracy-dashboard#59	A5	
-accuracy-dashboard#80	A5	
-blis-substrate#144	A5	
-blis-substrate#164	A5	
-inference-sim#2079	A5	fixed by inference-sim#2250 (merged 2026-11-18); only needs closing
-inference-sim#2115	A5	
-inference-sim#2125	A5	
-inference-sim#2136	A5	
-inference-sim#2141	A5	
-inference-sim#2142	A5	
-accuracy-dashboard#61	T1	
-accuracy-dashboard#64	T1	
-accuracy-dashboard#91	T1	
-blis-substrate#48	T1	
-blis-substrate#49	T1	
-blis-substrate#50	T1	
-blis-substrate#51	T1	switch_groups and uplink_oversubscription already exist and price cross-group pulls about 4x (verified on the M3.1 stack); likely closable
-blis-substrate#153	T1	
-blis-substrate#161	T1	
-blis-substrate#346	T1	
-blis-vllm#64	T1	
-inference-sim#1988	T1	
-inference-sim#2126	T1	
-inference-sim#2146	T1	
-inference-sim#2164	T1	
-blis-substrate#307	T2	
-blis-vllm#47	T2	
-blis-vllm#132	T2	
-blis-vllm#146	T2	
-blis-vllm#184	T2	
-blis-vllm#190	T2	
-blis-vllm#204	T2	
-inference-sim#2202	T2	
-inference-sim#2203	T2	
+issue	item	row	note
+blis-substrate#193	P1	2	
+blis-substrate#204	P1	3	
+blis-substrate#340	P1	2	
+blis-substrate#343	P1	22	
+blis-substrate#345	P1	22	
+inference-sim#2145	P1	22	
+inference-sim#2149	P1	22	
+inference-sim#2215	P1	2	
+blis-substrate#331	P2	24 (triage)	
+blis-substrate#332	P2	24 (triage)	
+blis-substrate#335	P2	24 (triage)	
+blis-substrate#337	P2	2	
+blis-substrate#338	P2	24 (triage)	
+inference-sim#1493	H1	24 (triage)	#2197 was taken out of the M3.0 build (inference-sim#2137 body); confirm it is in the M3.1 build before closing
+inference-sim#1495	H1	24 (triage)	same as #1493
+inference-sim#2052	H1	24 (triage)	
+inference-sim#2129	H1	24 (triage)	
+accuracy-dashboard#100	B1	16	
+blis-config-search#129	B1	24 (triage)	
+blis-config-search#133	B1	24 (triage)	
+blis-sglang#55	B1	4	
+blis-sglang#91	B1	4	
+blis-substrate#310	B1	23	
+blis-vllm#214	B1	15	
+inference-sim#2152	B1	24 (triage)	
+inference-sim#2201	B1	24 (triage)	
+inference-sim#2214	B1	24 (close)	fixed by inference-sim#2251 (merged 2026-11-18); confirm the unequal-TP transfer uses the NIC, then close
+blis-substrate#93	A1	29	
+blis-substrate#114	A1	29	
+blis-substrate#115	A1	29	
+blis-substrate#121	A1	29	
+blis-substrate#134	A1	29	
+blis-substrate#136	A1	29	
+blis-substrate#140	A1	23	
+blis-substrate#152	A1	29	
+blis-substrate#242	A1	6	
+blis-vllm#72	A1	29	
+blis-vllm#161	A1	23	
+blis-vllm#191	A1	23	
+accuracy-dashboard#22	C1	16	
+accuracy-dashboard#58	C1	8	
+accuracy-dashboard#62	C1	16	
+accuracy-dashboard#63	C1	16	
+accuracy-dashboard#65	C1	16	
+accuracy-dashboard#79	C1	16	
+accuracy-dashboard#83	C1	16	
+accuracy-dashboard#87	C1	16	
+accuracy-dashboard#89	C1	16	
+accuracy-dashboard#90	C1	10	
+accuracy-dashboard#110	C1	16	
+accuracy-dashboard#111	C1	16	
+blis-sglang#32	C2	15	
+blis-sglang#38	C2	15	
+blis-sglang#40	C2	15	
+blis-sglang#44	C2	15	
+blis-sglang#49	C2	15	
+blis-sglang#56	C2	15	
+blis-sglang#57	C2	4	
+blis-sglang#61	C2	15	
+blis-sglang#62	C2	15	
+blis-sglang#63	C2	15	
+blis-sglang#64	C2	15	
+blis-sglang#65	C2	15	
+blis-sglang#66	C2	15	
+blis-sglang#67	C2	15	
+blis-sglang#68	C2	15	
+blis-sglang#70	C2	15	
+blis-sglang#71	C2	15	
+blis-sglang#73	C2	15	
+blis-sglang#74	C2	15	
+blis-sglang#75	C2	2	
+blis-sglang#76	C2	2	
+blis-sglang#77	C2	4	
+blis-sglang#84	C2	4	
+blis-sglang#94	C2	15	
+blis-config-search#93	S1	20	
+blis-config-search#94	S1	28	
+blis-config-search#125	S1	20	
+blis-config-search#138	S1	28	
+inference-sim#2216	R1	8	
+blis-substrate#75	A2	29	
+blis-substrate#94	A2	29	
+inference-sim#2094	A2	29	
+blis-substrate#73	A3	29	
+blis-substrate#76	A3	29	
+blis-substrate#132	A3	29	
+blis-substrate#255	A3	5	
+blis-substrate#281	A3	5	
+blis-substrate#294	A3	23	
+blis-vllm#73	A3	23	
+blis-vllm#129	A3	23	
+blis-vllm#158	A3	23	
+inference-sim#1969	A3	16	
+accuracy-dashboard#53	C3	16	
+blis-substrate#41	C3	16	
+blis-substrate#43	C3	16	
+inference-sim#2101	C3	24 (close)	superseded: M3.2 removes the `ledger` command (Table DC, Simulator commands); close
+inference-sim#2103	C3	16	
+accuracy-dashboard#7	C5	16	
+blis-substrate#91	C5	15	
+blis-substrate#105	C5	5	
+blis-substrate#106	C5	15	
+blis-substrate#109	C5	15	
+blis-substrate#126	C5	16	
+blis-substrate#179	C5	15	
+blis-substrate#188	C5	15	
+blis-substrate#245	C5	5	
+blis-substrate#258	C5	5	
+blis-substrate#317	C5	15	
+blis-substrate#118	A4	29	
+blis-substrate#123	A4	29	
+blis-substrate#146	A4	29	
+blis-substrate#150	A4	6	
+blis-vllm#74	A4	15	
+blis-vllm#75	A4	15	
+blis-vllm#108	A4	15	
+accuracy-dashboard#59	A5	16	
+accuracy-dashboard#80	A5	16	
+blis-substrate#144	A5	29	
+blis-substrate#164	A5	15	
+inference-sim#2079	A5	24 (close)	fixed by inference-sim#2250 (merged 2026-11-18); only needs closing
+inference-sim#2115	A5	24 (triage)	
+inference-sim#2125	A5	24 (triage)	
+inference-sim#2136	A5	24 (triage)	
+inference-sim#2141	A5	24 (triage)	
+inference-sim#2142	A5	24 (triage)	
+accuracy-dashboard#61	T1	16	
+accuracy-dashboard#64	T1	15	
+accuracy-dashboard#91	T1	24 (triage)	
+blis-substrate#48	T1	28	
+blis-substrate#49	T1	28	
+blis-substrate#50	T1	28	
+blis-substrate#51	T1	24 (close)	switch_groups and uplink_oversubscription already exist and price cross-group pulls about 4x (verified on the M3.1 stack); likely closable
+blis-substrate#153	T1	24 (triage)	
+blis-substrate#161	T1	28	
+blis-substrate#346	T1	28	
+blis-vllm#64	T1	24 (triage)	
+inference-sim#1988	T1	24 (triage)	
+inference-sim#2126	T1	28	
+inference-sim#2146	T1	24 (triage)	
+inference-sim#2164	T1	24 (triage)	
+blis-substrate#307	T2	24 (close)	code merged (blis-substrate#402, blis-vllm#302, inference-sim#2252); close it, or say what remains
+blis-vllm#47	T2	24 (triage)	
+blis-vllm#132	T2	28	
+blis-vllm#146	T2	15	
+blis-vllm#184	T2	15	
+blis-vllm#190	T2	15	
+blis-vllm#204	T2	24 (triage)	
+inference-sim#2202	T2	24 (triage)	
+inference-sim#2203	T2	24 (triage)	
