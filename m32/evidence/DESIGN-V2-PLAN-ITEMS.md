@@ -3,8 +3,7 @@
 Design v2.0.0 states rules, not one upstream release's particulars. The audits of v2.0.0 found the particulars
 below. The design now states the rule that covers each one. The M3.2 implementation supplies each particular,
 mostly through each engine module's surface list and its generators (design §7.5), and the upgrade report
-(design §12.4). Each item names the rule it serves. `requirements.md` section DC (Table DC) builds them. The sources are the audit
-notes in `.blis-m3-tools/M3.2/audits/plan-items.md`; items that appear there more than once are listed once.
+(design §12.4). Each item names the rule it serves. Table DC in `requirements.md` section DC builds them.
 
 The tables group the items by component. In each table, the first column is the item and the second is the
 design rule it serves.
