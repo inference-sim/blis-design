@@ -1,40 +1,92 @@
-## Plan decisions — now in the requirements
+## Execution: ownership and order
 
-The decisions drafted here have been folded into the requirements above, where they are authoritative:
-the small-slice guard (§3B), the configuration-level partition rule (§1.4), the calibration acceptance
-gates (§1.5), and the `blis-config-search#110` disposition (§0.4). This section is kept only as an index
-to them, so the plan carries no decision that the requirements do not.
+Each row of Table W names its owner repositories, the rows that
+must be done first and a condition that shows it is done. Rows 6 and 11 need no other row: start both before any other
+row, and file row 6 first, because rows 9, 15 and 18 need it. Pull-request numbers are filed as each row starts.
 
-## Prerequisites — start now
+**Table W. The 29 workstreams. A row starts when every row in its "Depends on" cell is done. After row 2 lands, a row
+that names blis-substrate, blis-vllm or blis-sglang is done in inference-sim. A step marked (A1) to (A5) is performed under the standing
+authorization of Table A.**
 
-- **Harvest the expiring sources immediately.** The SGLang nightly job logs and `consolidated-metrics`,
-  and Tritonbench, expire at ~90 days. Begin the pinned private archive now, so the window keeps growing
-  instead of rolling off before M3.2 starts.
-- **"No new GPU or cluster runs" has one exception.** The real-vLLM load-timing test (blis-vllm#305)
-  uses already-posted real data, so it is not a new run; the GB200 custom all-reduce (blis-substrate#116)
-  is a genuinely new micro-measurement on GB200 and is the one exception — to be tracked under
-  blis-substrate#116 or a new issue (none is filed for the measurement yet).
+| # | Workstream | Owner repositories | Depends on rows | Done when |
+|---|---|---|---|---|
+| 1 | Size the migration from the actual workflows, checks and open issues (Table DC, Sizing) | inference-sim, blis-substrate, blis-vllm, blis-sglang, the router fork | none | `m32/migration-sizing.md` (blis-design, branch `m32`) lists the workflows, checks and open issues per repository; the checks that name blis-substrate as the hosting contract's home (`hack/embed-apidiff.sh` and its test, `hack/fork-policy/main.go` and `.github/workflows/hosting-lint.yml` in the fork; `contracts/architecture_test.go` and the SUB-1 API-diff check in blis-substrate); the edits to the fork's `go.mod` and `go.sum`, which cost patch budget (`hack/hosting-lint/budget.txt`; new files cost none); the packages `compat/` pulls in (`compat/kernelmodel`, `compat/engine`, `compat/lowering`, `compat/quantization`, `compat/vllmsettings`, `compat/tokenid`, `compat/internal/util`); and the pull-request sequence for rows 2, 3, 5 and 27 |
+| 2 | Migration: the hosting contract to the router fork; blis-substrate, blis-vllm and blis-sglang into inference-sim with history; checks; issue transfer (A4); retire the three repositories (A4) (DC3, Table DC) | the three repositories, inference-sim, the router fork | 1, 27 | the three repositories are archived (A4), their issues are transferred (A4), and inference-sim's CI runs their checks by directory |
+| 3 | Engines model an upstream commit: generators at any commit, the upgrade report, commit identity, commit distance in grading, model backports; no version in a scenario, `inference-sim version` printing the commits a build runs, and the dashboard's scenario writer writing no engine version (LIF-6, SIM-1, design §11.2) (DC1, Table DC); the first upgrade under it, blis-vllm from v0.33.0 to vLLM main `b582592d5a62` (DC4) | blis-vllm, blis-sglang, accuracy-dashboard, inference-sim | 2, 25 | a run on another commit is graded by its commit distance, an upgrade report is generated, a scenario with a version field is refused as an unknown field, and blis-vllm models vLLM `b582592d5a628cc24d3899da1e17f835a346b854`: `stack.json` names it, the upgrade report lists Inkling2ForConditionalGeneration, MistralLarge4ForCausalLM and their DSpark drafters, every oracle tier passes at that commit, T-E1 to T-E6 hold, and the upgrade has passed the whole-run gate |
+| 4 | The vLLM and SGLang particulars of Table DC (tuned MoE configuration, defaults at two commits, platform preferences, KV events, step boundary, backport paths, P/D allocation, radix-tree core, surface lists); the TensorRT-LLM sites are recorded, not built | blis-vllm, blis-sglang | 3 | each particular is in the engine's surface list or generator at its modelled commit |
+| 5 | Lowering out of the graph deriver, into the engine modules; the substrate's `contracts/rules/` removed (not blis-vllm's `rules/`, which row 27 removes); `onboard --plan` removed (DC2, Table DC) | blis-substrate, blis-vllm, blis-sglang | 2 | the deriver writes checkpoint facts only, `contracts/rules/` is gone and `onboard --plan` is gone with its tests and docs |
+| 6 | Engine-path coefficients keyed by the identity of the code that does the work: `CodeID`, `code_paths.json`, `host_cpu` (§3.2, Table DC) | blis-substrate | none | a coefficient lookup fails on a different `CodeID`; every existing value is carried to its new key unchanged, so the byte gate of SIM-4 still passes |
+| 7 | Kernel lists, the cross-generation transfer rule and the ledger's client multiples (Table DC, Substrate and simulator). The transfer rule is validated before any GB200 transfer is used | blis-substrate, inference-sim | 2, 25 | the freshness check passes; the leave-one-generation-out error of the GB200-to-Hopper rule is published as method error (VAL-5); the rule is used only if it beats roofline on the same units, and otherwise transfers rank as roofline |
+| 8 | Simplifications: the `ledger`, `invariants` and `compose` commands removed, the ledger no longer embedded, the gated-config nightly deleted with its environment and secret (A4), the InferenceX regeneration step dropped from the ledger nightly, the maintainer steps in the READMEs and PR template, the stale dashboard comment, the report role removed, one replication by default (Table DC) | inference-sim, blis-substrate, accuracy-dashboard | none | each deletion has merged and CI passes without it; the `config-fetch` environment and its `HF_TOKEN` secret are removed (A4) |
+| 9 | Mistral-Large-4 and Inkling-2-Small on GB200: catalog entries, model support, coefficients (DC4). The agent fetches Mistral-Large-4's gated `config.json` with `fetch_pinned_configs.py` using the token (I1), and the engine upgrade's report is reviewed by a different agent before merge (A1); every NVIDIA preset of the two vLLM recipes at the modelled commit (Table DC4.1) | blis-vllm, blis-substrate | 3, 6, 7, 25 | each scenario simulates on GB200, and a test simulates every NVIDIA preset of the two recipes (Table DC4.1), with every coefficient's method named and every preset argument classified in the field list. BLIS runs no experiment (§1.6). If the team shares measured runs of these models, they are added as a source under §1.3's rules |
+| 10 | Ingestion: the ledger follows each source, and the dump is reconciled with the API (§3A.1, §3A.9) | blis-substrate | none | a scheduled job ingests API rows together with the dump, and the straddling-run test passes |
+| 11 | Moved after M3.2: the archive of sources that expire (§3A.3, follow-on) | none | none | not part of M3.2 |
+| 12 | Count of anchor units whose inputs can be recovered, without simulating (§3A.8) | accuracy-dashboard | none | the count is published on the dashboard's coverage page |
+| 13 | The new calibration sources ingested, with training-only roles and the units of Table 1.4 (§1, §1.4) | blis-substrate | 10 | each source's units are in the ledger, identified as Table 1.4 says, with training roles only |
+| 14 | Settings provenance: each source's scenario writer has a field-against-record test, and the confirmations of §2.4 are made (§2.2, §2.4) | blis-substrate | 13 | every field is tested against its record, and the three confirmations are recorded in the cells of Table 2.3 in `evidence/SETTINGS-PROVENANCE.md`, each citing the file and commit read |
+| 15 | Engine and table coverage: SGLang field list, router table, the settings no engine module models (§3A.4), and the SGLang features refused in M3.1 (blis-sglang#64 to #71) with the other carried issues listed for this row | blis-sglang, blis-vllm, inference-sim, blis-substrate | 6, 25 | each listed blocker is modelled, proven inert, given an estimation rule or refused by name |
+| 16 | Scoring: no age limit, commit distances, funnels for InferenceX and configiq (§3A.2, §3A.5, §3A.6) | accuracy-dashboard | 3, 10, 12, 17, 26 | the funnels publish; no anchor unit is excluded for its date; every anchor unit whose inputs can be fetched (row 12's count) is scored or has a stated G5 reason; the scored count is published |
+| 17 | configiq as a ledger source: the rule for each writer (§3C.1 to §3C.7), and the pinned revision `21cc6eb` (1,702 units). The pin can be done first | blis-substrate, accuracy-dashboard | 10 | each writer's family has a rule, and revision `21cc6eb` is the revision the ledger names |
+| 18 | Calibration acceptance gates fixed in advance, at the defaults of §1.5, and roles drawn per role key (§1.4). Merged before any fit | blis-substrate | 6, 13, 14, 25 | each refit's pre-registration is merged with its success criteria and the margins of VAL-6 and the invariant registry (or the thresholds a maintainer sets in a merged pull request, §1.5), before any fit reads the new sources |
+| 19 | Dashboard: slicing by any attribute, and the rule for small slices (§3B) | accuracy-dashboard | 16 | COV-13's tests pass: ten points from two role keys render no aggregate |
+| 20 | blis-config-search#110, first workstream: nested native speculative settings with recursive provenance (§0.5) | blis-config-search | 15 | provenance round-trips |
+| 21 | blis-config-search#110, other three workstreams: bounded sharding, per-attempt journal, server-series diagnostics (§0.5) | blis-config-search | none | each workstream's test of §0.5 passes |
+| 22 | CI checks product correctness only: an `edited` event triggers nothing, the process checks are retired, and stale citations are updated (§4, Table DC "Process checks" and "Stale citations") | each repository's workflows; the substrate's shared checks | none | an `edited` event triggers nothing; no check reads pull-request text or an issue; the scheduled `blis` workflow is gone; main is green in each repository that exists when the row is done, and in inference-sim after row 2 |
+| 23 | The items moved to M3.2 by decision: GB200 decode cost (blis-vllm#272, blis-substrate#140), KV pool size (blis-vllm#158), blis-substrate#369, blis-sglang#141, and the smaller items of §0.2 and §0.6, with the carried issues listed for this row | as listed | 25 | each item is merged or closed with a record, and each smaller item meets the test written beside it in §0.2 or §0.6 |
+| 24 | Close or move each of the 150 carried M3.1 issues (§0.4) into the row listed for it in `m31-carried.tsv` (Table 0.4b). Close: inference-sim#2214, #2101 and #2079; blis-substrate#51 and #307. Triage (A5): blis-substrate#331, #332, #335, #338, #153; inference-sim#1493, #1495, #2052, #2129, #2152, #2201, #2115, #2125, #2136, #2141, #2142, #1988, #2146, #2164, #2202, #2203; blis-config-search#129, #133; accuracy-dashboard#91; blis-vllm#64, #47, #204 | as listed in `m31-carried.tsv` | 2 | every issue of `m31-carried.tsv` is closed, with its closing pull request, or moved into its row; each triage issue has a recorded decision (A5): keep in M3.2 under a named row, or close with a reason |
+| 25 | The whole-run held-out gate in accuracy-dashboard, and the rule that every accuracy change lands through it (Table DC "Whole-run gate", "Gate as the path"). The gate job holds the partition secret and the agent dispatches it (A3); the evaluation budget for each partition version is decided (A5) and merged (A1) | accuracy-dashboard | 2 | a pre-registered change receives one held evaluation, returned as aggregates on its pull request; the evaluation count is recorded against the partition version's budget (an agent proposes the number from the changes rows 3, 7, 9, 15, 23 and 29 pre-register, in the row's pull request; the budget is decided (A5) and merged (A1), and rows 3, 7, 9, 15, 23 and 29 start only after that merge); the nightly and pre-release runs pass on main |
+| 26 | AISimulate's held units become training roles, configiq's units become anchor 0 to 99 after the D2 join, and the operator-level held-out gate becomes validate-unit reporting (Table DC "Partition version", "Operator-level evidence"). The agent prepares the change and the join report, and writes the new partition version (A3; design §10.2, §13.7) | blis-substrate, accuracy-dashboard | 25 | only InferenceX has a held cut-point, only InferenceX and configiq have an anchor cut-point, every configiq unit that the D2 join shows was never read under a training role is an anchor unit and any unit read that way is left out, and no InferenceX unit changed role |
+| 27 | blis-vllm's compatibility code removed: what the current engine uses from `compat/` moves into `core/` as v0.33.0 code, then `compat/` and blis-vllm's `rules/` (not the substrate's `contracts/rules/`, which row 5 removes) are deleted (Table DC "Compatibility code") | blis-vllm | 1 | `go list -deps ./...` lists neither `compat/` nor blis-vllm's `rules/`, and every oracle tier passes at v0.33.0 |
+| 28 | The cluster matrix: every supported model on H100, H200, B200 and B300 over RoCE or InfiniBand, and on GB200 and GB300 NVL72 racks over InfiniBand or RoCE, in aggregated and P/D serving; RoCE 400G and 800G added to the catalog; the matrix test and the published support matrix (§5, Table DC "Cluster matrix"), with the carried issues listed for this row | blis-substrate, blis-vllm, blis-sglang, inference-sim, blis-config-search | 6, 7, 9, 15, 25 | every cell that the modelled commits can run simulates; a cell BLIS refuses for lack of a modelled feature is listed by issue in the support matrix as a defect, and the count is published; every price names its method; each inference-sim release publishes the support matrix |
+| 29 | Refit both engines on the training data: the new sources (row 13), the training shares of InferenceX, AISimulate and the internal experiments. Shared and engine-specific coefficients are kept as §3 decides. Each refit is pre-registered and lands through the whole-run gate (row 25). It waits for the release (A2) whose release job publishes the new fit list (design §12.2); the agent opens the refit pull requests and stops | blis-substrate (`substrate/registry` after the migration), accuracy-dashboard | 13, 18, 25, 26 | each family's refit has passed the gate or is recorded as a negative result (design §12.3), and the prospective accuracy is reported (design D9) |
 
-## Execution — ownership and sequence
+The steps marked (A1) to (A5) are performed under the standing authorization below (design §13.7). An
+issue listed for a row is worked in that row only where the row's "Done when" covers it; any other issue stays open
+after the row is done.
 
-Still requirements, not yet an executable plan. The carried M3.1 issues are dispositioned
-([`m31-carried.tsv`](m31-carried.tsv)), but the M3.2 work needs an ordered PR sequence. Workstreams in
-dependency order (PR numbers to be assigned at the cut):
+## Standing authorization
 
-| # | Workstream | Owner repo(s) | Depends on |
-|---|---|---|---|
-| 1 | Engine-path coefficient contract — host/scheduler/launch/replay keyed by code identity (§3) | blis-design, blis-substrate | — **(no issue/PR yet; gates every per-engine cost)** |
-| 2 | Ingestion: ledger-follows-source auto-pin + dump/API reconciliation (§3A.1, §3A.9) | blis-substrate | — |
-| 3 | Archival of the expiring sources (start immediately) | blis-substrate | — (not blocked on ingestion) |
-| 4 | New calibration sources ingested, fit-only roles (§1, §1.4) | blis-substrate | 2, 3 |
-| 5 | Input-recoverability census, no simulation (§3A.8) | accuracy-dashboard | — (pre-plan; does not wait on ingestion) |
-| 6 | Engine/table coverage: SGLang field list, router table, vLLM settings tail (§3A.4) | blis-sglang, blis-vllm, inference-sim, blis-substrate | 1 |
-| 7 | Scoring: no age gate, release-distance grades, funnel per source (§3A.2/§3A.5/§3A.6) | accuracy-dashboard | 2, 5 |
-| 8 | configiq as a ledger source, family rule, pinned revision (§3C) | blis-substrate, accuracy-dashboard | 2 |
-| 9 | Calibration acceptance gates + partition rule precommitted | blis-substrate | 1, 4 — before any fit |
-| 10 | Dashboard UI: slicing, small-slice guard, min_points legibility | accuracy-dashboard | 7 |
-| 11 | blis-config-search#110 successors — the four workstreams (§0.4) | blis-config-search | only (i) on 6; (ii)/(iii)/(iv) independent |
-| 12 | CI: a PR text edit must not change merge state (§5) | blis-design + each repo's ci.yml | — |
+This plan records the standing authorization of design §13.7. Merging this plan into `m32` is the maintainer's
+decision. From then on, an agent executing the plan performs each step below with the maintainer's credentials when
+its condition holds, and records what it did on the pull request or issue. The steps marked (A1) to (A5) in Table W
+are performed this way.
 
-Workstream 9's gates must be written and merged **before** any fitting reads the new sources (X8).
-Workstream 1 has no design issue or PR yet and blocks every per-engine cost; file it first.
+**Table A. What the agent may do under this plan, and the condition for each.**
+
+| Item | The agent may | When |
+|---|---|---|
+| A1 | Merge a pull request, using each repository's own merge rules | every required check passes on the head being merged, and a review by a different agent or a person finds no blocker or major issue; the review is posted on the pull request |
+| A2 | Cut an inference-sim release: a signed, annotated tag and a GitHub release | by design LIF-3 exactly, from a commit where every required check passed |
+| A3 | Dispatch the jobs that hold the partition secret (release, select, error and gate jobs), and write the new partition version of row 26 | the agent never reads the secret; the partition version uses only the cut-points this plan states and keeps the secret |
+| A4 | Change repository settings: transfer issues, archive repositories, and remove the environments and secrets this plan retires | only the settings, transfers and archives this plan names |
+| A5 | Decide the defaults this plan leaves to the maintainer: the gate's evaluation budget (row 25) and the triage of the carried issues (row 24) | the decision and its reason are posted on the issue or pull request, and the maintainer may reverse it |
+
+**Input the maintainer gives once.**
+
+| Input | For |
+|---|---|
+| I1. A Hugging Face access token, as a secret of the session | fetching gated model configs, such as Mistral-Large-4's (design X12; row 9) |
+
+**Never authorized.** A change to the design; retiring or publishing a partition secret; a step this plan does not
+name. Each needs the maintainer. M3.2 needs none of them. The maintainer revokes or narrows the authorization by
+editing this section.
+
+## Delivered so far (M1 to M3.1)
+
+M1 and M2 each ended with a milestone release. M3.0 (v0.18.0) and M3.1 (v0.18.1) are releases within M3. From
+M3.1 on, only inference-sim is tagged, and the other repositories are pinned by commit (blis-design#22).
+
+**Table M. Each milestone so far, and each release within M3, ended in an inference-sim release.**
+
+| Milestone | Release | What it delivered |
+|---|---|---|
+| **M1** Foundations | inference-sim v0.16.0 | blis-substrate created; the dashboard's scorer moved onto the Result document; `observe` and `calibrate` removed |
+| **M2** Engine boundary | inference-sim v0.17.0 (blis-vllm v0.32.0-blis.N) | units as types; coverage of what InferenceX serves (catalog onboarding, registry pricing); like-for-like comparison on three axes; blis-vllm publishes `fields.json`. No point reaches G1 |
+| **M3.0** | inference-sim v0.18.0 (blis-vllm v0.33.0-blis.1; blis-sglang v0.5.23-blis.1; router fork v1.0.0-blis.5; blis-substrate v0.15.0) | the port to vLLM v0.33.0; vLLM 0.32 and the engine kind `sglang` refused; the typed engine-settings carrier deleted; the dashboard's M3 baseline per engine, with grade ceilings; SGLang graded, not scored |
+| **M3.1** | inference-sim v0.18.1, released 2026-11-18 (a patch on `release-v0.18`; the other repositories pinned by commit) | the first release to register and run the engine kind `sglang`; seven integration pull requests; review fixes, including the all-reduce price keyed by backend (blis-substrate#373, for blis-substrate#116), p2p transfer at unequal TP, the P/D per-instance measured window, the router check, and the measured Muse DSpark acceptance |
+
+The rows above name the repositories as they were; M3.2 builds the one-repository layout of design v4.2.0 (DC3).
+
+## M3.2 requirements (source of truth)
+
+The rest of this page is `requirements.md`, verbatim. It states every rule and figure that Table W cites.

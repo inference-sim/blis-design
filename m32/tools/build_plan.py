@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Generate m32/plan.html from its sources, so the plan never drifts from the requirements.
 
-plan.html = plan.preamble.md  (delivered M1-M3.1 summary + abstract, plan-authored)
+plan.html = plan.preamble.md  (objectives and deliverables, plan-authored)
+          + plan.appendix.md   (the execution order, Table W and its notes, and the delivered M1-M3.1 summary;
+                                plan-authored)
           + requirements.md    (THE SOURCE OF TRUTH for every M3.2 number and rule)
-          + plan.appendix.md   (plan-authored decisions, prerequisites, execution table)
 
 all rendered to the release-plan gist's HTML style (tools/plan.css).
 
@@ -34,6 +35,27 @@ def slug(text: str) -> str:
     return base if n == 0 else f"{base}-{n}"
 
 
+DESIGN_URL = "https://inference-sim.github.io/blis-design/v4.2.0/blis-target-design.html"
+# Design subsections whose anchor is not s<n>-<m>.
+_DESIGN_ANCHORS = {"s4-1": "s4-proc", "s4-2": "s4-kinds"}
+_DESIGN_REF = re.compile(r"design (§\d+(?:\.\d+)?(?:(?:, | and |, and )§\d+(?:\.\d+)?)*)")
+
+
+def link_design_sections(text: str) -> str:
+    """Turn `design §n.m` (and the `, §x.y` / ` and §x.y` that follow it) into links to the design.
+
+    A bare § number is this file's own section, so only text that says "design" is linked.
+    Text inside an existing link is left alone."""
+    def one(m):
+        return re.sub(
+            r"§(\d+)(?:\.(\d+))?",
+            lambda s: (f'<a href="{DESIGN_URL}#{_DESIGN_ANCHORS.get(f"s{s.group(1)}-{s.group(2)}", f"s{s.group(1)}-{s.group(2)}")}">{s.group(0)}</a>' if s.group(2)
+                       else f'<a href="{DESIGN_URL}#s{s.group(1)}">{s.group(0)}</a>'),
+            m.group(0))
+    parts = re.split(r"(<a .*?</a>)", text)
+    return "".join(p if p.startswith("<a ") else _DESIGN_REF.sub(one, p) for p in parts)
+
+
 def inline(text: str) -> str:
     """Render inline markdown. Code spans are stashed as placeholders so bold/italic/links may
     span them (e.g. **a `code` b**), then restored after the other rules run."""
@@ -47,6 +69,7 @@ def inline(text: str) -> str:
     text = html.escape(text)
     text = re.sub(r"\[([^\]]+)\]\(([^)]+)\)",
                   lambda m: f'<a href="{m.group(2)}">{m.group(1)}</a>', text)
+    text = link_design_sections(text)
     text = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", text)
     text = re.sub(r"(?<![\w*])\*([^*]+?)\*(?![\w*])", r"<i>\1</i>", text)
     text = re.sub(r"\x00(\d+)\x00", lambda m: codes[int(m.group(1))], text)
@@ -175,8 +198,8 @@ def build() -> str:
 
     body = "\n".join([
         render(pre_body, headings),
-        render(requirements, headings),
         render(appendix, headings),
+        render(requirements, headings),
     ])
     toc = "\n".join(f'    <li><a href="#{sid}">{html.escape(txt)}</a></li>' for sid, txt in headings)
 
@@ -186,7 +209,7 @@ def build() -> str:
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title)}</title>
-<meta name="description" content="Generated M3.2 plan: delivered M1-M3.1 summary, the requirements body (source of truth), and plan decisions and execution.">
+<meta name="description" content="Generated M3.2 plan: objectives, deliverables, execution order (Table W), the delivered M1-M3.1 summary, and the requirements (source of truth).">
 {css}
 </head>
 <body>

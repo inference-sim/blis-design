@@ -1,24 +1,38 @@
 # BLIS M3.2: working requirements
 
-Working material for the M3.2 release, started 2026-11-18. It is not yet a design or a plan. This branch is for
-reading and editing only; it is never merged into `main`, which holds only the standing design.
+Working material for the M3.2 release, started 2026-11-18. This branch is for
+reading and editing; it is never merged into `main`, which holds the standing design.
+
+Start with [`plan.html`](plan.html): the objectives, the deliverables and Table W, the execution order. The rules and
+figures are in [`requirements.md`](requirements.md), whose Terms section defines the project's terms. Section DC lists what
+M3.2 builds for [design v4.2.0](https://inference-sim.github.io/blis-design/v4.2.0/blis-target-design.html).
+Section 0 lists what M3.1 left for M3.2. Each requirement carries one of three labels, defined in the requirements.
 
 For a one-page overview of the data sources and the calibration process, download
-[`data-and-calibration.html`](data-and-calibration.html) and open it in a browser. GitHub shows HTML files as
-source only. Then read [`requirements.md`](requirements.md). Section 0 lists what carries over from M3.1. Each requirement
-says whether the maintainer stated it or it is a proposal open to correction.
+[`data-and-calibration.html`](data-and-calibration.html) and open it in a browser; GitHub shows HTML files as
+source only.
 
-[`evidence/`](evidence/) holds the notes the requirements cite:
+**Table R. Each evidence note backs one section of the requirements.**
 
 | File | What it backs |
 |---|---|
-| [`INVENTORY.md`](evidence/INVENTORY.md) | What vLLM, SGLang and PyTorch publish as performance data, and where (§1) |
-| [`SETTINGS-PROVENANCE.md`](evidence/SETTINGS-PROVENANCE.md) | Where each new source records its workload, GPU, model and engine settings (§2) |
-| [`COVERAGE-FUNNEL.md`](evidence/COVERAGE-FUNNEL.md) | Why only 199 InferenceX points and about 213 configiq units are scored today (§3A) |
-| [`CONFIGIQ-FINDINGS.md`](evidence/CONFIGIQ-FINDINGS.md) | How Red Hat's configiq rows are produced, and which settings can be recovered (§3C) |
+| [`evidence/INVENTORY.md`](evidence/INVENTORY.md) | What vLLM, SGLang and PyTorch publish as performance data, and where (§1) |
+| [`evidence/SETTINGS-PROVENANCE.md`](evidence/SETTINGS-PROVENANCE.md) | Where each new source records its workload, GPU, model and engine settings (§2) |
+| [`evidence/COVERAGE-FUNNEL.md`](evidence/COVERAGE-FUNNEL.md) | Why 238 InferenceX anchor units are scored of 13,182 in scope, and how many configiq units could be (§3A) |
+| [`evidence/CONFIGIQ-FINDINGS.md`](evidence/CONFIGIQ-FINDINGS.md) | How Red Hat's configiq rows are produced, and which settings can be recovered (§3C) |
+| [`evidence/NEW-MODELS-GB200.md`](evidence/NEW-MODELS-GB200.md) | What Mistral-Large-4 and Inkling-2-Small need on GB200: no new kinds of layer expected, and kernels with no GB200 measurement (DC4) |
 
-Figures are as of 2026-11-18. Raw downloads behind the notes are not in the repository.
+No evidence note backs §5.
+
+The raw downloads behind the notes are not in the repository.
+
+Also here:
+- [`plan.html`](plan.html): the M3.2 plan, generated from `plan.preamble.md`, `plan.appendix.md` and
+  `requirements.md` by [`tools/build_plan.py`](tools/README.md). Never edit it by hand.
+- [`m31-carried.tsv`](m31-carried.tsv): the 150 M3.1 plan issues still open, each with its plan item, the Table W row
+  that owns it and any note from the M3.1 review (§0.4).
 
 ## How to contribute
 
-Push to the `m32` branch. Mark a new requirement as **Maintainer.** (decided) or **Proposal.** (open).
+Push to the `m32` branch, or open a pull request into `m32` for a proposal the team should review first. Mark each
+requirement with a label from the requirements.
