@@ -1,0 +1,88 @@
+<!-- ============================================================ -->
+<h2 id="s13"><span class="secno">13</span>Automation: how the rules are kept</h2>
+
+<p>This section describes the automated checks and the agent work that runs against them. Review, approval, merge, release and signing are maintainer practice (<a href="#s4-kinds">§4.2</a>). No automated check reads a pull request&rsquo;s title or body. Agents do bounded work, such as porting a changed function, classifying a new field or fitting a coefficient, from the upgrade report or a requested scenario (<a href="#s12">§12</a>), against the checks.</p>
+
+<figure class="fig-wide">
+<svg viewBox="0 0 960 220" role="img" aria-label="How a trigger flows through automation. A scheduled detector reports an upstream or data change in the nightly summary, and a maintainer records the work in an issue. An agent or a person works in a branch. Deterministic checks run on every push, and the work iterates until they pass. A maintainer reviews and merges. The nightly runs and the dashboard confirm the result and feed the backlog.">
+<defs><marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+<rect class="box soft" x="10" y="40" width="140" height="70" rx="6"/><text class="t-title" x="80" y="66" text-anchor="middle">detector</text><text class="t-small" x="80" y="84" text-anchor="middle">scheduled job,</text><text class="t-small" x="80" y="98" text-anchor="middle">lists what is new</text>
+<rect class="box" x="200" y="40" width="150" height="70" rx="6"/><text class="t-title" x="275" y="66" text-anchor="middle">agent or person</text><text class="t-small" x="275" y="84" text-anchor="middle">works the issue</text><text class="t-small" x="275" y="98" text-anchor="middle">in a branch</text>
+<rect class="box acc" x="400" y="40" width="150" height="70" rx="6"/><text class="t-title" x="475" y="66" text-anchor="middle">checks</text><text class="t-small" x="475" y="84" text-anchor="middle">on code changes</text><text class="t-small" x="475" y="98" text-anchor="middle">deterministic</text>
+<rect class="box" x="600" y="40" width="150" height="70" rx="6"/><text class="t-title" x="675" y="66" text-anchor="middle">maintainer</text><text class="t-small" x="675" y="84" text-anchor="middle">review, approval,</text><text class="t-small" x="675" y="98" text-anchor="middle">merge</text>
+<path class="edge" d="M150,75 L200,75" marker-end="url(#a5)"/>
+<path class="edge" d="M350,62 L400,62" marker-end="url(#a5)"/>
+<path class="edge" d="M400,90 L350,90" marker-end="url(#a5)"/>
+<text class="t-small" x="375" y="130" text-anchor="middle">fix and retry</text>
+<path class="edge" d="M550,75 L600,75" marker-end="url(#a5)"/>
+<rect class="box ok" x="400" y="165" width="550" height="40" rx="6"/><text x="675" y="190" text-anchor="middle">nightly: full-data gates, dashboard, backlog</text>
+<path class="edge dash" d="M750,75 L800,75 L800,165" marker-end="url(#a5)"/>
+<path class="edge dash" d="M400,185 C200,185 80,170 80,110" marker-end="url(#a5)"/>
+<text class="t-small" x="180" y="170">backlog feeds the next trigger</text>
+</svg>
+<figcaption><b>Figure 5. A trigger, start to finish.</b> Everything except the agent&rsquo;s work and the maintainer&rsquo;s decisions is deterministic. The checks, not the agent, decide when the work is done.</figcaption>
+</figure>
+
+<h3 id="s13-1">13.1 The invariant registry</h3>
+<p>Every invariant in this document is a record in <code>substrate/contracts/invariants/</code>:</p>
+<pre><code>- id: SUB-6
+  statement: The cost model resolves nothing; every default, backend choice,
+             padding and capture decision arrives in the plan or step shape.
+  scope: [substrate/kernel]
+  checks:
+    - test: TestKernelResolvesNothing
+      known_bad: a plan that leaves a default unresolved
+      runs: pull_request
+  status: ci                      # ci | partial | none</code></pre>
+<p>The status <code>partial</code> means some of a rule&rsquo;s checks are written and others are not. A rule that is a maintainer practice (<a href="#s4-kinds">§4.2</a>) has no checks. Each check runs on <code>pull_request</code>, <code>nightly</code> or <code>release</code>, and names a known-bad input that must make it fail (<span class="inv">X18</span>).</p>
+<p>A generator renders these records into a section of each repository&rsquo;s <code>AGENTS.md</code>, and a copy that does not match its record fails CI. A check on this document fails when a rule defined in the text is missing from Appendix A, or when the index lists a rule the text does not define.</p>
+
+<h3 id="s13-2">13.2 Agent guidance</h3>
+<p><b>What a repository&rsquo;s <code>AGENTS.md</code> holds.</b> In this order it holds: what the repository is and owns, and what it must never hold (Table 1, <a href="#s2-2">§2.2</a>); the rules that apply to a change here, rendered from the invariant registry; the commands that build, test and run every check, as CI runs them; what a change must also update (the <code>README.md</code>, a generated copy, the invariant registry record); and where to look next. It states no version, count or list of supported features, and states the rules a check cannot decide rather than those it enforces.</p>
+<p><b>Review questions.</b> A rule that depends on judgement may carry a <b>review question</b> with a trigger: the paths it concerns, or a description of the change, such as &ldquo;a floating-point reduction is added&rdquo;. Maintainer practice: the reviewer, a person or an agent a maintainer asks, applies each question whose trigger matches the change and records yes or no, with a reason and the files and lines that support it. A question is guidance for that review and never a check: no job runs, fails or waits on it.</p>
+
+<h3 id="s13-3">13.3 On every pull request</h3>
+<p>CI runs per component directory, with path filters: a change runs the checks of the directories it touches, and the cross-directory checks (<a href="#s3-4">§3.4</a>). Table 1 (<a href="#s2-2">§2.2</a>) names each component&rsquo;s checks.</p>
+<ul>
+<li>A workflow starts on a pull request only when the code can have changed: <code>opened</code>, <code>synchronize</code>, <code>reopened</code>, and a change of base branch.</li>
+<li>A pull request that can change prices also generates the <b>price-change report</b>: each benchmark scenario&rsquo;s step prices before and after the change.</li>
+<li>Heavy checks (oracles, mutation sweeps, the byte gate) run only for the directory whose code they test; accuracy gates run as <a href="#s13-5">§13.5</a> describes.</li>
+</ul>
+
+<h3 id="s13-4">13.4 Every night</h3>
+<ul>
+<li>The <b>nightly build</b> builds and tests <code>inference-sim</code> at the head of its main branch and of each open release branch (<a href="#s14-4">§14.4</a>), on three platforms, against the router fork commit each pins, and checks the import graph against Table 1.</li>
+<li><b>Full-data gates</b> rerun the coefficient registry writers, the landing gates and fixture-agreement checks on the full data, which a pull request&rsquo;s CI cannot hold.</li>
+<li><b>Detectors</b> poll upstream commits and releases and the data sources, and list what is new in the nightly summary. A maintainer decides the work and records it in an issue.</li>
+<li>The <b>dashboard</b> scores, publishes coverage and grades, and updates the backlog.</li>
+</ul>
+
+<h3 id="s13-5">13.5 Where accuracy gates run</h3>
+<p>An accuracy gate compares a candidate with held-out data (<span class="inv">VAL-6</span>). Where it runs depends on what it needs, and the partition secret stays in the jobs of <span class="inv">D7</span>:</p>
+<ul>
+<li><b>Operator-level gates</b> need only the cost model and the coefficient registry, for example whether an attention coefficient predicts the held-out sweep points. They run in <code>inference-sim</code>&rsquo;s gate job.</li>
+<li><b>Whole-run gates</b> need engines and the simulator, for example whether a change improves end-to-end latency on held-out deployments. They run the dashboard&rsquo;s scoring harness (<a href="#s11-7">§11.7</a>), the only end-to-end scorer, at the commit that <code>inference-sim</code>&rsquo;s harness pin file names (<span class="inv">X7</span>). A <b>candidate job</b> in the pull request&rsquo;s own repository builds the candidate and runs the harness with no secret, as <a href="#s10-2">§10.2</a> describes. <code>accuracy-dashboard</code>&rsquo;s <b>gate job</b> refuses predictions made by a harness commit that is not on its <code>main</code> branch, reduces them to aggregates and reports the result on the pull request.</li>
+</ul>
+<p>The gate compares two trees: the base, which is the pull request&rsquo;s merge base, and the candidate, which is its head.</p>
+<ul>
+<li>If the pull request changes only files under <code>substrate/catalog/</code> and <code>substrate/registry/</code>, both trees load under the released simulator&rsquo;s validators, and the code outside those directories at the merge base is identical to the code of the release, the gate runs the released simulator twice, once per tree. No rebuild is needed. If <code>main</code> carries unreleased code changes, the next case applies, so the data are judged with the code they will ship with.</li>
+<li>Otherwise, as when the pull request changes the cost model or an engine module, or uses a data field the released simulator cannot read, the job builds one simulator from the base and one from the candidate, and each runs on its own tree.</li>
+</ul>
+<p>Before a release is cut, the whole-run gate job runs once more, comparing the release candidate with the previous release, and with the best published release for each lane, on held units. A lane that fails the test of <span class="inv">VAL-6</span> against either fails the check, unless <span class="inv">VAL-11</span> applies.</p>
+<p>The gate job runs on pull requests that carry a pre-registration, and again nightly on the full data. </p>
+
+<h3 id="s13-6">13.6 Releases</h3>
+<p><code>inference-sim</code> is the one tagged release (<a href="#s14">§14</a>). Cutting it is maintainer practice (<span class="inv">LIF-3</span>). The generated inputs to a release are the list of pull requests merged since the previous release, the price-change report (<a href="#s13-3">§13.3</a>) and <code>stack.json</code> (<span class="inv">SIM-3</span>).</p>
+<p><code>accuracy-dashboard</code> and <code>blis-config-search</code> cut no release (<a href="#s14-1">§14.1</a>).</p>
+
+<h3 id="s13-7">13.7 What agents may and may not do</h3>
+<div class="tbl"><table>
+<caption><b>An agent works within the checks and never decides a merge or a release.</b></caption>
+<thead><tr><th>Agents may</th><th>Agents may not</th></tr></thead>
+<tbody>
+<tr><td>Work an issue, an upgrade report or a requested scenario, in a branch</td><td>Edit a recorded trace without the update flag and a review line; edit a generated file by hand</td></tr>
+<tr><td>Port changed functions; classify fields and surface items; write tests; fit coefficients from <code>fit</code> units; draft pre-registrations</td><td>Weaken, skip or delete a check; change a success criterion after reading held-out data; change the ledger&rsquo;s cut-points or partition version</td></tr>
+<tr><td>Iterate until the checks pass</td><td>Approve a merge, cut a release, or review a change they wrote</td></tr>
+<tr><td>Review a change when a maintainer asks (<a href="#s13-2">§13.2</a>)</td><td>Load recorded traces, vendored data or data files into context, instead of tool summaries</td></tr>
+</tbody></table></div>
+<p>CI or permissions enforce most of the prohibitions: trace and generated-file guards are CI checks, and agent credentials have no permission to merge or tag. Maintainer practice: the reviewer rejects a change that skips a test, suppresses a lint or loosens a threshold without a stated reason, and a change that loads generated files into an agent&rsquo;s context.</p>
