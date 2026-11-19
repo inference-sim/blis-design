@@ -55,11 +55,7 @@ class TestStandcheck(unittest.TestCase):
             done = run_tool(REPO, "tools/standcheck.py", REPO / "v2.0.0" / name)
             self.assertEqual(done.returncode, 0, name + "\n" + done.stdout)
 
-    @unittest.expectedFailure
     def test_built_v2_full_design_passes_standcheck(self):
-        # The seed is v1.0.0's text, which still holds milestone labels (M3, M4), issue
-        # numbers and "Today" in standing sections. Rewriting the sections removes them;
-        # delete this decorator when that is done.
         done = run_tool(REPO, "tools/standcheck.py", REPO / "v2.0.0/blis-target-design.html")
         self.assertEqual(done.returncode, 0, done.stdout)
 
