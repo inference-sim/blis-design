@@ -185,7 +185,7 @@ other groups are easier in one repository.**
 | **Held-out gate (design v3.0.0)** | Table W rows 25 and 26 | |
 | Whole-run gate | Build the whole-run landing gate in accuracy-dashboard. A candidate job with no secret builds the candidate and runs the pinned harness on every unit not on the published fit or anchor lists. The secret-holding gate job computes roles, scores held units only and returns aggregates over at least `min_points` role keys, with VAL-6's statistics: a non-inferiority margin, a one-sided 95% BCa interval from 10,000 resamples by role key, Holm over lanes and criteria, and the merging of small lanes. It gives one evaluation per pre-registration and counts each against the partition version's budget. It reports on the pull request, runs nightly, and runs before each release against the previous release and the best published release | [VAL-6](https://inference-sim.github.io/blis-design/v3.0.0/blis-target-design.html#s9-4), D7, design §12.3, design §13.5 |
 | Gate as the path | Every M3.2 change that moves accuracy goes through the whole-run gate: each refit, each coefficient change and each engine upgrade. The calibration of the new sources (row 18) lands only through it | VAL-6, T-A1, T-A2 |
-| Operator-level evidence | Replace the operator-level held-out gate in the ledger workflow with the error job's report of a candidate's operator-level error on validate units, shown beside the gate | VAL-5, VAL-11, design §13.5 |
+| Operator-level evidence | Remove the operator-level held-out gate from the ledger workflow. The error job keeps reporting each method's error on validate units nightly, as method error, never as accuracy; it informs review and never decides a landing | VAL-5, VAL-11, design §13.5 |
 | AISimulate roles | Write a new partition version that changes only AISimulate's cut-points to training roles (fit 0 to 69, select 70 to 84, validate 85 to 99) and keeps the partition secret. No InferenceX or configiq unit changes role, and no secret is published | D4, D7, D9 |
 | **Simplifications (design v2.1.0 to v2.4.0)** | Table W rows 8 and 22 | |
 | Simulator commands | Remove the `ledger`, `invariants` and `compose` commands from inference-sim, with their tests and docs pages, and the `blis invariants` mention in the README. Nothing calls them: the dashboard reads the ledger from the release checkout, and the substrate's own tool renders the invariant blocks | COV-2, X29, DEV-7 |
@@ -357,7 +357,8 @@ training data for M3.2, used however serves accuracy best. Applied as follows:
   experiments, any source added under §1.3, and all of AISimulate, its sweeps and its forward-pass set. AISimulate's
   sweeps lose their held share (20% of files today) to training roles (Table DC "AISimulate roles").
 - *The landing gate is whole-run.* Changes land on held InferenceX and configiq units only, through the whole-run gate
-  (design VAL-6, §13.5). Operator-level error on validate units is reported beside it and does not land a change.
+  (design VAL-6, §13.5). A worse lane fails the change; a maintainer may land it only after recording the regression as a defect in another
+  term (VAL-11). Operator-level method error on validate units is reported nightly and never decides a landing.
 - *No double use* (X8). A coefficient is never selected or graded on the units that fit it, and selection uses the
   select and validate shares only.
 
