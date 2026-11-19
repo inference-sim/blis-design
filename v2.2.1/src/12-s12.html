@@ -182,10 +182,10 @@
 <div class="row"><div class="k">Components</div><div class="v">The router fork, and the simulator (its <code>replace</code> line and plugin allow-list). <code>engines/&lt;engine&gt;</code> only when llm-d changes the metrics or KV events it reads from engines.</div></div>
 <div class="row"><div class="k">Steps</div><div class="v"><ol>
 <li>Run <code>hack/upstream-merge-report</code>. It lists conflicts with files the fork changes, new clock, goroutine, random or map-order uses on decision paths, new or renamed plugin types and parameters, changed per-engine metric mappings and KV-event adapters, and changed resource definitions.</li>
-<li>Merge the release into <code>llm-d-r</code> (a merge, not a rebase).</li>
+<li>On a branch cut from <code>llm-d-r</code>, merge the release (a merge, not a rebase).</li>
 <li>Route every new hazard site through the runtime interface, or add it to the baseline on review (<span class="inv">RTR-6</span>). Each change to an upstream file must be of an allowed kind (<span class="inv">RTR-2</span>).</li>
 <li>Audit new plugin types, or leave them refused.</li>
-<li>Merge into the fork’s <code>llm-d-r</code> branch once the fork’s own checks pass, after re-applying any hosting change the merge conflicted with (<span class="inv">T-R1</span>).</li>
+<li>Re-apply any hosting change the merge conflicted with (<span class="inv">T-R1</span>). Once the fork’s own checks pass, merge that branch into <code>llm-d-r</code> by pull request.</li>
 <li>If the release changes the metrics or KV events llm-d reads from engines, check that each engine still emits exactly what its upstream emits. Change an engine only where llm-d’s new mapping exposes something the port omits but its upstream emits. Where llm-d reads something the modelled commit does not emit, BLIS reproduces the mismatch and the release notes name it.</li>
 <li>Move the simulator’s <code>replace</code> line to that commit and update its plugin allow-list in the same pull request. If an upstream behaviour change breaks simulator tests while the fork’s own checks pass, that pull request waits. Maintainer practice: the maintainers of both decide whether the tests or the expected results change.</li>
 </ol></div></div>
