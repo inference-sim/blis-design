@@ -33,7 +33,7 @@ is done in inference-sim.**
 | 19 | Dashboard: slicing by any attribute, and the rule for small slices (§3B) | accuracy-dashboard | 16 | COV-13's tests pass: ten points from two role keys render no aggregate |
 | 20 | blis-config-search#110, first workstream: nested native speculative settings with recursive provenance (§0.5) | blis-config-search | 15 | provenance round-trips |
 | 21 | blis-config-search#110, other three workstreams: bounded sharding, per-attempt journal, server-series diagnostics (§0.5) | blis-config-search | none | each workstream's test of §0.5 passes |
-| 22 | CI: editing a pull request's text must not change its merge state (§4); inference-sim's workflow once row 2 lands | each repository's `ci.yml` | none | an `edited` event triggers nothing |
+| 22 | CI checks product correctness only: an `edited` event triggers nothing, the process checks are retired, and stale citations are updated (§4, Table DC "Process checks" and "Stale citations"); inference-sim's workflows once row 2 lands | each repository's workflows; the substrate's shared checks | none | an `edited` event triggers nothing; no check reads pull-request text or an issue; the scheduled `blis` workflow is gone and main is green in every repository |
 | 23 | The items moved to M3.2 by decision: GB200 decode cost (blis-vllm#272, blis-substrate#140), KV pool size (blis-vllm#158), blis-substrate#369, blis-sglang#141, and the smaller items of §0.2 and §0.6 | as listed | none | each item is merged or closed with a record |
 | 24 | The 150 open M3.1 issues (§0.4), each taken into the row its plan item matches; the issue numbers are re-mapped after the transfer | as listed in `m31-carried.tsv` | 2 | each issue is closed or named in a row above |
 

@@ -34,7 +34,7 @@ def slug(text: str) -> str:
     return base if n == 0 else f"{base}-{n}"
 
 
-DESIGN_URL = "https://inference-sim.github.io/blis-design/v2.2.1/blis-target-design.html"
+DESIGN_URL = "https://inference-sim.github.io/blis-design/v2.3.0/blis-target-design.html"
 _DESIGN_REF = re.compile(r"design (§\d+(?:\.\d+)?(?:(?:, | and |, and )§\d+(?:\.\d+)?)*)")
 
 
