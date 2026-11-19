@@ -13,7 +13,7 @@ Two things were checked by hand: the parser's regular expression (configiq
 
 Names used here:
 - **forge** is Red Hat's open-source benchmark launcher.
-- **Model Furnace** is an earlier, private Red Hat launcher.
+- An earlier private launcher wrote the oldest rows.
 - **CPT** is forge's per-model test matrix.
 - **GuideLLM** is the load generator all three writers use.
 
@@ -28,7 +28,7 @@ Names used here:
      separated by `; ` (forge `test_phase.py`, lines 578 to 584).
 2. **Three writers feed one private CSV.** The dataset is a weekly, filtered copy of a private CSV
    (`consolidated_dashboard.csv` in a private S3 bucket). Its writers are forge, manual JSON imports (from
-   `performance-dashboard`) and Model Furnace. The filter keeps 10 approved models, version labels of the form
+   `performance-dashboard`) and the earlier launcher. The filter keeps 10 approved models, version labels of the form
    `vLLM-x.y.z`, and the classification columns only.
 3. **`prefix_caching` is passed through, not parsed.** forge fills it. Older writers left it blank even when prefix
    caching was off.
@@ -46,7 +46,7 @@ Names used here:
 |---|---|---|---|
 | A | request type starts `/v1/`, prefix caching on | 800 / 779 (H200 205, B200 168, MI355X 406) | forge's CPT, GuideLLM 0.7.4 or 0.8.1, vLLM 0.26 to 0.33 (a few 0.22 and 0.24) |
 | C | request type `chat_completions` or `text_completions` | 143 / 128 (H200) | manual imports |
-| D | request type blank | 830 / 803 | Model Furnace and older manual imports, vLLM 0.11 to 0.24 |
+| D | request type blank | 830 / 803 | The earlier launcher and older manual imports, vLLM 0.11 to 0.24 |
 
 The current revision has 1,773 whole-run rows (1,710 units) and 1,036 per-turn slices. No family B was found. The
 ledger's pinned revision, `21cc6eb`, has 1,702 units.
@@ -57,7 +57,7 @@ ledger's pinned revision, `21cc6eb`, has 1,702 units.
   C and D: mostly 0.92. A blank would be vLLM's default, 0.9 through v0.19.1 and 0.92 from v0.20.0, but that a
   blank means the default is not proven.
 - **`max_seq_len`.** Family A never passes it, so it is the model's configured length. Family D's 8192 and 10000 are
-  Model Furnace defaults; 34816, 67584 and 110000 are manual long-context runs.
+  the earlier launcher's defaults; 34816, 67584 and 110000 are manual long-context runs.
 - **`max_num_seqs`.** forge never passes it, so it is vLLM's default: 1024 on H200 and B200.
 - **`max_num_batched_tokens`.** vLLM's default: 8192 on H200, and from v0.28.0 16384 on parts with 160 GiB or more
   (B200, MI355X, MI300X).
@@ -93,7 +93,7 @@ ledger's pinned revision, `21cc6eb`, has 1,702 units.
 - **From row to run.** The private CSV has a uuid, MLflow ids, GuideLLM times, the image tag and the GuideLLM
   version. The published dataset has none of them.
 - **forge's history.** `projects/rhaiis` starts on 2026-06-02 (commit `4edf18ac`). Models were inline in
-  `config.yaml` until commit `117e2386`. Older rows come from Model Furnace or manual imports; the only public
+  `config.yaml` until commit `117e2386`. Older rows come from the earlier launcher or manual imports; the only public
   description of those runs is `LLM-inference-benchmark-guide`.
 
 Not recoverable: data parallelism in families C and D, the cluster, the image as opposed to the label, and the actual

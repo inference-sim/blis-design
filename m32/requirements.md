@@ -2,14 +2,14 @@
 
 These are the working requirements for M3.2, the release after M3.1, captured with the maintainer from
 2026-11-18. They are not yet a plan, and more will be added. The design they build on is
-[design v2.2.0](https://inference-sim.github.io/blis-design/v2.2.0/blis-target-design.html).
+[design v2.2.1](https://inference-sim.github.io/blis-design/v2.2.1/blis-target-design.html).
 
 **Labels.** Each item carries one label:
 - **Decided**: stated, decided or accepted by the maintainer.
 - **Proposal**: open to correction.
 - **Open**: not yet decided. An Open item names its owner and what decides it.
 
-Section DC lists what M3.2 builds for design v2.2.0. It comes first because the maintainer asked that design
+Section DC lists what M3.2 builds for design v2.2.1. It comes first because the maintainer asked that design
 changes be the first requirement. It cites later sections.
 
 **Evidence.** The notes in `evidence/`, next to this file, back the figures:
@@ -24,7 +24,7 @@ named here is under `github.com/inference-sim/` unless another owner is shown.
 
 ## Terms
 
-**Repositories.** Design v2.2.0 has one simulator repository and the router fork. M3.2 builds that layout (DC3).
+**Repositories.** Design v2.2.1 has one simulator repository and the router fork. M3.2 builds that layout (DC3).
 Until the migration lands, the three repositories below still exist, and the issue numbers in this file name them.
 - **inference-sim**: the simulator. Its tagged release is the only one a milestone requires (v0.18.0 is M3.0,
   v0.18.1 is M3.1). Since M3.1 the other repositories are pinned by commit, and their tags are optional.
@@ -57,11 +57,11 @@ Until the migration lands, the three repositories below still exist, and the iss
   InferenceX rows published after the dump and added to the ledger one by one, each pinned by its row id and the
   SHA-256 of its content.
 
-**Design rules, sections and terms.** IDs such as X7, SUB-15, LIF-5, COV-6, T-M1 or D6 name rules of design v2.2.0.
+**Design rules, sections and terms.** IDs such as X7, SUB-15, LIF-5, COV-6, T-M1 or D6 name rules of design v2.2.1.
 The letters group them: X across components, SUB substrate, LIF versions and releases, COV accuracy coverage, VAL
 coefficients, D the ledger, T a trigger's test. A design section is written "design §n.m" and links to the design.
 A bare § number is this file's own section (§0 to §4, §3A to §3C); the design changes are DC1 to DC3 and the team
-request is DC4, without a §. The design's glossary, [Appendix B](https://inference-sim.github.io/blis-design/v2.2.0/blis-target-design.html#appB),
+request is DC4, without a §. The design's glossary, [Appendix B](https://inference-sim.github.io/blis-design/v2.2.1/blis-target-design.html#appB),
 defines these terms, which keep its sense here: anchor, commit distance, drafter, engine module, engine upgrade,
 funnel, graph handler, graph vocabulary, headline, held-out unit, lowering, model backport (written "backport"),
 model support, named substitution (an **estimated substitution** is one whose value comes from a stated rule rather
@@ -82,14 +82,14 @@ are called groups here.
 - **Role**: each unit has one of fit, select, validate, held, anchor or report, drawn once per role key by a
   seeded rule (design §10.2). Fit units fit coefficients, select units choose between fits, validate units check a
   fit. **Held-out** units are held (one evaluation per pre-registration) and anchor (the **headline**, the
-  dashboard's accuracy figure). A report unit gives context only. Every source with no held or anchor role is
-  training data.
+  dashboard's accuracy figure). A report unit gives context only. **Training data** is every fit, select or validate unit and all
+  data from a source with no held or anchor role.
 - New InferenceX and configiq units draw 30% fit, 10% select, 10% validate, 30% held and 20% anchor. Older units
   were first split into a fit group and a held group; each stays in its group, and the ledger's rules split each
   group into roles (fit and select; held and anchor).
 
 **Grades.** G1 (exact) to G5 (not scored), as design
-[§11.3](https://inference-sim.github.io/blis-design/v2.2.0/blis-target-design.html#s11-3) defines them. G1 and G2
+[§11.3](https://inference-sim.github.io/blis-design/v2.2.1/blis-target-design.html#s11-3) defines them. G1 and G2
 need the run's own engine commit; G3 and G4 are other commits, by commit distance.
 
 **Coefficients.**
@@ -109,9 +109,9 @@ need the run's own engine commit; G3 and G4 are other commits, by commit distanc
 
 ## DC. Design changes (DC1 to DC3) and a team request (DC4)
 
-**Status.** M3.2 implements [design v2.2.0](https://inference-sim.github.io/blis-design/v2.2.0/blis-target-design.html).
+**Status.** M3.2 implements [design v2.2.1](https://inference-sim.github.io/blis-design/v2.2.1/blis-target-design.html).
 The design states the rules. DC1 to DC3 are **Decided**: the design adopts them, and this section states each once.
-Table DC lists what M3.2 builds. Rule IDs and sections are those of v2.2.0. The lowering work of DC2, planned
+Table DC lists what M3.2 builds. Rule IDs and sections are those of v2.2.1. The lowering work of DC2, planned
 for M4, is part of M3.2.
 
 **Why.** Changes crossed repositories in sequence: the per-pool offload fix took blis-substrate#402, blis-vllm#302
@@ -540,13 +540,13 @@ expression and forge's `cpt.yaml` checked by hand). The configiq team's answers 
 override anything inferred here.
 
 Three things write configiq's rows: **forge** (`openshift-psap/forge`, Red Hat's open-source benchmark launcher),
-manual imports, and **Model Furnace** (an earlier, private Red Hat launcher). The publisher keeps a filtered copy of
+manual imports, and an earlier private launcher. The publisher keeps a filtered copy of
 Red Hat's private results CSV.
 
 **Correction to how BLIS reads blanks.** BLIS treated a blank engine column as "not recorded" unless the row matched
 a forge preset. A blank means the flag was not passed only for rows forge wrote. The publisher extracts settings
 from a free-text `runtime_args` field with a regular expression, which misses space-separated values and bare
-flags. So a blank in a manually imported or Model Furnace row can hide a value the run set. A blank
+flags. So a blank in a manually imported or earlier-launcher row can hide a value the run set. A blank
 `prefix_caching` never means "on".
 
 The rules 3C.1 to 3C.7 are **Proposal**, pending the team's answers. The correction above is a finding from the code, checked by hand.
@@ -554,7 +554,7 @@ The rules 3C.1 to 3C.7 are **Proposal**, pending the team's answers. The correct
 3C.1 **Proposal. Classify each row by its writer.** The counts are on the current dataset revision, which has 1,710
 whole-run units; the ledger's pinned revision has 1,702. Family A is forge's, recognised by a `/v1/...` request
 type and prefix caching on: 779 units, 373 of them on H200 or B200. Family C is manual imports: 128 units. Family D
-is Model Furnace and older manual imports: 803 units. No family B was found. The family decides how blanks are read.
+is the earlier launcher and older manual imports: 803 units. No family B was found. The family decides how blanks are read.
 
 3C.2 **Proposal. Family A: fill every blank from forge's own records**, each named as the substitution it is:
 - the CPT matrix (forge's per-model test matrix, `cpt.d/cpt.yaml`) and the presets at the commit in force on the
@@ -565,7 +565,7 @@ is Model Furnace and older manual imports: 803 units. No family B was found. The
   the warm-up and ramp-up then in force, the GuideLLM release, seed 42, `ignore_eos`, and streaming.
 This replaces today's preset match, which misses `cpt.yaml`. The points are provisional (design COV-7; §3A.8).
 
-3C.3 **Proposal. Family D: fill only what the public benchmark guide and Model Furnace's defaults support.** That is prefix
+3C.3 **Proposal. Family D: fill only what the public benchmark guide and the earlier launcher's defaults support.** That is prefix
 caching off, and a measurement duration of 450 s or 600 s, when `max_seq_len` is 8192 or 10000 and memory
 utilisation is 0.92. These are estimated substitutions and lower the grade. Rows whose TP is 1 may have used data
 parallelism, and stay unscored.
