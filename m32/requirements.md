@@ -116,8 +116,9 @@ Only (i) depends on the engine's native speculative field list; (ii), (iii) and 
   the tier helping, not hurting.
 - *GB200 custom all-reduce still transferred from GB300* (blis-substrate#116). #373 fixed only the lane (the price
   now follows the resolved backend); the value is unchanged — 13.16 µs, `transferred_from: gb300`, against a ~7 µs
-  estimate for the custom lane. Measure the GB200 4- and 8-rank custom all-reduce on GB200 itself; keep #116 open
-  until then, or file the measurement as its own issue.
+  estimate for the custom lane. Use a measurement of the GB200 4- and 8-rank custom all-reduce if one of the
+  allowed sources holds it; otherwise the value stays transferred, with its source and rationale, and the points it
+  prices name it (1.6). Keep #116 open until a measured value exists.
 
 ## 1. New data sources for calibration
 
@@ -156,6 +157,12 @@ workload at least); the minimum sample count per slice for a verdict (at least `
 per-engine and per-chip regression elsewhere; the held/anchor verdict, evaluated once after selection; and the
 revise-or-revert rule. The thresholds themselves are still to be set by the maintainer, and are a blocker on
 fitting until they are.
+
+1.6 **Maintainer (2026-11-18). No new GPU or cluster experiments, with no exceptions.** M3.2 fits, selects,
+validates and evaluates only on data that already exists: the sources of §1 and the ones it adds. Where no source
+measures a coefficient, it is transferred (from another chip, width or lane, by a stated rule) or assumed (with its
+reasoning), written by its family's writer script, and named on every point it prices. It is replaced when data
+appears. A test that compares against real runs uses runs already recorded (for example blis-vllm#305).
 
 ## 2. Settings identification (apples to apples)
 
