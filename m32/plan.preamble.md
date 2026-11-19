@@ -22,6 +22,9 @@ M3.1 on, only inference-sim is tagged, and the other repositories are pinned by 
 | **M3.0** | inference-sim v0.18.0 (blis-vllm v0.33.0-blis.1; blis-sglang v0.5.23-blis.1; router fork v1.0.0-blis.5; blis-substrate v0.15.0) | the port to vLLM v0.33.0; vLLM 0.32 and the engine kind `sglang` refused; the typed engine-settings carrier deleted; the dashboard's M3 baseline per engine, with grade ceilings; SGLang graded, not scored |
 | **M3.1** | inference-sim v0.18.1, released 2026-11-18 (a patch on `release-v0.18`; the other repositories pinned by commit) | the first release to register and run the engine kind `sglang`; seven integration pull requests; review fixes, including the all-reduce lane keyed by backend (blis-substrate#373, for blis-substrate#116), p2p transfer at unequal TP, the P/D per-instance measured window, the router check, and the measured Muse DSpark acceptance |
 
+Design v2.0.0 (2026-11-19) puts the substrate and the engine modules into inference-sim and makes an engine module
+model an upstream commit. The rows above name the repositories as they were; M3.2 builds the new layout (DC3).
+
 ## M3.2 requirements (source of truth)
 
 The sections below are `requirements.md`, verbatim. The plan's own prerequisites and execution order follow them.

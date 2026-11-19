@@ -1,10 +1,11 @@
 # BLIS M3.2: working requirements
 
 Working material for the M3.2 release, started 2026-11-18. It is not yet a design or a plan. This branch is for
-reading and editing; it is never merged into `main`, which holds only the standing design.
+reading and editing; it is never merged into `main`, which holds the standing design.
 
-Start with [`requirements.md`](requirements.md). Its Terms section defines the project's terms. Section DC
-proposes design changes for the team to review; section 0 lists what M3.1 left for M3.2. Each requirement is
+Start with [`requirements.md`](requirements.md). Its Terms section defines the project's terms. Section DC records
+the design changes that [design v2.0.0](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html)
+adopted and lists what M3.2 builds for them; section 0 lists what M3.1 left for M3.2. Each requirement is
 marked **Maintainer** (decided), **Proposal (accepted)**, **Proposal** (open to correction) or **Open** (undecided).
 
 For a one-page overview of the data sources and the calibration process, download
@@ -19,6 +20,7 @@ source only.
 | [`evidence/SETTINGS-PROVENANCE.md`](evidence/SETTINGS-PROVENANCE.md) | Where each new source records its workload, GPU, model and engine settings (§2) |
 | [`evidence/COVERAGE-FUNNEL.md`](evidence/COVERAGE-FUNNEL.md) | Why 238 InferenceX anchor units are scored of 13,182 in scope, and how many configiq units could be (§3A) |
 | [`evidence/CONFIGIQ-FINDINGS.md`](evidence/CONFIGIQ-FINDINGS.md) | How Red Hat's configiq rows are produced, and which settings can be recovered (§3C) |
+| [`evidence/DESIGN-V2-PLAN-ITEMS.md`](evidence/DESIGN-V2-PLAN-ITEMS.md) | The implementation particulars the design v2.0.0 audits moved out of the design, each with the rule it serves (Table DC) |
 | [`evidence/NEW-MODELS-GB200.md`](evidence/NEW-MODELS-GB200.md) | What Mistral-Large-4 and Inkling-2-Small need on GB200: no new kinds of layer expected, and kernels with no GB200 measurement (DC4) |
 
 The figures are as of 2026-11-18; the M3.1 status in §0 of the requirements is as of 2026-11-19 04:10 UTC. The raw downloads behind the notes are not in the repository.
