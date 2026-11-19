@@ -2,10 +2,162 @@
 
 Status: being captured with the maintainer; more requirements to come. Not yet a design or plan.
 **2026-11-18: the maintainer accepted the proposals in sections 1, 2 and 3** (1.2, 2.2-2.4, 3.2). 1.3 stays open.
+**Section D (design changes) is a proposal under team review**; nothing in it is decided.
 Each item says whose it is: **maintainer** (stated by them) or **proposal** (open to correction).
 Supporting evidence is in `evidence/` next to this file: what each project publishes (`INVENTORY.md`), where each
 new source records its settings (`SETTINGS-PROVENANCE.md`), why so few points are scored (`COVERAGE-FUNNEL.md`),
 and how configiq rows are produced (`CONFIGIQ-FINDINGS.md`).
+
+## D. Design changes M3.2 needs (proposal, for team review)
+
+**Status.** Proposal, raised by the maintainer on 2026-11-18 for the team to review. Nothing in this section is
+decided or built until the review closes. Each change to the standing design lands first as a blis-design pull
+request to `main`, then in code. Whether D4 belongs in M3.2 or in a patch release of M3.1 is open.
+
+**Why.** Three things recur.
+- *Cross-repository friction.* Most features touch contracts, an engine and the simulator together, and each
+  repository boundary turns one change into a sequence. A change to blis-substrate is re-pinned in blis-vllm,
+  blis-sglang and the router fork, then in inference-sim, with full CI at every hop. In M3.1, blis-substrate#373
+  was first held out because that cascade "cannot be green in the window". The per-pool offload fix took three
+  sequential pull requests: blis-substrate#402, blis-vllm#302 and inference-sim#2252.
+- *Teams ask for models that only an unreleased engine build supports* (D4).
+- *The new data is pinned to engine commits, not releases.* Every vLLM CI perf row names a vLLM commit, and every
+  SGLang nightly names an SGLang commit (§1, §2.3). Today BLIS can model only a release, so those runs are all
+  release differences.
+
+### D1. Model any upstream commit, not only a release (vLLM and SGLang)
+
+**Today.** An engine module models one upstream release (LIF-5). A build runs one release of each engine, and a
+scenario that names another is refused (LIF-6). A run on another release is scored as a named release
+difference (§3A.5).
+
+**Proposal.**
+- An engine module models one upstream **commit**. It may be a release tag or a commit on the upstream's main or
+  release branch. The Upstream record names the commit, and the release it descends from. A build still runs
+  one commit of each engine, so LIF-6's refusal stays as it is, with a commit in place of a release.
+- A move between upstream commits is ported as a diff, as v0.32.0 to v0.33.0 was. The generators (`fields.json`, `surface.json`, `kernel_impls.json`) already take the
+  upstream reference as a parameter. The oracle environment is locked per commit.
+- **Grading.** A point whose run used the modelled commit is not a release difference. Any other point names its
+  distance: commits apart, and releases apart where the two commits sit in different releases.
+- **Model backport.** This is the narrow case. The upstream commits that add one model are applied onto the
+  modelled commit and listed in the Upstream record. A backport carries model code only, never scheduler, KV or
+  connector changes. It folds away when the modelled commit contains it.
+- **When to move.** Move the modelled commit on each upstream release, and on demand when a team scenario needs
+  a later commit. Each move re-runs the oracle and the goldens.
+
+**Effect.** New models on upstream main can be modelled (D4). The vLLM CI perf and SGLang nightly runs can be
+fitted against the exact engine code that produced them (§1). Release-difference grading becomes commit
+distance, which is finer.
+
+### D2. Lowering out of blis-substrate, brought forward from M4
+
+**Today.** The catalog's graph deriver still holds vLLM lowering. The plan moved its removal, and the
+contract-change review set that removes `contracts/rules/` with model values moved into graph fields, from M3 to
+M4 (2026-11-17). The design already says a graph holds only what the checkpoint states, and that sharding,
+fusion, padding and the nodes emitted under a layout are lowering (SUB-15). It also says onboarding a model is
+one blis-substrate pull request with no engine code (§12.1, T-M1). Neither is true yet. The onboarding preflight
+the design describes, `inference-sim onboard --plan`, is not built.
+
+**Proposal.** Bring both into M3.2.
+- Move all lowering into the engine modules.
+- Remove `contracts/rules/`, as the contract-change review set (§12.8).
+- Build the onboarding preflight.
+
+**Effect.** Onboarding a new architecture becomes a graph handler plus data, and each engine lowers the new
+primitives in its own code. Every model request gets the same answer: what exists, what is missing, which engine
+build, and which coefficients come from which method.
+
+### D3. Consolidate blis-substrate, blis-vllm, blis-sglang and blis-kvstore into inference-sim
+
+**Proposal.** Move the four repositories into inference-sim as top-level directories, keeping their history (a
+subtree merge) and transferring their open issues.
+- `contracts/` becomes its own small Go module inside the repository, versioned, because the router fork imports
+  it. SUB-1 already limits it to the standard library and the YAML parser.
+- These stay separate:
+  - the router fork, a fork of llm-d with upstream's import path;
+  - accuracy-dashboard, because a scorer independent of the simulator is a deliberate audit property;
+  - blis-config-search, which consumes simulator releases;
+  - blis-design.
+
+**Separation of concerns is kept by checks, not by repository walls.**
+
+| Rule | Kept by |
+|---|---|
+| No engine name or policy in blis-substrate (X2); the cost model imports no engine module; no engine module imports another or blis-kvstore (KVS-2) | an import-graph lint over directories (`go list`), required in CI |
+| Each area's heavy CI (oracles, mutation sweeps, byte gate) | path-filtered workflows, so a change runs only the jobs of the directories it touches |
+| Review ownership | `CODEOWNERS` per directory; the review agent's questions per area, unchanged |
+| One upstream commit of each engine per build (LIF-6) | unchanged; the build's engine directories each name one commit |
+
+**What changes.** One pull request can span the contracts, an engine and the simulator. The bottom-up merge
+order and the cascade of pins between BLIS repositories go away (X10, X11). Per-engine release branches (§14.4)
+become release branches of inference-sim, which already cuts `release-v0.18`. The rule that blis-substrate is
+one Go module (SUB-13) is restated for the new layout.
+
+**What is given up.** The hard wall between repositories. A simulator change could edit catalog data in the same
+pull request, so the lints and `CODEOWNERS` must do what the walls did. Each repository's merge rules, checks and
+workflows have to be consolidated.
+
+**Timing.** At a release boundary, after the M3.1 cut, as the first M3.2 item, because D1 and D2 are easier in
+one repository. The migration is not sized yet. A sizing from the actual workflows, checks and open issues comes
+before the decision.
+
+### D4. Support requested by a team: Mistral-Large-4 and Inkling-2-Small on GB200
+
+**Request.** A GB200 configuration for both models on 16 GPUs (Muse Spark's capacity), for the team to use and
+verify.
+
+**Facts** (checked 2026-11-18).
+- **Mistral-Large-4.** `MistralLarge4ForCausalLM`, with a DSpark drafter. It is in vLLM v0.34.0, released
+  2026-11-16, and not in v0.33.0, which blis-vllm models. Its Hugging Face repository is gated.
+- **Inkling-2-Small.** `Inkling2ForConditionalGeneration`, 594B. It is only on vLLM main, in vllm-project/vllm#67325,
+  merged 2026-11-18 as `abb8194dc3`, and not in v0.34.0. Recent vLLM releases came about two weeks apart.
+  blis-substrate#88 tracks it.
+
+**Proposal.**
+- Mistral-Large-4 comes with the v0.34.0 port.
+- Inkling-2-Small comes with D1, at `abb8194dc3` or later, or with the v0.35 port if that release is near.
+- Each model gets its catalog entry and graph handler, and its drafters, under D2.
+- Answer each request with its confidence. Neither model has measured runs on GB200, so the configuration is a
+  prediction with no held-out evidence. GB200 decode is about 1.35 times slow per token until blis-substrate#140
+  and blis-vllm#272 land (§0.2).
+
+### D5. Changes blis-design needs
+
+The standing design and the release plan both change. Each item is one blis-design pull request to `main`,
+except where items share lines.
+
+| Design area | Change | For |
+|---|---|---|
+| §2 Shape, §2.2 ownership table, the repository tree | the four repositories become directories of inference-sim; `contracts/` its own module | D3 |
+| §5 repository cards | merge the blis-substrate, blis-vllm, blis-sglang and blis-kvstore cards into inference-sim's, keep a card for the `contracts` module; restate each check's "Runs in" by directory | D3 |
+| §6 engine boundary, X2, KVS-2 | the same rules, checked by an import-graph lint over directories | D3 |
+| §7.6 port as a unit; §7.1 engine port frame | "at an exact pin" means an upstream commit; the model backport | D1 |
+| §8 lowering; SUB-15 | lowering lives only in engine modules; the deriver writes checkpoint facts only | D2 |
+| §11.2 to §11.4 grading | release difference becomes commit distance | D1 |
+| §12.1 onboarding; T-M1 | one pull request touching the catalog directory; the preflight is built | D2, D3 |
+| §12.8 contract-change review set | one pull request in one repository, plus the router fork | D3 |
+| §13 automation | the release bot without the pin cascade; path-filtered CI | D3 |
+| §14 versions: LIF-2, LIF-4, LIF-5, LIF-6, §14.4; X10, X11; SUB-13 | an engine models one commit; one repository's release branches; pins only to `contracts` and the router fork | D1, D3 |
+| The invariant registry (`contracts/invariants`) and its generated appendix | each record's "Runs in" and check names follow the new layout | D3 |
+| The release plan | move the M4 lowering item into M3.2; add D1 to D4 to the M3.2 section; map the moved issues | D1 to D4 |
+
+### How D relates to the rest of this document
+
+- §1, §2: per-commit data matches per-commit engines (D1).
+- §3.2: engine-path coefficients are keyed by the code that does the work. With D1, that code is pinned by
+  upstream commit.
+- §3A.5 and 4.2: commit distance replaces release distance.
+- §0: the carried M3.1 items are unchanged. After D3, the re-pin cascades behind several of them go away.
+
+### Open questions for the review
+
+1. D1: how often to move the modelled commit, and who decides an on-demand move.
+2. D1: does a backport need its own grade, or is commit distance enough?
+3. D2: is the `contracts/rules/` removal in scope for M3.2 or only the lowering move?
+4. D3: consolidate, or keep the repositories and remove the cascade with tooling (a local `go.work`, a bot that
+   runs the cascade, and one CI job that tests every repository at the pull request heads)? Tooling keeps the
+   walls, but cross-repository changes stay non-atomic.
+5. D4: M3.2, or a patch release of M3.1?
 
 ## 0. Carried from M3.1
 
