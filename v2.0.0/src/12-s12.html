@@ -28,7 +28,7 @@
 <li><b>Define the unit.</b> Define the unit, its identifying fields and its role key so that near-copies share a role (<a href="#s10-2">§10.2</a>), and the cut-points, which allot training roles only. Define how a record maps to an engine commit and to the kernel and code identities of <a href="#s9-2">§9.2</a>.</li>
 <li><b>Identify each run's settings</b> from its own records: workload, cluster, GPU, model, engine settings and engine commit, and the metric's definition. Name the record that settles each. Write the scenario writer with a test of every field against its record (<span class="inv">D10</span>). A value no record holds becomes a named substitution.</li>
 <li><b>Pin and ingest.</b> Pin the revision or each row by id and content hash (<span class="inv">D3</span>). A source with a live feed joins continuously, by a scheduled job. A new source gets cut-points for training roles only (<span class="inv">D9</span>). Commit only redistributable data (<span class="inv">D6</span>).</li>
-<li><b>Roles.</b> The seed-holding jobs draw each new unit's role the first time they see it, before any use (<span class="inv">D4</span>). If the source changed its format, ship the alias table first, so every unit keeps its role.</li>
+<li><b>Roles.</b> The secret-holding jobs draw each new unit's role the first time they see it, before any use (<span class="inv">D4</span>). If the source changed its format, ship the alias table first, so every unit keeps its role.</li>
 <li><b>Refit</b> only the families whose fit data changed. A refit that uses new units waits for the release whose release job publishes their <code>fit</code> list. Each refit follows §12.3.</li>
 <li><b>Acceptance profiles.</b> Regenerate them. A new curve is carried, with its drafter, when its model and drafter resolve in the catalog; one that does not is skipped with a stated reason (<span class="inv">D8</span>).</li>
 <li><b>Report</b> the source's funnel (§11.6) and the coverage and grade changes per lane.</li>
@@ -58,7 +58,7 @@
 <div class="row"><div class="k">Done when</div><div class="v"><ul>
 <li><span class="inv">T-A1</span> Results on held units exist only as outputs of the gate job, run after the pre-registration commit (<span class="inv">D7</span>).</li>
 <li><span class="inv">T-A2</span> Held-out error and distribution distance (<a href="#s11-8">§11.8</a>) did not get worse on any lane beyond the margin, judged by the paired interval of <span class="inv">VAL-6</span>, and improved on the target lane.</li>
-<li><span class="inv">T-A3</span> After release, the change in the dashboard's prospective figure (<span class="inv">D9</span>) is within the predicted range, or the miss is recorded.</li>
+<li><span class="inv">T-A3</span> After release, the change in the dashboard's prospective accuracy (<span class="inv">D9</span>) is within the predicted range, or the miss is recorded.</li>
 <li><span class="inv">T-A4</span> A failed idea leaves a committed note with its evidence, so it is not tried again blindly.</li>
 </ul></div></div>
 </div>

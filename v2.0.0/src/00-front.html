@@ -16,7 +16,7 @@
 <li>Engines hand the cost model a fully resolved description of what runs, so the cost model does not depend on which engine produced it.</li>
 <li>Each engine module models one upstream commit and has a list of that commit&rsquo;s features, generated from the upstream&rsquo;s own source. Each feature is modelled, refused by name, or declared out of scope, and CI fails while any feature has no status. Missing features are then counted and ranked, instead of being discovered when someone needs one.</li>
 <li>Every coefficient the cost model needs has a value, labelled by how it was obtained: measured, calibrated, transferred, taken from published work, or assumed. Coverage can then grow without hiding how good each estimate is.</li>
-<li>The simulator follows explicit rules for a discrete-event simulation and for analysing its output, so its figures are reproducible and carry their uncertainty (§8).</li>
+<li>The simulator follows explicit rules for a discrete-event simulation and for analysing its output, so its reported values are reproducible and carry their uncertainty (§8).</li>
 <li>Every rule in this document has an identifier. Automated checks enforce every rule that protects correctness or accuracy and can be checked mechanically. Maintainers decide the rest (§1, §13).</li>
 </ol>
 </div>
