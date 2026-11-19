@@ -1,0 +1,2 @@
+# A metric listed here may exceed v1.0.0's value. Format: metric: reason.
+sections: Appendix C is a new top-level section that maps every v1.0.0 rule identifier to its fate, so that a citation of v1.0.0 can be followed.

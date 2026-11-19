@@ -226,9 +226,10 @@ footer{font-family:var(--sans);font-size:.82rem;color:var(--muted);border-top:1p
     <li><a href="#s11">11 Accuracy coverage</a></li>
     <li><a href="#s12">12 Triggers</a></li>
     <li><a href="#s13">13 Automation</a></li>
-    <li><a href="#s14">14 Versions, releases and blis-sglang</a></li>
-    <li><a href="#appA">A Invariant index</a></li>
+    <li><a href="#s14">14 Versions and releases</a></li>
+    <li><a href="#appA">A Rule index</a></li>
     <li><a href="#appB">B Glossary</a></li>
+    <li><a href="#appC">C Rule IDs from v1.0.0</a></li>
   </ol>
 </nav>
 <main>
@@ -479,7 +480,7 @@ footer{font-family:var(--sans);font-size:.82rem;color:var(--muted);border-top:1p
 │   └── data.go         package substrate: go:embed of catalog/ and registry/
 ├── engines/            one directory per engine (§7)
 ├── sim/, cmd/          the simulator
-├── tools/              the release bot (§13.6) and other tools
+├── tools/              generators and other tools (§13)
 └── go.mod              the one Go module: github.com/inference-sim/inference-sim
 </code></pre>
 <p>The hosting contract (<code>embed</code> and its conformance suite) is not in <code>contracts/</code>. It lives in the router fork (§5), so that the fork imports no BLIS code.</p>
@@ -1726,191 +1727,161 @@ The next engine upgrade drops the backport when the new commit contains it. A ru
 <!-- ============================================================ -->
 <h2 id="s13"><span class="secno">13</span>Automation: how the rules are kept</h2>
 
-<p>Rules are kept by three kinds of worker, used in this order of preference:</p>
+<p>Rules are kept in three ways (<a href="#s4-kinds">§4.2</a>). This section describes the first, automated checks, and the agent work that runs against them. Review, approval, merge, release and signing decisions are maintainer practice, kept with branch protection, required reviews and signed commits. No automated check reads a pull request&rsquo;s title or body, and none polices process.</p>
 <ol>
-<li><b>Deterministic checks</b> decide everything that can be decided mechanically. Given the same commit, they give the same answer.</li>
-<li><b>Agents</b> do bounded work: porting a changed function, classifying a new field, fitting a coefficient. They work from a preflight, against the checks, inside a budget.</li>
-<li><b>People</b> answer the yes/no questions in §4 and §5, approve releases, and set direction.</li>
+<li><b>Deterministic checks</b> decide everything that can be decided mechanically and that protects the product&rsquo;s correctness or accuracy: import-graph boundaries, conformance suites, differential, mutation, metamorphic and property tests, data validators, and the staleness of generated files. Given the same commit, a check gives the same answer.</li>
+<li><b>Agents</b> do bounded work: porting a changed function, classifying a new field, fitting a coefficient. They work from the upgrade report or the requested scenario (<a href="#s12">§12</a>), against the checks.</li>
+<li><b>Maintainers</b> review, merge and release, and set direction.</li>
 </ol>
 
 <figure class="fig-wide">
-<svg viewBox="0 0 960 260" role="img" aria-label="How a trigger flows through automation. A scheduled detector notices the trigger and runs the preflight, which produces a scoped work list and a budget. An agent works the list in a branch. Deterministic checks run on every push; the agent iterates until they pass or the budget runs out. A person answers the review questions the checks attached and approves. The release bot merges, tags and bumps versions bottom-up. The nightly matrix and dashboard confirm the result.">
+<svg viewBox="0 0 960 220" role="img" aria-label="How a trigger flows through automation. A scheduled detector notices an upstream or data change and opens an issue. An agent or a person works in a branch. Deterministic checks run on every push, and the work iterates until they pass. A maintainer reviews and merges. The nightly runs and the dashboard confirm the result and feed the backlog.">
 <defs><marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
-<rect class="box soft" x="10" y="80" width="120" height="70" rx="6"/><text class="t-title" x="70" y="106" text-anchor="middle">detector</text><text class="t-small" x="70" y="124" text-anchor="middle">scheduled job</text><text class="t-small" x="70" y="138" text-anchor="middle">deterministic</text>
-<rect class="box soft" x="160" y="80" width="120" height="70" rx="6"/><text class="t-title" x="220" y="106" text-anchor="middle">preflight</text><text class="t-small" x="220" y="124" text-anchor="middle">scope, budget</text><text class="t-small" x="220" y="138" text-anchor="middle">deterministic</text>
-<rect class="box" x="310" y="80" width="130" height="70" rx="6"/><text class="t-title" x="375" y="106" text-anchor="middle">agent</text><text class="t-small" x="375" y="124" text-anchor="middle">works the list</text><text class="t-small" x="375" y="138" text-anchor="middle">in a branch</text>
-<rect class="box acc" x="470" y="80" width="140" height="70" rx="6"/><text class="t-title" x="540" y="106" text-anchor="middle">checks</text><text class="t-small" x="540" y="124" text-anchor="middle">every push</text><text class="t-small" x="540" y="138" text-anchor="middle">deterministic</text>
-<rect class="box" x="640" y="80" width="120" height="70" rx="6"/><text class="t-title" x="700" y="106" text-anchor="middle">person</text><text class="t-small" x="700" y="124" text-anchor="middle">reads the review,</text><text class="t-small" x="700" y="138" text-anchor="middle">approval</text>
-<rect class="box soft" x="790" y="80" width="160" height="70" rx="6"/><text class="t-title" x="870" y="106" text-anchor="middle">release bot</text><text class="t-small" x="870" y="124" text-anchor="middle">merge, pin, release</text><text class="t-small" x="870" y="138" text-anchor="middle">deterministic</text>
-<path class="edge" d="M130,115 L160,115" marker-end="url(#a5)"/>
-<path class="edge" d="M280,115 L310,115" marker-end="url(#a5)"/>
-<path class="edge" d="M440,105 L470,105" marker-end="url(#a5)"/>
-<path class="edge" d="M470,128 L440,128" marker-end="url(#a5)"/>
-<text class="t-small" x="455" y="168" text-anchor="middle">fix and retry</text>
-<path class="edge" d="M610,115 L640,115" marker-end="url(#a5)"/>
-<path class="edge" d="M760,115 L790,115" marker-end="url(#a5)"/>
-<rect class="box ok" x="470" y="200" width="480" height="40" rx="6"/><text x="710" y="225" text-anchor="middle">nightly: compatibility build, full-data gates, dashboard, backlog</text>
-<path class="edge dash" d="M870,150 L870,200" marker-end="url(#a5)"/>
-<path class="edge dash" d="M470,220 C300,220 220,190 220,150" marker-end="url(#a5)"/>
-<text class="t-small" x="280" y="210">backlog feeds the next trigger</text>
+<rect class="box soft" x="10" y="40" width="140" height="70" rx="6"/><text class="t-title" x="80" y="66" text-anchor="middle">detector</text><text class="t-small" x="80" y="84" text-anchor="middle">scheduled job,</text><text class="t-small" x="80" y="98" text-anchor="middle">opens an issue</text>
+<rect class="box" x="200" y="40" width="150" height="70" rx="6"/><text class="t-title" x="275" y="66" text-anchor="middle">agent or person</text><text class="t-small" x="275" y="84" text-anchor="middle">works the issue</text><text class="t-small" x="275" y="98" text-anchor="middle">in a branch</text>
+<rect class="box acc" x="400" y="40" width="150" height="70" rx="6"/><text class="t-title" x="475" y="66" text-anchor="middle">checks</text><text class="t-small" x="475" y="84" text-anchor="middle">on code changes</text><text class="t-small" x="475" y="98" text-anchor="middle">deterministic</text>
+<rect class="box" x="600" y="40" width="150" height="70" rx="6"/><text class="t-title" x="675" y="66" text-anchor="middle">maintainer</text><text class="t-small" x="675" y="84" text-anchor="middle">review, approval,</text><text class="t-small" x="675" y="98" text-anchor="middle">merge</text>
+<path class="edge" d="M150,75 L200,75" marker-end="url(#a5)"/>
+<path class="edge" d="M350,62 L400,62" marker-end="url(#a5)"/>
+<path class="edge" d="M400,90 L350,90" marker-end="url(#a5)"/>
+<text class="t-small" x="375" y="130" text-anchor="middle">fix and retry</text>
+<path class="edge" d="M550,75 L600,75" marker-end="url(#a5)"/>
+<rect class="box ok" x="400" y="165" width="550" height="40" rx="6"/><text x="675" y="190" text-anchor="middle">nightly: full-data gates, dashboard, backlog</text>
+<path class="edge dash" d="M750,75 L800,75 L800,165" marker-end="url(#a5)"/>
+<path class="edge dash" d="M400,185 C200,185 80,170 80,110" marker-end="url(#a5)"/>
+<text class="t-small" x="180" y="170">backlog feeds the next trigger</text>
 </svg>
-<figcaption><b>Figure 6. A trigger, start to finish.</b> Everything except the agent's work and the review agent's answers is deterministic. The checks, not the agent, decide when the work is done.</figcaption>
+<figcaption><b>Figure 5. A trigger, start to finish.</b> Everything except the agent&rsquo;s work and the maintainer&rsquo;s decisions is deterministic. The checks, not the agent, decide when the work is done.</figcaption>
 </figure>
 
 <h3 id="s13-1">13.1 The invariant registry</h3>
-<p>Every invariant in this document is a record in <code>blis-substrate/contracts/invariants/</code>:</p>
+<p>Every invariant in this document is a record in <code>substrate/contracts/invariants/</code>:</p>
 <pre><code>- id: SUB-6
   statement: The cost model resolves nothing; every default, backend choice,
              padding and capture decision arrives in the plan or step shape.
-  scope: [blis-substrate/kernel]
+  scope: [substrate/kernel]
   checks:
-    - repo: blis-substrate
-      test: TestKernelResolvesNothing
+    - test: TestKernelResolvesNothing
+      known_bad: a plan that leaves a default unresolved
       runs: pull_request
-  review: null                    # or {question, reviewer, trigger}
-  status: new                     # ci | partial | new | review
-  target: {status: ci, milestone: 4}   # a milestone of a release plan</code></pre>
-<p>The status <code>partial</code> means some of an invariant's checks run in CI and others are still <code>new</code>. The status <code>review</code> means the invariant is enforced only by its review question, with no mechanical check; X1 to X9 keep a review question beside their checks, and no invariant in this document is <code>review</code> alone. Each check has its own status, so the invariant registry shows which parts are enforced.</p>
-<p>An invariant registry check's <code>runs</code> value is <code>pull_request</code>, <code>nightly</code> or <code>release</code> for an automated check, or <code>practice</code> for a maintainer practice (§4.2). A <code>practice</code> record names the repository it concerns and its checklist item, and has no test: no program in another repository reads it. A practice is confirmed by a person ticking its item on the repository&rsquo;s maintainer checklist; it has no check run to pass, so the release bot does not wait on it.</p>
-<p>A generator turns these records into this document's appendix, into a section of every repository's <code>AGENTS.md</code> that carries the agent guidance, into the checklist of every pull-request template, and into a maintainer checklist for each repository that lists its practices. A rendered copy that does not match its record fails CI.</p>
-<p><b>What a repository&rsquo;s <code>AGENTS.md</code> holds.</b> It is the first file an agent reads, so it is short and complete. It holds, in this order: what the repository is and owns, and what it must never hold (§5); the rules that apply to a change here, rendered from the invariant registry; the commands to build, test and run every check, exactly as CI runs them; what a change in this repository must also update (the <code>README.md</code>, the generated copy, the invariant registry record, the plan&rsquo;s issue); and where to look next. It states no version, count or list of supported features, and leaves the concepts to the design, which a person reads. It does not restate a rule that CI enforces and an agent cannot get wrong; it states the rules a check cannot decide. A repository adds to it only through the invariant registry or a pull request that the reviewer with write access approves.</p>
+  status: ci                      # ci | partial | none</code></pre>
+<p>The status <code>partial</code> means some of a rule&rsquo;s checks are written and others are not. A rule that is a maintainer practice (<a href="#s4-kinds">§4.2</a>) has no checks. Each check runs on <code>pull_request</code>, <code>nightly</code> or <code>release</code>, and names a known-bad input that must make it fail (<span class="inv">X18</span>).</p>
+<p>A generator renders these records into a section of each repository&rsquo;s <code>AGENTS.md</code>. A rendered copy that does not match its record fails CI.</p>
 
-<h3 id="s13-2">13.2 On every pull request</h3>
-<ol class="steps">
-<li>The template lists the invariant identifiers the change claims to keep or introduce. CI fails if any identifier does not exist. The invariant registry lives at <code>contracts/invariants/</code>, and every Go repository pins the substrate, so each reads the invariant registry version it pins; <code>blis-config-search</code> and <code>accuracy-dashboard</code>, which depend only on <code>inference-sim</code>, read it through <code>inference-sim invariants</code> at the release they pin. The shared workflow lives in <code>blis-substrate/.github/workflows</code>, and each repository calls it by commit (<span class="inv">X21</span>).</li>
-<li>For each cited identifier whose status is <code>ci</code>, CI confirms its checks passed. A check in this repository must pass on this pull request. A check in another repository must have passed at the version this pull request pins.</li>
-<li>The review agent reads the changed paths and the diff against every review question&rsquo;s trigger. A few triggers depend on what changed, not where, such as &ldquo;a floating-point reduction is added&rdquo;; the agent applies those by reading the diff.</li>
-<li>For each question that applies, the review agent answers it in a review comment with yes or no, a reason, and the files and lines that support the answer. A question is guidance for that review and never a check: no CI job fails because a question is unanswered or answered in the unwanted direction, and no person has to answer or tick one. An answer in the unwanted direction is a finding like any other (§13.7): the reviewer with write access reads it with the rest of the review, and branch protection blocks the merge until that reviewer approves and every conversation is resolved.</li>
-</ol>
+<h3 id="s13-2">13.2 Agent guidance</h3>
+<p><b>What a repository&rsquo;s <code>AGENTS.md</code> holds.</b> It is the first file an agent reads, so it is short. In this order it holds: what the repository is and owns, and what it must never hold (Table 1, <a href="#s2-2">§2.2</a>); the rules that apply to a change here, rendered from the invariant registry; the commands that build, test and run every check, as CI runs them; what a change must also update (the <code>README.md</code>, a generated copy, the registry record); and where to look next. It states no version, count or list of supported features. It does not restate a rule that a check enforces and an agent cannot get wrong; it states the rules a check cannot decide.</p>
+<p><b>Review questions.</b> A rule that depends on judgement may carry a <b>review question</b> with a trigger: the paths it concerns, or a description of the change, such as &ldquo;a floating-point reduction is added&rdquo;. The review agent reads the diff against each trigger and, for each question that applies, answers yes or no in a review comment, with a reason and the files and lines that support it. A question is guidance for that review and never a check: no job fails because it is unanswered or answered in the unwanted direction. A maintainer reads the answers with the rest of the review.</p>
 
-<h3 id="s13-3">13.3 On every release</h3>
-<ol class="steps">
-<li>The release bot refuses to release <code>inference-sim</code>, or to pin a commit of a repository below it, unless every <code>ci</code> invariant that repository owns passed at that commit.</li>
-<li>The release notes are generated, never typed. They list the price-change report (each benchmark scenario's step prices before and after the change), changed coefficient values, changed traces, contract differences, invariants added or changed, review answers, and the exact upstream versions.</li>
-<li>Once the milestone named in an invariant's target is reached, the release bot refuses to release until that invariant has its target status.</li>
-</ol>
+<h3 id="s13-3">13.3 On every pull request</h3>
+<p>CI runs per component directory, with path filters: a change runs the checks of the directories it touches, and the cross-directory checks (<a href="#s3-4">§3.4</a>). The last column of Table 1 (<a href="#s2-2">§2.2</a>) names each component&rsquo;s checks.</p>
+<ul>
+<li>A workflow starts on a pull request only when the code can have changed: <code>opened</code>, <code>synchronize</code>, <code>reopened</code>, and a change of base branch. Editing a pull request&rsquo;s title or body starts nothing and changes no merge state, and no check reads that text.</li>
+<li>The checks are required in branch protection (<span class="inv">X17</span>), so a pull request cannot merge while one fails.</li>
+<li>A pull request that can change prices also generates the <b>price-change report</b>: each benchmark scenario&rsquo;s step prices before and after the change.</li>
+<li>Heavy checks (oracles, mutation sweeps, the byte gate) run only for the directory whose code they test. Whole-run accuracy gates run as <a href="#s13-5">§13.5</a> describes.</li>
+</ul>
 
 <h3 id="s13-4">13.4 Every night</h3>
 <ul>
-<li>The <b>nightly compatibility build</b> builds every repository at the commit the newest <code>inference-sim</code> release pins, and at the commit the newest release of each open <code>inference-sim</code> release branch pins, with the substrate raised to the newest commit of its main branch (skipping a release branch whose contracts the newest substrate no longer fits), on three platforms. It runs each repository's tests and checks the module graph against Figure 1.</li>
-<li><b>Full-data gates</b> rerun coefficient registry writers, the landing gates and fixture-agreement checks on the full data, which CI cannot hold.</li>
-<li><b>Detectors</b> poll upstream releases and data sources, and open trigger pull requests.</li>
+<li>The <b>nightly build</b> builds and tests <code>inference-sim</code> at the head of its main branch and of each open release branch (<a href="#s14-4">§14.4</a>), on three platforms, against the router fork commit each one pins. It checks the import graph against Table 1.</li>
+<li><b>Full-data gates</b> rerun the coefficient registry writers, the landing gates and fixture-agreement checks on the full data, which a pull request&rsquo;s CI cannot hold.</li>
+<li><b>Detectors</b> poll upstream commits and releases and the data sources, and open an issue for a maintainer.</li>
 <li>The <b>dashboard</b> scores, publishes coverage and grades, and updates the backlog.</li>
-<li>A <b>status page</b> shows every invariant by repository with its latest result.</li>
 </ul>
 
 <h3 id="s13-5">13.5 Where accuracy gates run</h3>
 <p>An accuracy gate compares a candidate with held-out data (<span class="inv">VAL-6</span>). Where it runs depends on what it needs:</p>
 <ul>
-<li><b>Operator-level gates</b> need only the cost model and the coefficient registry, for example "does this attention coefficient predict the held-out sweep points?" They run in <code>blis-substrate</code>'s gate job, which holds the role seed in that repository's protected environment (<span class="inv">D7</span>).</li>
-<li><b>Whole-run gates</b> need engines and the simulator, for example "does this change improve end-to-end latency on held-out InferenceX deployments?" They run the dashboard's scoring harness (§11.7), the only end-to-end scorer, at the release or commit the repository pins. A <b>candidate job</b> in the pull request's own repository builds the candidate and runs the harness with no secret and a read-only token, on every unit not on the published <code>fit</code>, <code>anchor</code> or <code>report</code> lists, and writes one prediction per unit. <code>accuracy-dashboard</code>'s <b>gate job</b> holds the role seed (<span class="inv">D7</span>), runs only its own <code>main</code>, refuses predictions made by a harness commit other than one released from its <code>main</code>, reads them as untrusted input, reduces them to aggregates and reports the result on the pull request.</li>
+<li><b>Operator-level gates</b> need only the cost model and the coefficient registry, for example &ldquo;does this attention coefficient predict the held-out sweep points?&rdquo; They run in <code>inference-sim</code>&rsquo;s gate job, which holds the role seed in a protected environment (<span class="inv">D7</span>).</li>
+<li><b>Whole-run gates</b> need engines and the simulator, for example &ldquo;does this change improve end-to-end latency on held-out InferenceX deployments?&rdquo; They run the dashboard&rsquo;s scoring harness (<a href="#s11-7">§11.7</a>), the only end-to-end scorer, at the release or commit the repository pins. A <b>candidate job</b> in the pull request&rsquo;s own repository builds the candidate and runs the harness with no secret and a read-only token, on every unit not on the published <code>fit</code>, <code>anchor</code> or <code>report</code> lists, and writes one prediction per unit. <code>accuracy-dashboard</code>&rsquo;s <b>gate job</b> holds the role seed (<span class="inv">D7</span>), runs only its own <code>main</code>, refuses predictions made by a harness commit other than one released from its <code>main</code>, reads them as untrusted input, reduces them to aggregates and reports the result on the pull request.</li>
 </ul>
-<p>The gate compares two trees: the base, which is the pull request's merge base, and the candidate, which is its head. Comparing against the merge base, rather than against the last release, keeps unrelated changes already on <code>main</code> out of the comparison. Each tree's catalog and coefficient registry are passed with <code>--catalog</code> and <code>--registry</code>.</p>
+<p>The gate compares two trees: the base, which is the pull request&rsquo;s merge base, and the candidate, which is its head. Comparing against the merge base, not the last release, keeps unrelated changes already on <code>main</code> out of the comparison. Each tree&rsquo;s catalog and coefficient registry are passed with <code>--catalog</code> and <code>--registry</code>.</p>
 <ul>
-<li>If the pull request changes only files under <code>catalog/</code> and <code>registry/</code>, and both trees load under the released simulator's validators, and the code outside those directories at the merge base is identical to the substrate release that simulator embeds, the gate runs the released simulator twice, once per tree. No rebuild is needed. If <code>main</code> carries unreleased code changes, the next case applies, so the data are judged with the code they will ship with.</li>
-<li>Otherwise, for example when the pull request changes the cost model or an engine, or uses a data field an older simulator cannot read, stack CI (§13.6) builds one simulator from the base and one from the candidate, and each runs on its own tree.</li>
+<li>If the pull request changes only files under <code>substrate/catalog/</code> and <code>substrate/registry/</code>, both trees load under the released simulator&rsquo;s validators, and the code outside those directories at the merge base is identical to the code of the release, the gate runs the released simulator twice, once per tree. No rebuild is needed. If <code>main</code> carries unreleased code changes, the next case applies, so the data are judged with the code they will ship with.</li>
+<li>Otherwise, for example when the pull request changes the cost model or an engine module, or uses a data field the released simulator cannot read, the job builds one simulator from the base and one from the candidate, and each runs on its own tree.</li>
 </ul>
-<p>Before an <code>inference-sim</code> release moves its substrate pin, the release bot triggers the whole-run gate job once more, comparing the candidate substrate commit (its code and its data) with the commit the previous release pinned (its code and its data) on held units. A lane that gets worse by the test of <span class="inv">VAL-6</span> blocks the release, unless it is recorded as a defect in another term and approved (<span class="inv">VAL-11</span>). That final check covers changes that were each fine alone but interact. In every case the substrate's CI imports no repository above it (<span class="inv">X7</span>). A substrate pull request's candidate job builds <code>inference-sim</code> through stack CI and runs the pinned harness. Those are the two uses of higher repositories <span class="inv">X7</span> allows, and the candidate job imports neither.</p>
-<p>The gate job runs on pull requests that carry a pre-registration, and again nightly on the full data. Any pull request, draft or not, may also run the harness on published units for review (§11.7); that run holds no seed and decides nothing.</p>
+<p>Before a release is cut, the whole-run gate job runs once more, comparing the release candidate with the previous release on held units. A lane that gets worse by the test of <span class="inv">VAL-6</span> fails the check, unless it is recorded as a defect in another term and approved (<span class="inv">VAL-11</span>). That final check covers changes that were each fine alone but interact. In every case the import graph holds (<span class="inv">X7</span>): the candidate job runs the pinned harness and imports none of its code.</p>
+<p>The gate job runs on pull requests that carry a pre-registration, and again nightly on the full data. Any pull request, draft or not, may also run the harness on published units for review (<a href="#s11-7">§11.7</a>); that run holds no seed and decides nothing.</p>
 
-<h3 id="s13-6">13.6 The release bot</h3>
-<p>A review set spanning repositories is described by one file, <code>stack.lock</code>, which lists each repository's branch head. During review, a "stack CI" job builds and tests the heads together, through a <code>go.work</code> file it generates and never commits (<span class="inv">X11</span>), and each pull request in the set pins the head of the pull request below it. When the set is approved, the bot:</p>
-<ol>
-<li>merges each repository bottom-up with a merge commit, so every pinned head stays on its main branch and no pin is written twice;</li>
-<li>checks that each pin is on its repository's main branch or a release branch, and that the repository's checks passed at it;</li>
-<li>tags <code>inference-sim</code>, the only repository whose release is required.</li>
-</ol>
-<p>A new <code>inference-sim</code> release starts the jobs of <code>blis-config-search</code> and <code>accuracy-dashboard</code>: each moves its pin to the release, in a pull request the bot writes, and runs on it, and each also runs nightly on the newest release. Neither cuts a release of its own. A change below <code>inference-sim</code> that no change above it waits for is merged on its own. The next <code>inference-sim</code> release picks it up by moving its pin to the newest commit of that repository's main branch at which the repository's checks passed, with the price-change report (§13.3).</p>
-<p>No person or agent re-pins by hand, and no agent waits on CI.</p>
-<p>The bot's code lives in <code>blis-substrate/tools/release</code>, and its tags are signed. If the bot is unavailable, a documented manual procedure, run by a person with write access, produces the same tags in the same order.</p>
+<h3 id="s13-6">13.6 Releases</h3>
+<p><code>inference-sim</code> is the one tagged release (<a href="#s14">§14</a>). Cutting it is maintainer practice (<span class="inv">LIF-3</span>). The generated inputs to a release are the list of pull requests merged since the previous release, the price-change report (<a href="#s13-3">§13.3</a>) and <code>stack.json</code> (<span class="inv">SIM-3</span>).</p>
+<p><code>accuracy-dashboard</code> and <code>blis-config-search</code> each pin an <code>inference-sim</code> release and run nightly on the newest one. Neither cuts a release of its own.</p>
 
 <h3 id="s13-7">13.7 What agents may and may not do</h3>
 <div class="tbl"><table>
+<caption><b>An agent works within the checks and never decides a merge or a release.</b></caption>
 <thead><tr><th>Agents may</th><th>Agents may not</th></tr></thead>
 <tbody>
-<tr><td>Work the items a preflight lists, in a branch</td><td>Start without a preflight, or go beyond its list</td></tr>
-<tr><td>Port changed functions; classify fields and surface items; write tests; fit coefficients from <code>fit</code> units; draft pre-registrations</td><td>Edit a recorded trace without the update flag and a review line; edit a generated file by hand</td></tr>
-<tr><td>Iterate until the checks pass, within the declared budget</td><td>Weaken, skip or delete a check; change a success criterion after reading held-out data; change the ledger's cut-points or partition version</td></tr>
-<tr><td>Act as the review agent: apply each review question to a pull request, answer it with the files and lines that support the answer, and raise findings</td><td>Approve a merge; cut a release; review a change it wrote itself</td></tr>
-<tr><td>Read summaries produced by tools</td><td>Load recorded traces, vendored data, vendor configs or data files into context, instead of the tool summaries</td></tr>
+<tr><td>Work an issue, an upgrade report or a requested scenario, in a branch</td><td>Edit a recorded trace without the update flag and a review line; edit a generated file by hand</td></tr>
+<tr><td>Port changed functions; classify fields and surface items; write tests; fit coefficients from <code>fit</code> units; draft pre-registrations</td><td>Weaken, skip or delete a check; change a success criterion after reading held-out data; change the ledger&rsquo;s cut-points or partition version</td></tr>
+<tr><td>Iterate until the checks pass</td><td>Approve a merge, cut a release, or review a change they wrote</td></tr>
+<tr><td>Act as the review agent (<a href="#s13-2">§13.2</a>)</td><td>Load recorded traces, vendored data or data files into context, instead of the tool summaries</td></tr>
 </tbody></table></div>
-<p>Most of the prohibitions on the right are enforced by CI or by permissions, as listed below. Two depend on the agent's instructions and on review: staying within the preflight's list, and not loading generated files into context.</p>
+<p>CI or permissions enforce most of the prohibitions. Two depend on the agent&rsquo;s instructions and on review: working within the task, and not loading generated files into context.</p>
 <ul>
-<li>Every check declares the paths it consists of: its test files, thresholds, fixtures and workflow file. Those paths, and <code>.github/</code>, are protected. A change to any of them is a trigger for the review agent&rsquo;s guidance.</li>
-<li>A CI step fails on any new test skip, lint suppression or loosened threshold, unless the pull-request description carries a <code>Waiver:</code> line that names the file and the reason. The line is a fact the step reads; the review agent judges whether the reason holds, and the reviewer with write access approves the pull request that carries it.</li>
-<li>A change to a success criterion, or to the ledger&rsquo;s cut-points or partition version, is a trigger for the review agent&rsquo;s guidance. Held-out data is never read before the criterion is committed (§9, §10).</li>
+<li>Every check declares the paths it consists of: its test files, thresholds, fixtures and workflow file. A CI step fails on any new test skip, lint suppression or loosened threshold in them, unless a committed waiver file names the file and the reason; a maintainer reads that file in review.</li>
+<li>Held-out data is never read before the success criterion is committed (<a href="#s9">§9</a>, <a href="#s10">§10</a>).</li>
 <li>Trace and generated-file guards are CI checks.</li>
 <li>Agent credentials have no permission to merge or tag.</li>
 </ul>
-
-<h3 id="s13-8">13.8 Keeping agent work cheap</h3>
-<ul>
-<li><b>The preflight sets the scope.</b> An agent works only on the preflight's list, within its budget. Work outside the list is a new trigger.</li>
-<li><b>Tools do mechanical work.</b> Re-pinning, re-vendoring, regenerating traces, diffing releases and updating descriptions are commands.</li>
-<li><b>Agents do not wait.</b> When CI or review is pending, the session ends and resumes on an event.</li>
-<li><b>Reviews by agents are narrow.</b> An audit agent receives one diff and one trigger's done-when list.</li>
-</ul>
-
 <!-- ============================================================ -->
-<h2 id="s14"><span class="secno">14</span>Versions, releases and blis-sglang</h2>
+<h2 id="s14"><span class="secno">14</span>Versions and releases</h2>
+
+<p>This design has its own version number. The rule for numbering and tagging it is in the <a href="https://github.com/inference-sim/blis-design#version-numbers">README of blis-design</a>, and is stated nowhere else. This section is about the versions of the code the design describes.</p>
 
 <h3 id="s14-1">14.1 Version schemes</h3>
+<p>An engine module models one upstream <b>commit</b>: a release tag, or any commit on the upstream&rsquo;s main or a release branch (<span class="inv">LIF-5</span>). <code>inference-sim</code> is the one tagged release. Every other repository is pinned by commit.</p>
 <div class="tbl"><table>
-<thead><tr><th>Kind</th><th>Repositories</th><th>How a release pins it</th><th>What the pin means</th></tr></thead>
+<caption><b>Only <code>inference-sim</code> has release versions; everything else is identified by a commit.</b></caption>
+<thead><tr><th>Kind</th><th>Where</th><th>How it is identified</th><th>What that means</th></tr></thead>
 <tbody>
-<tr><td>Engines</td><td><code>blis-vllm</code>, <code>blis-sglang</code></td><td>One commit, by its pseudo-version. A tag is optional and never pinned.</td><td>The commit models one upstream release. Its <code>Upstream</code> record (<code>provenance.go</code>) names that release and its commit, and the module holds no code for any other release. When upstream releases a new version, the module's main branch moves to it, and the previous upstream release keeps its own release branch for fixes (<a href="#s14-4">§14.4</a>). A tag, if one is made, has the form <code>v&lt;upstream&gt;-blis.N</code> (<span class="inv">LIF-5</span>); every tag stays (<span class="inv">LIF-1</span>).</td></tr>
-<tr><td>KV stores</td><td><code>blis-kvstore</code></td><td>One commit, by its pseudo-version. A tag is optional and never pinned.</td><td>Each store package names its store's release and commit in its <code>Upstream</code> record, and <code>stack.json</code> records each one (<span class="inv">SIM-3</span>). Moving a store to a new release is a MINOR release of <code>inference-sim</code>, and its release notes name every store release that changed.</td></tr>
-<tr><td>Router fork</td><td>the llm-d router fork</td><td>One commit of <code>llm-d-r</code>, by its pseudo-version, in <code>inference-sim</code>'s one <code>replace</code> directive. A tag is optional and never pinned.</td><td>The fork carries one llm-d release at a time, because the router is one module with upstream's import path. A tag, if one is made, has the form <code>v&lt;upstream&gt;-blis.N</code>; every tag stays.</td></tr>
-<tr><td>Substrate</td><td><code>blis-substrate</code></td><td>One commit, by its pseudo-version. A tag is optional and never pinned.</td><td>A compatible contract addition, new data or pricing forms, or changed values are listed in the notes of the <code>inference-sim</code> release that first pins them, with the price-change report. An incompatible contract change needs the contract-change review set (§12.8), and the <code>inference-sim</code> release that pins it is MINOR while <code>inference-sim</code> is at v0. A tag, if one is made, has the form <code>vX.Y.Z</code>; every tag stays. If the module path ever needs a major version, Go adds <code>/v2</code> to it.</td></tr>
-<tr><td>Simulator</td><td><code>inference-sim</code></td><td><code>vX.Y.Z</code>, the only BLIS tag</td><td>Semantic versions over what users see: the command line, scenario format and <code>Result</code> document. Moving to a new upstream release of an engine or of llm-d, patch releases included, is MINOR. It stops running scenarios that name the old release, but that refusal is part of the scenario contract (<span class="inv">LIF-6</span>), not a breaking change; the release notes and the refusal message name the last release that runs the old one. MAJOR is kept for changes to the command line, the scenario format or the <code>Result</code> document.</td></tr>
-<tr><td>Applications</td><td><code>blis-config-search</code>, <code>accuracy-dashboard</code></td><td>Not pinned by <code>inference-sim</code>. No release.</td><td>Each pins an <code>inference-sim</code> release by its tag and commit, runs from its main branch nightly and on every new <code>inference-sim</code> release (§13.6), and records its own commit on every figure and report it writes (<span class="inv">X8</span>).</td></tr>
+<tr><td>Simulator</td><td><code>inference-sim</code>, with <code>substrate/</code> and <code>engines/</code></td><td><code>vX.Y.Z</code>, the only BLIS tag</td><td>Semantic versions over what users see: the command line, the scenario format and the <code>Result</code> document. Prices and decisions are not part of that surface. A release that changes them is still MINOR or PATCH, and its notes carry the price-change report. Moving an engine module to another upstream commit is MINOR: it stops running scenarios that name the old commit, but that refusal is part of the scenario contract (<span class="inv">LIF-6</span>), not a breaking change. MAJOR is kept for changes to the command line, the scenario format or the <code>Result</code> document.</td></tr>
+<tr><td>Engine modules</td><td><code>engines/vllm</code>, <code>engines/sglang</code></td><td>No version of their own: the <code>Upstream</code> record in <code>provenance.go</code></td><td>The record names the upstream commit the module models, and the release that commit descends from, such as <code>v0.5.6.post1</code>, written as upstream writes it. The module holds no code for any other commit, except a listed model backport (<a href="#s7">§7</a>).</td></tr>
+<tr><td>Substrate</td><td><code>substrate/</code></td><td>No version of its own</td><td>A compatible contract addition, new data or pricing forms, or changed values are listed in the notes of the release that first contains them, with the price-change report. An incompatible contract change is one pull request that moves every implementer (<span class="inv">SUB-1</span>, <a href="#s12-8">§12.8</a>), and the release that contains it is MINOR while <code>inference-sim</code> is at v0.</td></tr>
+<tr><td>Router fork</td><td>the llm-d router fork</td><td>One commit of <code>llm-d-r</code>, by its pseudo-version, in <code>inference-sim</code>&rsquo;s one <code>replace</code> directive (<span class="inv">X11</span>). A tag is optional and never pinned.</td><td>The fork carries one llm-d release at a time, because the router is one module with upstream&rsquo;s import path. A tag, if one is made, has the form <code>v&lt;upstream&gt;-blis.N</code>; every tag stays.</td></tr>
+<tr><td>Applications</td><td><code>blis-config-search</code>, <code>accuracy-dashboard</code></td><td>Not pinned by <code>inference-sim</code>. No release.</td><td>Each pins an <code>inference-sim</code> release by its tag and commit, runs nightly and on every new release (<a href="#s13-6">§13.6</a>), and records its own commit on every figure and report it writes (<span class="inv">X8</span>).</td></tr>
 </tbody></table></div>
 
-<h4>What an engine pin guarantees</h4>
-<p>An engine release, like any software, can ship with a bug or a gap that is found later. That is expected: the fix is a later commit on the same branch, and the next <code>inference-sim</code> release pins it the same way as any other.</p>
-<p>When an <code>inference-sim</code> release pins a commit of <code>blis-vllm</code> or <code>blis-sglang</code>, that commit:</p>
+<h4>What a release guarantees about an engine module</h4>
+<p>An upstream commit, like any software, can ship with a bug or a gap found later. The fix is a later commit on the same branch, and a later release contains it like any other change.</p>
+<p>A release of <code>inference-sim</code>, for each engine module:</p>
 <ul>
-<li>models the upstream release its <code>Upstream</code> record names, at the commit that record names, and no other release;</li>
-<li>passed that release's oracle tiers, its field list and surface list checks, and every <code>ci</code> invariant (<span class="inv">LIF-3</span>);</li>
-<li>differs from the commit the previous release pinned, on the same upstream release, only by BLIS-side changes: bug fixes, newly modelled features or plugins, contract or substrate updates. They may change prices or decisions. The <code>inference-sim</code> release notes list the pull requests merged between the two commits, say whether prices or decisions changed, and include the price-change report (§13.3);</li>
-<li>holds only files ported from that upstream release or original to BLIS. Nothing is kept for an older release.</li>
+<li>models the upstream commit its <code>Upstream</code> record names, and no other;</li>
+<li>passed that commit&rsquo;s oracle tiers, its field list and surface list checks, and every <code>ci</code> invariant (<span class="inv">LIF-3</span>);</li>
+<li>differs from the previous release that models the same commit only by BLIS-side changes: bug fixes, newly modelled features, contract or substrate updates. They may change prices or decisions. The release notes list the pull requests merged between the two releases, say whether prices or decisions changed, and include the price-change report (<a href="#s13-3">§13.3</a>);</li>
+<li>holds only files ported from that commit or original to BLIS.</li>
 </ul>
-<p>An engine module has no version number of its own. Its identity is its <code>Upstream</code> record and its commit. The pseudo-version Go derives for a commit only orders commits; its numbers come from an older tag and say nothing about the release modelled. Only <code>inference-sim</code> imports an engine module, and it pins the exact commit (<span class="inv">LIF-2</span>). If an upstream reaches v2, the module path gains <code>/v2</code>, as Go requires.</p>
-
-<h4>Upstream versions</h4>
-<p>Release candidates (vLLM's <code>v0.33.0rc0</code>, SGLang's <code>v0.5.3rc0</code>) are not modelled; an engine module models final releases only. A post release (SGLang's <code>v0.5.6.post1</code>) or a four-part version (vLLM's <code>v0.10.1.1</code>) is named in the <code>Upstream</code> record and in <code>engine.version</code> exactly as upstream writes it; no tag has to encode it.</p>
+<p>The pseudo-version Go derives for a router fork commit only orders commits; its numbers come from an older tag and say nothing about the llm-d release modelled. If an upstream reaches v2, the module path gains <code>/v2</code>, as Go requires.</p>
 
 <div class="callout warn">
-<h4>A detail of Go's version ordering</h4>
-<p>To Go, <code>-blis.N</code> is a pre-release suffix. So <code>v0.32.0-blis.1</code> sorts <em>before</em> <code>v0.32.0</code>. Among suffixed tags, <code>v0.32.0-blis.2</code> sorts before <code>v0.32.0-blis.10</code>, and both sort before <code>v0.32.1-blis.1</code>. <code>go get …@latest</code> also prefers any plain release over every pre-release. This is Go's own ordering (<code>golang.org/x/mod/semver</code>) and the behaviour of <code>go get</code>.</p>
-<p>Three rules follow:</p>
+<h4>A detail of Go&rsquo;s version ordering</h4>
+<p>To Go, <code>-blis.N</code> is a pre-release suffix. So <code>v0.32.0-blis.1</code> sorts <em>before</em> <code>v0.32.0</code>, and <code>go get &hellip;@latest</code> prefers any plain release over every pre-release. This is Go&rsquo;s own ordering (<code>golang.org/x/mod/semver</code>). Three rules follow for the router fork:</p>
 <ul>
-<li>Engine modules and the router fork never tag a plain <code>v&lt;upstream&gt;</code>; an optional tag always has a <code>-blis.N</code> suffix, with <code>N</code> from 1. The pseudo-version of a commit sorts after every tag that is its ancestor, so a pin to a new commit outranks the tags made before this rule.</li>
-<li>Pins name exact commits. The release bot never resolves <code>@latest</code>, and a lint checks the version each build actually selects, not the text of <code>go.mod</code> (<span class="inv">LIF-2</span>).</li>
-<li>A plain tag made before this rule stays, because tags are never moved or deleted (<span class="inv">LIF-1</span>). It makes <code>@latest</code> wrong for that module, and a module that requires it outranks every <code>-blis.N</code> tag and the pseudo-versions after them in version selection. A <code>retract</code> line does not fix this: retractions never change version selection, and Go reads them only from the latest release version, which is the plain tag itself. An <code>exclude</code> line in <code>inference-sim</code>'s <code>go.mod</code> does, because Go applies the main module's excludes to the whole build (<span class="inv">X11</span>).</li>
+<li>It never tags a plain <code>v&lt;upstream&gt;</code>; an optional tag always has a <code>-blis.N</code> suffix, with <code>N</code> from 1.</li>
+<li>Pins name exact commits. A lint checks the version each build actually selects, not the text of <code>go.mod</code> (<span class="inv">LIF-2</span>).</li>
+<li>A plain tag made earlier stays, because tags are never moved or deleted (<span class="inv">LIF-1</span>). It makes <code>@latest</code> wrong for that module. A <code>retract</code> line does not fix this, because Go reads retractions only from the latest release version, which is that tag. An <code>exclude</code> line in <code>inference-sim</code>&rsquo;s <code>go.mod</code> does, because Go applies the main module&rsquo;s excludes to the whole build (<span class="inv">X11</span>).</li>
 </ul>
 </div>
 
 <h3 id="s14-2">14.2 Lifecycle invariants</h3>
 <ul class="invlist">
-<li><span class="inv">LIF-1</span> <span class="stmt">A tag names one commit forever, and a pinned commit stays on its branch forever. Tags are never moved or deleted; a mistake gets a new tag. A main or release branch that an <code>inference-sim</code> release pins is never rewritten.</span><span class="enf"><b>Checked by:</b> the release bot, which confirms at each release that the tag is an annotated tag on the checked commit and that every pinned commit is on its branch. <b>Maintainer practice</b> (§4.2): a tag rule on <code>v*</code> in <code>inference-sim</code> blocks updating and deleting a tag, and branch protection blocks force-pushes to main and release branches in every repository.</span></li>
-<li><span class="inv">LIF-2</span> <span class="stmt">In every build, each BLIS module resolves to the exact commit the release records in <code>stack.json</code>, and the router fork resolves to the commit <code>stack.json</code> records through <code>inference-sim</code>'s one <code>replace</code> directive (<span class="inv">X11</span>). <code>inference-sim</code>'s own substrate requirement equals the version its build selects, so no engine or router release can change the simulator's data. One Go toolchain version is named in <code>contracts/toolchain</code>, at the substrate version <code>inference-sim</code> selects. No module BLIS writes declares a <code>go</code> version above it. Every CI job sets <code>GOTOOLCHAIN=local</code> and installs exactly that version, so no build downloads a toolchain. The router fork's <code>go</code> line follows upstream llm-d; when upstream raises it, the release bot raises the toolchain file first, in the same review set. Documented version strings are generated (<span class="inv">X23</span>).</span><span class="enf"><b>Checked by:</b> selected-version lint (<code>go list -m all</code>), which for the router reads the replace target that <code>go list -m -json</code> reports, not the placeholder version on the <code>require</code> line; a check that every module in <code>go list -m -json all</code> declares a <code>GoVersion</code> no higher than <code>contracts/toolchain</code>; a CI step that fails if <code>go version</code> differs from it; the pre-release test of every engine and router package against the simulator's selected versions (§3.2).</span></li>
-<li><span class="inv">LIF-3</span> <span class="stmt">Only the release bot cuts releases. The one required release is <code>inference-sim</code>'s, cut from a commit where every <code>ci</code> invariant passed, with every pin on a commit where the pinned repository's <code>ci</code> invariants passed. If the bot is unavailable, a person with write access to <code>inference-sim</code> may follow the documented manual procedure (§13.6); a manual tag is an annotated tag on the checked commit, recorded in the release notes.</span><span class="enf"><b>Checked by:</b> the bot&rsquo;s own check of every <code>ci</code> invariant at each commit it releases or pins; a nightly check, in <code>inference-sim</code>, that every tag made by a person is annotated and listed in its release notes. <b>Maintainer practice</b> (§4.2): <code>inference-sim</code>&rsquo;s settings let only the release bot and people with write access create tags.</span></li>
-<li><span class="inv">LIF-4</span> <span class="stmt">Release notes are generated (§13.3). For each repository the release pins, they list the pull requests merged between the commit the previous release pinned and the commit this one pins.</span><span class="enf"><b>Checked by:</b> the release bot, which writes the notes from the release's changes.</span></li>
-<li><span class="inv">LIF-5</span> <span class="stmt">An engine module, or the router fork, models one upstream release. A tag is optional. If one is made, it is <code>v&lt;upstream&gt;-blis.N</code>, <code>v&lt;upstream&gt;-post.K.blis.N</code> for a post release, or <code>v&lt;upstream&gt;-rev.W.blis.N</code> for a four-part version, with <code>N</code> from 1, and no plain upstream tag is made; every tag stays (<span class="inv">LIF-1</span>). In an engine module, the <code>Upstream</code> record names that release and commit, every ported file names that same release, and no code for another release remains. An adapter file derived from a package the oracle's lock pins also names that package's version (<span class="inv">VLM-2</span>). Release candidates are not modelled. The package that runs the modelled release depends on no package that exists only for another release.</span><span class="enf"><b>Checked by:</b> a test that lists the dependencies of the engine's entry package with <code>go list -deps</code> and fails on any package kept for another release; a nightly tag check in the repository (format, <code>N</code> one above the previous tag on the same upstream release, no plain tag); in engine modules, the provenance test, which refuses a ported file that names another release.</span></li>
-<li><span class="inv">LIF-6</span> <span class="stmt">Each <code>inference-sim</code> release runs exactly one upstream release of each engine, of llm-d and of each KV store <code>blis-kvstore</code> models, and lists them in <code>stack.json</code>. A scenario whose <code>engine.version</code> names a different upstream release is refused, with a message naming the release it asked for, the one this build runs, and the newest <code>inference-sim</code> release that runs the one it asked for, or says that none does. The llm-d release is not stated by scenarios; it is the one <code>stack.json</code> lists.</span><span class="enf"><b>Checked by:</b> a refusal test per engine kind; a check that the message's release names match <code>stack.json</code> history.</span></li>
-<li><span class="inv">LIF-7</span> <span class="stmt">A deprecated feature is removed by the first <code>inference-sim</code> release after its deprecation that may break compatibility: a MAJOR release, or a MINOR release while <code>inference-sim</code> is at v0. A repository below <code>inference-sim</code>, which has no releases of its own, removes it in the commit that release pins; an engine module also removes deprecated code when <code>main</code> moves to a new upstream release. Removal takes with it every code path, flag, field, test and document that existed only for that feature. Each deprecation is recorded where the feature is defined (a command's or flag's deprecation notice, or a <code>// Deprecated:</code> comment) with the release that deprecated it. Nothing in this design depends on a deprecated feature, and no repository keeps code that none of the binaries BLIS ships can reach.</span><span class="enf"><b>Checked by:</b> the release bot, which refuses a MAJOR <code>inference-sim</code> release, or a MINOR one at v0, that still contains, in <code>inference-sim</code> or in a commit it pins, a feature deprecated in an earlier release; a whole-program dead-code check (Go's <code>deadcode</code>), run in stack CI's workspace from the main packages of every binary BLIS ships, with test files not counted as reaching code. Upstream files in the router fork, and the interfaces in <code>contracts/</code>, are exempt.</span></li>
+<li><span class="inv">LIF-1</span> <span class="stmt">A tag names one commit forever, and a pinned commit stays on its branch forever. Tags are never moved or deleted; a mistake gets a new tag. A main or release branch that a release pins is never rewritten.</span><span class="enf"><b>Maintainer practice</b> (<a href="#s4-kinds">§4.2</a>): a tag rule on <code>v*</code> in <code>inference-sim</code> blocks updating and deleting a tag, and branch protection blocks force-pushes to main and release branches in every repository.</span></li>
+<li><span class="inv">LIF-2</span> <span class="stmt">In every build, the router fork resolves to the commit <code>stack.json</code> records, through <code>inference-sim</code>&rsquo;s one <code>replace</code> directive (<span class="inv">X11</span>). One Go toolchain version is named in <code>substrate/contracts/toolchain</code>. No module BLIS writes declares a <code>go</code> version above it. Every CI job sets <code>GOTOOLCHAIN=local</code> and installs exactly that version, so no build downloads a toolchain. The router fork&rsquo;s <code>go</code> line follows upstream llm-d; when upstream raises it, a maintainer raises the toolchain file first, in the same change. Documented version strings are generated (<span class="inv">X23</span>).</span><span class="enf"><b>Checked by:</b> selected-version lint (<code>go list -m all</code>), which for the router reads the replace target that <code>go list -m -json</code> reports, not the placeholder version on the <code>require</code> line; a check that every module in <code>go list -m -json all</code> declares a <code>GoVersion</code> no higher than <code>contracts/toolchain</code>; a CI step that fails if <code>go version</code> differs from it; a test of every engine and router package against the versions the simulator selects.</span></li>
+<li><span class="inv">LIF-3</span> <span class="stmt">A maintainer with write access cuts each <code>inference-sim</code> release, from a commit where every required check passed, with an annotated tag on that commit. The release notes list the pull requests merged since the previous release and the price-change report, and name the upstream commit each engine module models (<span class="inv">SIM-3</span>).</span><span class="enf"><b>Maintainer practice</b> (<a href="#s4-kinds">§4.2</a>): <code>inference-sim</code>&rsquo;s settings let only people with write access create tags; branch protection requires the checks before a merge; the maintainer writes the notes from the generated list and report (<a href="#s13-6">§13.6</a>).</span></li>
+<li><span class="inv">LIF-5</span> <span class="stmt">An engine module models one upstream commit. Its <code>Upstream</code> record names that commit and the release it descends from, every ported file names that same commit, and no code for another commit remains except a model backport the record lists (<span class="inv">VLM-2</span>). An adapter file derived from a package the oracle&rsquo;s lock pins also names that package&rsquo;s version. The package that runs the modelled commit depends on no package that exists only for another commit.</span><span class="enf"><b>Checked by:</b> a test that lists the dependencies of the engine&rsquo;s entry package with <code>go list -deps</code> and fails on any package kept for another commit; the provenance test, which refuses a ported file that names another commit.</span></li>
+<li><span class="inv">LIF-6</span> <span class="stmt">Each <code>inference-sim</code> release runs exactly one upstream commit of each engine and one llm-d release, and lists them in <code>stack.json</code>. A scenario whose <code>engine.version</code> names a different commit is refused, with a message naming the commit it asked for, the one this build runs, and the newest release that runs the one it asked for, or saying that none does. The llm-d release is not stated by scenarios; it is the one <code>stack.json</code> lists.</span><span class="enf"><b>Checked by:</b> a refusal test per engine kind; a check that the message&rsquo;s commit names match <code>stack.json</code> history.</span></li>
+<li><span class="inv">LIF-7</span> <span class="stmt">A deprecated feature is removed by the first release after its deprecation that may break compatibility: a MAJOR release, or a MINOR release while <code>inference-sim</code> is at v0. An engine module also removes deprecated code when it moves to a new upstream commit. Removal takes with it every code path, flag, field, test and document that existed only for that feature. Each deprecation is recorded where the feature is defined (a command&rsquo;s or flag&rsquo;s deprecation notice, or a <code>// Deprecated:</code> comment) with the release that deprecated it. Nothing in this design depends on a deprecated feature, and no directory keeps code that none of the binaries BLIS ships can reach.</span><span class="enf"><b>Checked by:</b> a whole-program dead-code check (Go&rsquo;s <code>deadcode</code>) from the main packages of every binary BLIS ships, with test files not counted as reaching code; upstream files in the router fork, and the interfaces in <code>contracts/</code>, are exempt. <b>Maintainer practice</b> (<a href="#s4-kinds">§4.2</a>): the maintainer cutting a MAJOR release, or a MINOR one at v0, reads the deprecation notices and removes the features they name.</span></li>
 </ul>
 
-
-<h3 id="s14-3">14.3 blis-sglang</h3>
-<p><code>blis-sglang</code> does for SGLang what <code>blis-vllm</code> does for vLLM. It models one SGLang release, pinned by tag and commit. The pin must be exact, because SGLang's <code>main</code> moves fast and often rewrites core components, such as the allocator, between releases. Its first release and stages are in the release plan.</p>
+<h3 id="s14-3">14.3 The SGLang engine module</h3>
+<p><code>engines/sglang</code> does for SGLang what <code>engines/vllm</code> does for vLLM. It models one SGLang commit, which <code>stack.json</code> records. The commit is exact, because SGLang&rsquo;s <code>main</code> moves fast and often rewrites core components, such as the allocator, between releases.</p>
 
 <h4>Layout</h4>
 <div class="tbl"><table>
+<caption><b>The SGLang module has one directory for each part of the port.</b> Paths are relative to <code>engines/sglang/</code>.</caption>
 <thead><tr><th>Path</th><th>Contents</th></tr></thead>
 <tbody>
-<tr><td><code>provenance.go</code></td><td><code>Kind = "sglang"</code> and the <code>Upstream</code> record (the SGLang release and commit), using the type from <code>contracts/harness</code></td></tr>
+<tr><td><code>provenance.go</code></td><td><code>Kind = "sglang"</code> and the <code>Upstream</code> record (the SGLang commit and the release it descends from), using the type from <code>contracts/harness</code></td></tr>
 <tr><td><code>config/</code></td><td><code>ServerArgs</code> field for field, from <code>srt/arg_groups/fields/</code>; defaults resolved as SGLang's <code>*_hook.py</code> files resolve them; <code>fields.json</code></td></tr>
 <tr><td><code>core/sched/</code></td><td>event loops (normal and overlap), <code>PrefillAdder</code>, policies, prefill budget, retraction</td></tr>
 <tr><td><code>core/cache/</code></td><td>the radix cache, token and paged allocators, eviction, KV events</td></tr>
@@ -1925,7 +1896,8 @@ The next engine upgrade drops the backport when the new commit contains it. A ru
 
 <h4>Behaviour the port must reproduce</h4>
 <div class="tbl"><table>
-<thead><tr><th>Behaviour at v0.5.23</th><th>Source</th></tr></thead>
+<caption><b>Each behaviour is stated where the port must reproduce it, with its source.</b> Lines are those of SGLang v0.5.23.</caption>
+<thead><tr><th>Behaviour</th><th>Source</th></tr></thead>
 <tbody>
 <tr><td>A step tries prefill first. A batch is prefill or decode, mixed only with <code>enable_mixed_chunk</code> (off by default).</td><td><code>managers/scheduler.py</code> <code>get_next_batch_to_run</code>; <code>arg_groups/fields/schedule.py:208-211</code></td></tr>
 <tr><td>The overlap scheduler forms the next batch before the current result is processed, using placeholder tokens. A request that stops at end-of-sequence may run one discarded extra step (<span class="inferred">inferred</span>).</td><td><code>managers/scheduler.py</code> <code>event_loop_overlap</code>; <code>managers/overlap_utils.py</code></td></tr>
@@ -1938,53 +1910,48 @@ The next engine upgrade drops the backport when the new commit contains it. A ru
 <tr><td>Sources of nondeterminism to remove in the port: the unified radix cache uses its Rust tree core on Linux and its Python tree core elsewhere (<code>SGLANG_UNIFIED_RADIX_TREE_CORE_BACKEND</code>, default <code>rust</code>, with fallbacks to Python); a <code>random</code> policy; time-based timeouts.</td><td><code>environ.py:741</code>; <code>managers/schedule_policy.py</code></td></tr>
 </tbody></table></div>
 
-<h3 id="s14-4">14.4 Release branches</h3>
-<p>Each upstream-tracking repository has a main branch (<code>llm-d-r</code> in the router fork) that models the newest upstream release BLIS supports. When BLIS moves to a new upstream release, two branches are cut:</p>
-<ul>
-<li>in the upstream-tracking repository, <code>release-&lt;upstream&gt;</code>, for example <code>release-0.32.0</code>, from the last commit that modelled the old release;</li>
-<li>in <code>inference-sim</code>, <code>release-vX.Y</code>, from its last release that ran the old upstream release.</li>
-</ul>
-<p>A fix needed on the old release is made first on the main branch if the main branch needs it too, then cherry-picked to the release branch; otherwise it is made on the release branch alone. The fix is shipped by a PATCH release from <code>inference-sim</code>'s release branch, which pins the fix's commit on the engine's release branch. A commit on a release branch alone reaches no user, because every <code>inference-sim</code> release pins exact commits.</p>
-<p>Only the <code>inference-sim</code> release before the newest one is supported this way. Both release branches close when <code>inference-sim</code> next moves an engine or llm-d to a new upstream release.</p>
 
+<h3 id="s14-4">14.4 Release branches</h3>
+<p><code>inference-sim</code> has a main branch, which models the newest upstream commit of each engine BLIS supports, and release branches <code>release-vX.Y</code>. Its release branches replace any branch per engine. When an engine module moves to a new upstream commit, <code>inference-sim</code> cuts <code>release-vX.Y</code> from its last release that ran the old commit.</p>
+<p>A fix needed on the old commit is made first on the main branch if the main branch needs it too, then cherry-picked to the release branch; otherwise it is made on the release branch alone. A PATCH release from the release branch ships it. Only the release before the newest is supported this way. The release branch closes when <code>inference-sim</code> next moves an engine or llm-d to a new upstream commit.</p>
+<p>The router fork keeps a branch <code>release-&lt;llm-d release&gt;</code> for the same purpose, cut from the last commit that modelled the old llm-d release, and the release branch of <code>inference-sim</code> pins it.</p>
 <!-- ============================================================ -->
-<h2 id="appA"><span class="secno">A</span>Invariant index</h2>
+<h2 id="appA"><span class="secno">A</span>Rule index</h2>
 <div class="tbl"><table>
+<caption><b>Every rule identifier defined in this design is listed here, by family.</b> Appendix C maps each identifier of v1.0.0 to its place in this version.</caption>
 <thead><tr><th>Family</th><th>Identifiers</th><th>Applies to</th><th>Defined in</th></tr></thead>
 <tbody>
-<tr><td>Cross-repository</td><td><span class="inv">X1</span>–<span class="inv">9</span></td><td>all</td><td><a href="#s4">§4</a></td></tr>
-<tr><td>Process</td><td><span class="inv">X10</span>–<span class="inv">29</span></td><td>all</td><td><a href="#s4-proc">§4.1</a></td></tr>
-<tr><td>Per repository</td><td><span class="inv">SUB-1</span>–<span class="inv">22</span>, <span class="inv">VLM-1</span>–<span class="inv">8</span>, <span class="inv">SGL-1</span>–<span class="inv">7</span>, <span class="inv">KVS-1</span>–<span class="inv">7</span>, <span class="inv">RTR-1</span>–<span class="inv">7</span>, <span class="inv">SIM-1</span>–<span class="inv">15</span>, <span class="inv">CFG-1</span>–<span class="inv">6</span></td><td>the named repository</td><td><a href="#s5">§5</a></td></tr>
-<tr><td>Fidelity</td><td><span class="inv">FID-1</span>–<span class="inv">12</span></td><td>engine repositories, <code>blis-kvstore</code></td><td><a href="#s7-7">§7.7</a></td></tr>
-<tr><td>Simulation method</td><td><span class="inv">DEV-1</span>–<span class="inv">13</span></td><td><code>inference-sim</code>, engine repositories, router fork, applications</td><td><a href="#s8-10">§8.10</a></td></tr>
-<tr><td>Coefficient values</td><td><span class="inv">VAL-1</span>–<span class="inv">11</span></td><td><code>blis-substrate</code></td><td><a href="#s9-4">§9.4</a></td></tr>
-<tr><td>Data</td><td><span class="inv">D1</span>–<span class="inv">8</span></td><td><code>blis-substrate</code>, <code>accuracy-dashboard</code></td><td><a href="#s10-4">§10.4</a></td></tr>
-<tr><td>Coverage</td><td><span class="inv">COV-1</span>–<span class="inv">12</span></td><td><code>accuracy-dashboard</code></td><td><a href="#s11-8">§11.8</a></td></tr>
-<tr><td>Versions</td><td><span class="inv">LIF-1</span>–<span class="inv">7</span></td><td>all</td><td><a href="#s14-2">§14.2</a></td></tr>
-<tr><td>Trigger outcomes</td><td><span class="inv">T-M1</span>–3, <span class="inv">T-D1</span>–4, <span class="inv">T-A1</span>–4, <span class="inv">T-E1</span>–6, <span class="inv">T-R1</span>–5, <span class="inv">T-N1</span>–2, <span class="inv">T-B1</span>–3, <span class="inv">T-C1</span>, <span class="inv">T-P1</span>, <span class="inv">T-F1</span>, <span class="inv">T-K1</span>, <span class="inv">T-G1</span>–2, <span class="inv">T-S1</span>, <span class="inv">T-L1</span></td><td>one trigger each</td><td><a href="#s12">§12</a></td></tr>
+<tr><td>Cross-component</td><td><span class="inv">X1</span>–<span class="inv">9</span></td><td>all</td><td><a href="#s4">§4</a></td></tr>
+<tr><td>Process</td><td><span class="inv">X11</span>–<span class="inv">29</span></td><td>all</td><td><a href="#s4-proc">§4.1</a></td></tr>
+<tr><td>Per component</td><td><span class="inv">SUB-1</span>–<span class="inv">22</span>, <span class="inv">VLM-1</span>–<span class="inv">8</span>, <span class="inv">SGL-1</span>–<span class="inv">7</span>, <span class="inv">RTR-1</span>–<span class="inv">7</span>, <span class="inv">SIM-1</span>–<span class="inv">18</span>, <span class="inv">CFG-1</span>–<span class="inv">6</span></td><td>the named component</td><td><a href="#s5">§5</a></td></tr>
+<tr><td>Fidelity</td><td><span class="inv">FID-1</span>–<span class="inv">14</span></td><td>engine modules</td><td><a href="#s7-7">§7.7</a></td></tr>
+<tr><td>Simulation method</td><td><span class="inv">DEV-1</span>–<span class="inv">13</span></td><td><code>inference-sim</code>, engine modules, router fork, applications</td><td><a href="#s8-10">§8.10</a></td></tr>
+<tr><td>Coefficient values</td><td><span class="inv">VAL-1</span>–<span class="inv">11</span></td><td><code>substrate/</code></td><td><a href="#s9-4">§9.4</a></td></tr>
+<tr><td>Data</td><td><span class="inv">D1</span>–<span class="inv">11</span></td><td><code>substrate/</code>, <code>accuracy-dashboard</code></td><td><a href="#s10-4">§10.4</a></td></tr>
+<tr><td>Coverage</td><td><span class="inv">COV-1</span>–<span class="inv">13</span></td><td><code>accuracy-dashboard</code></td><td><a href="#s11-8">§11.8</a></td></tr>
+<tr><td>Versions</td><td><span class="inv">LIF-1</span>–<span class="inv">3</span>, <span class="inv">LIF-5</span>–<span class="inv">7</span></td><td>all</td><td><a href="#s14-2">§14.2</a></td></tr>
+<tr><td>Trigger outcomes</td><td><span class="inv">T-M1</span>–5, <span class="inv">T-D1</span>–5, <span class="inv">T-A1</span>–4, <span class="inv">T-E1</span>–6, <span class="inv">T-R1</span>–5, <span class="inv">T-N1</span>–3, <span class="inv">T-B1</span>–3, <span class="inv">T-C1</span>, <span class="inv">T-F1</span>, <span class="inv">T-K1</span>, <span class="inv">T-G1</span>–2, <span class="inv">T-S1</span>, <span class="inv">T-L1</span></td><td>one trigger each</td><td><a href="#s12">§12</a></td></tr>
 </tbody></table></div>
-
 <h2 id="appB"><span class="secno">B</span>Glossary</h2>
-<div class="tbl"><table><tbody>
-<tr><td><b>Agent</b></td><td>An AI coding agent that does one scoped task in a branch, within a budget (§13.7).</td></tr>
-<tr><td><b>Agent guidance</b></td><td>A rule an agent follows on every change it writes or reviews, rendered into each repository&rsquo;s <code>AGENTS.md</code> (§4.2, §13.1).</td></tr>
+<div class="tbl"><table>
+<caption><b>Each term is defined once, here, and used in one sense throughout.</b></caption>
+<tbody>
+<tr><td><b>Agent</b></td><td>An AI coding agent that does one scoped task in a branch (<a href="#s13-7">§13.7</a>).</td></tr>
+<tr><td><b>Agent guidance</b></td><td>A rule an agent follows on every change it writes or reviews, rendered into each repository&rsquo;s <code>AGENTS.md</code> (§4.2, §13.2).</td></tr>
 <tr><td><b>Anchor</b></td><td>A ledger unit with the role <i>anchor</i>: the units on which the dashboard reports public accuracy. Only anchor units are scored for publication (§10.2, <span class="inv">COV-2</span>).</td></tr>
 <tr><td><b>Batch means</b></td><td>A way to estimate the uncertainty of a steady-state figure from one long run: cut it, after warm-up, into equal consecutive batches, and treat each batch's mean as one observation (§8.8).</td></tr>
 <tr><td><b>Blocker backlog</b></td><td>The ranked list, per engine, of everything that lowers coverage or grade: refused surface items, not-modelled fields, coefficients below rank 1 and unpriced execution modes. Each entry shows how many points it blocks or demotes (§11.6).</td></tr>
 <tr><td><b>Byte gate</b></td><td>A fixed set of scenarios whose output must stay byte-identical across a refactor.</td></tr>
 <tr><td><b>Candidate job</b></td><td>The half of a scoring run that runs the candidate's code, with no seed and no network, and writes one prediction per unit (§10.2).</td></tr>
-<tr><td><b>Change class</b></td><td>Whether a pull request is a verification change or a validation change (§8.9, <span class="inv">DEV-12</span>), declared in its template.</td></tr>
-<tr><td><b>Coefficient registry</b></td><td>The substrate&rsquo;s fitted and assumed coefficients, each with its provenance, in <code>blis-substrate/registry/</code> and read with <code>--registry</code> (§3.3, §9). Distinct from the invariant registry and the metric registry (§1).</td></tr>
+<tr><td><b>Coefficient registry</b></td><td>The substrate&rsquo;s fitted and assumed coefficients, each with its provenance, in <code>substrate/registry/</code> and read with <code>--registry</code> (§3.3, §9). Distinct from the invariant registry and the metric registry (§1).</td></tr>
+<tr><td><b>Commit distance</b></td><td>How far a run&rsquo;s engine commit is from the modelled one, counted from their merge base: commits apart, and releases apart where the two commits are in different releases (§11.5). A run on the modelled commit has distance zero.</td></tr>
 <tr><td><b>Common random numbers</b></td><td>Using the same random streams in two runs that are being compared, so their difference reflects the configuration, not chance (§8.4).</td></tr>
-<tr><td><b>Component</b></td><td>A part of the simulated system with its own state, changed only by its own internal events and by messages from other components: an engine instance, the router, a link, or a client (one source in the workload generator) (§8.1).</td></tr>
+<tr><td><b>Component</b></td><td>A part of the BLIS code with one owner: a directory of <code>inference-sim</code>, or a separate repository. Table 1 (<a href="#s2-2">§2.2</a>) lists them and says what each may import. Not to be confused with a model component.</td></tr>
 <tr><td><b>Confluent transition</b></td><td>A component's change of state when its own event and a message fall at the same instant (§8.1).</td></tr>
 <tr><td><b>Conformance suite</b></td><td>A test suite in <code>contracts/conformance</code> that any implementation of a contract must pass.</td></tr>
 <tr><td><b>Content hash</b></td><td>The SHA-256 of a sorted list of every data file's own SHA-256 and relative path (§3.3). Equal hashes identify equal data.</td></tr>
-<tr><td><b>Contract-change review set</b></td><td>A review set that makes an incompatible change to <code>contracts/</code> and releases every implementer with it (§12.8).</td></tr>
-<tr><td><b>Cost model</b></td><td>The code in <code>blis-substrate/kernel/</code> that prices a step from the plan, the step shape, the catalog and the coefficient registry. It was the repository <code>blis-latency-kernel</code>.</td></tr>
+<tr><td><b>Cost model</b></td><td>The code in <code>substrate/kernel/</code> that prices a step from the plan, the step shape, the catalog and the coefficient registry.</td></tr>
 <tr><td><b>CUDA graph</b></td><td>A recorded sequence of GPU launches that replays quickly but only for fixed batch shapes, so engines pad a batch up to the next recorded shape.</td></tr>
-<tr><td><b>Dashboard corpus</b></td><td>Every deployment the dashboard scores and every point it scores. A refactor must leave it identical (<span class="inv">X13</span>). The byte gate is a smaller fixed set in <code>inference-sim</code>.</td></tr>
-<tr><td><b>Data ledger</b></td><td>The committed list of external data units and the rule that gives each one a role (§10).</td></tr>
 <tr><td><b>DCO</b></td><td>Developer Certificate of Origin: a <code>Signed-off-by</code> line by which the person who takes responsibility for a commit certifies it. Encouraged, not checked (<span class="inv">X20</span>).</td></tr>
 <tr><td><b>Deployment</b></td><td>A serving configuration, as a scenario's deployment document states it (<span class="inv">SUB-19</span>). For InferenceX, one role key covers one deployment under one benchmark type (§10.2): one model on one chip, at one precision, under one framework and configuration hash.</td></tr>
 <tr><td><b>DEVS</b></td><td>The Discrete Event System Specification, Bernard Zeigler's formalism for discrete-event models, whose terms §8 uses.</td></tr>
@@ -1992,50 +1959,63 @@ The next engine upgrade drops the backport when the new commit contains it. A ru
 <tr><td><b>Drafter</b></td><td>What proposes speculative tokens for a target model: the model's own in-graph speculator, such as its MTP layers, or a separate drafter checkpoint with its own catalog entry, such as an EAGLE3, DSpark or DFlash model. It is distinct from vLLM's <code>draft_model</code> method, which is one way of running a separate checkpoint (<span class="inv">D8</span>).</td></tr>
 <tr><td><b>Engine block, router block</b></td><td>The parts of a scenario that hold the engine's own configuration and llm-d's own configuration, copied verbatim from what the upstream accepts.</td></tr>
 <tr><td><b>Engine kind</b></td><td>Which engine a scenario uses: <code>vllm</code> or <code>sglang</code>.</td></tr>
-<tr><td><b>Engine module</b></td><td>The one Go module in an engine repository (<code>blis-vllm</code> or <code>blis-sglang</code>). It models one upstream release (<span class="inv">LIF-5</span>).</td></tr>
+<tr><td><b>Engine module</b></td><td>A directory under <code>engines/</code> that ports one upstream engine at one commit: its scheduler, KV-cache management, defaults and lowering, with its oracle and its Upstream record (<a href="#s5-2">§5.2</a>, <span class="inv">LIF-5</span>).</td></tr>
+<tr><td><b>Engine upgrade</b></td><td>Porting the diff of the code an engine module already models (scheduler, KV-cache manager, connectors, defaults, lowering) from one upstream commit to another. It changes behaviour for every model (§12.4).</td></tr>
 <tr><td><b>Environment</b></td><td>The interface through which an engine asks the substrate for model graphs, chip facts, memory sizes and prices (§6.3).</td></tr>
+<tr><td><b>Exactly pinned, experimental</b></td><td>A run is exactly pinned when the simulator is an <code>inference-sim</code> release tag or a full commit, its <code>stack.json</code> names the router fork commit and each engine&rsquo;s modelled commit, its catalog and coefficient registry hashes equal the embedded hashes of that commit, and it uses no overlay and no uncommitted change. Any other run is experimental. Only exactly pinned results are published.</td></tr>
 <tr><td><b>Experimental frame</b></td><td>The recorded description of what a run measures: its input generator, initial state, phases (warm-up, measured window, drain), stop rule, acceptance conditions and metric definitions (§8.6).</td></tr>
 <tr><td><b>Extrapolated, unidentified</b></td><td>Flags on a lookup or coefficient. Extrapolated: used outside the range of inputs its fit covered. Unidentified: its fit data do not determine its value. Both lower its rank for <span class="inv">VAL-3</span> (§9.3, <span class="inv">VAL-10</span>).</td></tr>
 <tr><td><b>Fate</b></td><td>How a request ended: completed, dropped with a reason, timed out, in flight or queued at the horizon, or not started. Written once per request (<span class="inv">DEV-9</span>).</td></tr>
-<tr><td><b>Field list</b></td><td>The generated list (<code>fields.json</code>) of every configuration field and environment variable an upstream release reads, each with a BLIS status (<span class="inv">VLM-3</span>).</td></tr>
+<tr><td><b>Field list</b></td><td>The generated list (<code>fields.json</code>) of every configuration field and environment variable an upstream commit reads, each with a BLIS status (<span class="inv">VLM-3</span>).</td></tr>
 <tr><td><b>FLOPs</b></td><td>Floating-point operations.</td></tr>
+<tr><td><b>Funnel</b></td><td>The count of units at each stage from a source to scored, reported for each scored source (§11.6).</td></tr>
 <tr><td><b>Gate job, select job, error job</b></td><td>Three of the seed-holding jobs. The gate job and the select job score candidates on held and select units respectively; the error job measures each method's error on validate units. Each runs in <code>blis-substrate</code> for operator-level work and in <code>accuracy-dashboard</code> for whole-run work. All three return only aggregate results (§10.2, §13.5).</td></tr>
 <tr><td><b>GEMM</b></td><td>General matrix multiply.</td></tr>
-<tr><td><b>Grade</b></td><td>G1 to G5: how closely BLIS reproduces a dashboard point, judged by its engine release, its configuration and the methods of the coefficients that price it (§11.3).</td></tr>
+<tr><td><b>Grade</b></td><td>G1 to G5: how closely BLIS reproduces a dashboard point, judged by its engine commit, its configuration and the methods of the coefficients that price it (§11.3).</td></tr>
+<tr><td><b>Graph handler, graph vocabulary</b></td><td>A graph handler is catalog code that builds one model family&rsquo;s graph from its <code>config.json</code>. The graph vocabulary is the set of node kinds a graph may use (<span class="inv">SUB-15</span>).</td></tr>
+<tr><td><b>Headline</b></td><td>The dashboard&rsquo;s published accuracy figure, computed from anchor units only (§11).</td></tr>
 <tr><td><b>Held</b></td><td>A ledger unit with the role <i>held</i>: used only to judge an accuracy change at its landing gate, in the gate job, never listed publicly (§10.2, <span class="inv">VAL-6</span>).</td></tr>
+<tr><td><b>Held-out unit</b></td><td>A ledger unit whose role is <i>held</i> or <i>anchor</i>. Accuracy is reported only on held-out units (<span class="inv">D9</span>); every other unit is training data.</td></tr>
 <tr><td><b>HiSparse</b></td><td>Hierarchical sparse attention for sparse-MLA models, in vLLM and SGLang. Host memory holds each request's whole KV cache; GPU memory holds the pages the sparse indexer selects, plus the newest tokens. In vLLM it is a connector, a coordinator and three KV-cache managers (source, hot and resident).</td></tr>
 <tr><td><b>HMAC</b></td><td>A keyed hash. Without the key (here, the seed) the output cannot be predicted.</td></tr>
 <tr><td><b>Holm correction</b></td><td>A way to test many lanes at once while keeping the chance of any false failure at the stated level (<span class="inv">VAL-6</span>).</td></tr>
 <tr><td><b>Horizon</b></td><td>The simulated time at which a run stops, if its stop rule names one (§8.6).</td></tr>
+<tr><td><b>Hosting contract</b></td><td>The interface between the simulator and the router fork&rsquo;s embedded router: clock, runtime, sessions and KV events. The router fork owns it, with its conformance suite, so the fork depends on no BLIS module (<span class="inv">RTR-3</span>, <a href="#s5-3">§5.3</a>).</td></tr>
 <tr><td><b>In-flight depth</b></td><td>The most engine steps that run at once, <code>PoolPlan.InFlight</code>: 1 without asynchronous or overlap scheduling (<span class="inv">SIM-7</span>).</td></tr>
 <tr><td><b>Inert, unproven</b></td><td>A temporary field status allowed only by a release plan: a field believed to have no effect, whose proof is still to come.</td></tr>
 <tr><td><b>Internal event, external event</b></td><td>A component's change of state at a time it scheduled for itself (internal), or on a message from another component (external) (§8.1).</td></tr>
-<tr><td><b>Invariant registry</b></td><td>The records of every invariant in this document: statement, checks, review question and status, in <code>blis-substrate/contracts/invariants/</code> (§13.1). The appendix, each repository&rsquo;s <code>AGENTS.md</code> section and the pull-request checklist are generated from it.</td></tr>
+<tr><td><b>Invariant registry</b></td><td>The records of every invariant in this document: statement, checks and status, in <code>substrate/contracts/invariants/</code> (§13.1). Each repository&rsquo;s <code>AGENTS.md</code> section is generated from it.</td></tr>
+<tr><td><b>ISL, OSL</b></td><td>Input and output length of a request, in tokens.</td></tr>
 <tr><td><b>Kernel hash</b></td><td><code>CodeHash</code>: the hash that identifies a kernel implementation, of its source and target GPU architecture, or of a binary library (§6.2).</td></tr>
 <tr><td><b>Kernel implementation</b></td><td>The library, variant and kernel hash (<code>CodeHash</code>) that execute one primitive. The coefficient registry looks coefficients up by it.</td></tr>
 <tr><td><b>Known-bad input</b></td><td>An input that a check must reject. Each check in the invariant registry names one (<span class="inv">X18</span>).</td></tr>
 <tr><td><b>KV cache</b></td><td>The stored attention keys and values of each request. A <b>KV connector</b> moves it between machines; <b>KV tiering</b> moves it between GPU memory, host memory and storage.</td></tr>
 <tr><td><b>KV-cache manager, KV-cache spec</b></td><td>In vLLM, the code that decides which blocks a request's KV cache holds, which prefix blocks it shares and which blocks are evicted. At start-up the model's layers are grouped, and each group has a <b>KV-cache spec</b>, such as full attention, sliding window or Mamba state. <code>KVCacheSpecRegistry</code> maps each spec type, or a group's role, to a manager; one manager may serve several spec types. A coordinator runs one manager per group (§7.1).</td></tr>
 <tr><td><b>Landing gate</b></td><td>The accuracy check a coefficient or pricing change must pass to merge (<span class="inv">VAL-6</span>).</td></tr>
-<tr><td><b>Lane</b></td><td>One engine, engine release, chip, model and layout, as the dashboard groups points.</td></tr>
+<tr><td><b>Lane</b></td><td>A group of results judged apart. For a coefficient it is the kernel implementation the coefficient is fitted on, and the landing gate judges each lane (<span class="inv">VAL-6</span>). The dashboard reports in the same way for points that share an engine, modelled commit, chip, model and layout.</td></tr>
 <tr><td><b>Layout</b></td><td>How a model is split across GPUs: the tensor, pipeline, data, expert and context parallel widths, and where each rank is placed.</td></tr>
-<tr><td><b>Ledger owner</b></td><td>A person the project team names to own the role seed and its rotation (§10.2).</td></tr>
+<tr><td><b>Ledger</b></td><td>The committed list of every measured unit from every data source, with the rule that gives each unit a role (<code>substrate/catalog/ledger/</code>, §10).</td></tr>
 <tr><td><b>llm-d stack</b></td><td>llm-d's router in front of vLLM or SGLang engines, as llm-d's published guides deploy it.</td></tr>
-<tr><td><b>Lowering</b></td><td>Turning a model's architecture into the concrete kernels an engine release runs: which attention backend, which fused operations, which data types, which page size.</td></tr>
-<tr><td><b>Maintainer practice</b></td><td>A rule a person with write access keeps for a repository as a whole, such as its branch protection, its tag settings, its merge methods and, encouraged but not required, the signing of its commits (§4.2). It is stated once with a checklist item, enforced by the hosting service where a setting exists, and audited by no program in another repository.</td></tr>
+<tr><td><b>Lowering</b></td><td>Turning a model&rsquo;s architecture into the concrete operations one engine runs on one layout: which attention backend, which fused operations, which data types, which page size, how it shards and pads. It lives only in engine modules (<span class="inv">SUB-15</span>, §6.1).</td></tr>
+<tr><td><b>Maintainer practice</b></td><td>A rule about process (review, approval, merge, issue handling, pull-request text, release notes, signing) that a maintainer with write access keeps with standard git and GitHub mechanisms such as branch protection, required reviews and signed commits. It is written as &ldquo;Maintainer practice:&rdquo; and has no check (§4.2).</td></tr>
 <tr><td><b>Manifest</b></td><td>The list of everything the oracle replaces.</td></tr>
 <tr><td><b>Memory pool</b></td><td>In SGLang, a store of KV cache or recurrent state in GPU memory, or, for HiCache, in host memory. A separate allocator hands out its slots or pages. Each attention layout (full attention in its MHA and MLA forms, sliding window, Mamba, hybrid, sparse) has its own pool type (§7.1).</td></tr>
 <tr><td><b>Message class</b></td><td>One of a fixed order of message kinds, used with time, sender and the sender's send count to order messages at one instant (§8.2)</td></tr>
 <tr><td><b>Metric registry</b></td><td>The list in <code>contracts/</code> of every metric's definition: formula, statistic, population, window and unit (§8.7, <span class="inv">DEV-8</span>).</td></tr>
-<tr><td><b>Milestone</b></td><td>One of the numbered steps in which a release plan delivers its work.</td></tr>
 <tr><td><b>MLA</b></td><td>Multi-head latent attention: attention that stores a compressed latent instead of full keys and values.</td></tr>
+<tr><td><b>Model backport</b></td><td>Upstream commits that add one model, applied onto the modelled commit and listed in the Upstream record. It carries model code only, never scheduler, KV-cache or connector changes, and is dropped when the modelled commit contains it (§12.5).</td></tr>
+<tr><td><b>Model component</b></td><td>A part of the simulated system with its own state, changed only by its own internal events and by messages from other model components: an engine instance, the router, a link, or a client (one source in the workload generator) (§8.1). This is the DEVS sense, and differs from a component of Table 1.</td></tr>
+<tr><td><b>Model support</b></td><td>Work in an engine module for one model, needed only when the model brings engine-facing code that an engine upgrade does not port, such as a new KV-cache layout, its own kernels or a new drafting method (§12.5).</td></tr>
+<tr><td><b>Modelled commit</b></td><td>The upstream commit an engine module models. A build runs one modelled commit of each engine (<span class="inv">LIF-5</span>, <span class="inv">LIF-6</span>).</td></tr>
 <tr><td><b>MoE</b></td><td>Mixture of experts.</td></tr>
-<tr><td><b>Mooncake</b></td><td>A KV transfer and storage system, used by vLLM connectors and as SGLang's default P/D transfer backend.</td></tr>
+<tr><td><b>Mooncake</b></td><td>A KV transfer and storage system, used by vLLM connectors and as SGLang&rsquo;s default P/D transfer backend.</td></tr>
 <tr><td><b>MSER-5</b></td><td>A warm-up rule: batch the output series in fives and cut where the variance of the remaining mean is smallest (§8.8).</td></tr>
 <tr><td><b>MTP</b></td><td>Multi-token prediction: a speculative-decoding method where extra model layers draft the next few tokens.</td></tr>
+<tr><td><b>Named substitution</b></td><td>A value that no record of the run holds, stated on the point with the value used and its source. It lowers the grade. An <b>estimated substitution</b> is a named substitution whose value comes from a stated rule and not from a record (<span class="inv">D10</span>).</td></tr>
 <tr><td><b>NIXL</b></td><td>NVIDIA's library for moving KV caches between machines. vLLM's <code>NixlConnector</code>, the P/D connector llm-d's guides use most, is built on it.</td></tr>
 <tr><td><b>Not blind</b></td><td>A held-side figure from a unit whose label predates the ledger, so that the unit may have influenced earlier choices. The gate reports each such unit as a separate figure for as long as such units are used (§10.2).</td></tr>
 <tr><td><b>Offered load</b></td><td>Requests arriving per second, set by the workload rather than by the system's response.</td></tr>
+<tr><td><b>Onboarding a model</b></td><td>One to three pieces of work, after any engine upgrade the model needs: a catalog entry, always; model support, when needed; and coefficients, only for a new primitive family (§12.1).</td></tr>
 <tr><td><b>Oracle</b></td><td>The harness that runs the upstream's own code with its environment replaced, and records its decisions.</td></tr>
 <tr><td><b>Output function</b></td><td>What a component sends, evaluated just before an internal or confluent transition (§8.1).</td></tr>
 <tr><td><b>Overlay</b></td><td>A directory given with <code>--catalog-overlay</code> or <code>--registry-overlay</code>. Each entry replaces the entry with the same identity in the data in use, or is added if none exists (§3.3).</td></tr>
@@ -2044,57 +2024,264 @@ The next engine upgrade drops the backport when the new commit contains it. A ru
 <tr><td><b>Parallel DEVS</b></td><td>The form of DEVS in which all outputs at an instant are collected before any component changes state (§8.2).</td></tr>
 <tr><td><b>Partition version</b></td><td>A numbered version of the ledger's role assignment. A new version is needed to change any existing unit's role.</td></tr>
 <tr><td><b>Perturbation test</b></td><td>A test that changes one field and checks that some price, decision, or field of the emitted plan or step shape changes (<span class="inv">SUB-11</span>, <span class="inv">VLM-3</span>).</td></tr>
-<tr><td><b>Pin, re-pin</b></td><td>To require an exact version of another module in <code>go.mod</code>; to update that requirement.</td></tr>
-<tr><td><b>Playbook</b></td><td>The fixed steps for one kind of trigger, run by CI and, where needed, by an agent (§12).</td></tr>
+<tr><td><b>Pin, re-pin</b></td><td>To require an exact commit or release of another module in <code>go.mod</code>; to update that requirement.</td></tr>
 <tr><td><b>Point</b></td><td>One InferenceX unit as the dashboard grades it, G1 to G5 (§11.3): one benchmark run of one deployment and recipe fingerprint at one concurrency.</td></tr>
 <tr><td><b>Pool</b></td><td>A group of engine instances that share one configuration and layout, such as the prefill pool or the decode pool in P/D. Each pool has one <code>PoolPlan</code>.</td></tr>
 <tr><td><b>PoolPlan, StepShape, Transfer</b></td><td>The three objects an engine hands the cost model: a plan per engine pool, the shape of each step, and one transfer per KV move (§6.1, §6.2).</td></tr>
-<tr><td><b>Pre-registration</b></td><td>The preflight file of an accuracy change, committed before any held-out data is read, that states what the change will be judged on (§12.3).</td></tr>
-<tr><td><b>Preflight</b></td><td>The generated report that fixes a trigger's scope before work starts.</td></tr>
-<tr><td><b>Price-change report</b></td><td>A report, generated for every release and every pull request that can change prices, of each benchmark scenario's step prices before and after the change (§13.3).</td></tr>
+<tr><td><b>Pre-registration</b></td><td>The file of an accuracy change, committed before any held-out data is read, that states what the change will be judged on (§12.3).</td></tr>
+<tr><td><b>Price-change report</b></td><td>A report, generated for every release and every pull request that can change prices, of each benchmark scenario&rsquo;s step prices before and after the change (§13.3).</td></tr>
 <tr><td><b>Primitive</b></td><td>One kind of work the cost model prices: an attention step, a matrix multiply, a collective, a memory transfer.</td></tr>
+<tr><td><b>Primitive family</b></td><td>The coefficients that price one kind of primitive, such as dense GEMM, decode attention or all-reduce (<span class="inv">VAL-2</span>).</td></tr>
 <tr><td><b>Profile likelihood</b></td><td>A way to find a fitted coefficient's interval by refitting the others at each candidate value (<span class="inv">VAL-10</span>).</td></tr>
 <tr><td><b>Progress watchdog</b></td><td>A check that fails a run when no request changes state for a set number of engine steps while work is waiting (<span class="inv">SIM-7</span>).</td></tr>
 <tr><td><b>Quarantine list</b></td><td>The list of tests that fail on the main branch, each with an owning issue and an expiry date; listed tests do not block merges until they expire (<span class="inv">X25</span>).</td></tr>
 <tr><td><b>Radix cache, tree cache, tree core</b></td><td>SGLang's prefix cache: a tree of token sequences whose nodes hold KV cache, so that requests sharing a prefix reuse it. A <b>tree cache</b> is any implementation of SGLang's tree-cache interface; the default is the unified radix cache, and others can be registered. A <b>tree core</b> is the tree's own data structure inside the unified radix cache, implemented in Python and in Rust (§7.1).</td></tr>
 <tr><td><b>Ratchet</b></td><td>A count that CI allows to fall but never to rise.</td></tr>
 <tr><td><b>Recorded trace</b></td><td>The oracle's output for one scenario at one upstream commit, reviewed and committed. The commit marker <code>golden-reviewed:</code> keeps an older name for the same thing.</td></tr>
-<tr><td><b>Release branch</b></td><td>A branch <code>release-&lt;upstream&gt;</code> in an upstream-tracking repository, or <code>release-vX.Y</code> in <code>inference-sim</code>, kept for fixes to an upstream release after <code>main</code> moves to the next one (<a href="#s14-4">§14.4</a>).</td></tr>
-<tr><td><b>Release owner</b></td><td>A person with write access to a repository who cuts a release by the manual procedure when the release bot is unavailable (§13.6), with standard git or the hosting service's interface.</td></tr>
-<tr><td><b>Release watcher</b></td><td>The scheduled job in each upstream-tracking repository that detects new upstream releases and opens the upgrade pull request (§12.4).</td></tr>
-<tr><td><b>Exactly pinned, experimental</b></td><td>A run is exactly pinned when the simulator is an <code>inference-sim</code> release tag or a full commit, its <code>stack.json</code> names the commit of every module, its catalog and coefficient registry hashes equal the embedded hashes of that substrate commit, and it uses no overlay and no uncommitted change. Any other run is experimental. Only exactly pinned results are published.</td></tr>
+<tr><td><b>Release branch</b></td><td>A branch <code>release-vX.Y</code> of <code>inference-sim</code>, cut when an engine module moves to a new upstream commit, and kept for fixes to the commit the last release ran (<a href="#s14-4">§14.4</a>).</td></tr>
 <tr><td><b>Replication</b></td><td>One run of a scenario with its own scenario seed. Several replications give a confidence interval (§8.8).</td></tr>
 <tr><td><b>Result</b></td><td>The structured output of one run, written as JSON, including everything the run used (§3.3).</td></tr>
-<tr><td><b>Review question</b></td><td>A yes/no question, attached to an invariant, that the review agent applies to a pull request and answers in a review comment with the files and lines that support the answer (§13.2). It is guidance and never a check: it fails no CI job and waits for no person. Its expertise line names the knowledge the agent brings, and its applies-when line says which changes it covers.</td></tr>
-<tr><td><b>Review set</b></td><td>The pull requests, across repositories, that make up one change.</td></tr>
+<tr><td><b>Review question</b></td><td>A yes/no question, attached to a rule, that the review agent applies to a pull request and answers in a review comment with the files and lines that support the answer (§13.2). It is guidance and never a check: it fails no CI job.</td></tr>
+<tr><td><b>Review set</b></td><td>The pull requests that make up one change: one in <code>inference-sim</code>, and one in the router fork when the hosting contract changes (§12.8).</td></tr>
 <tr><td><b>Role key</b></td><td>The fields of a data unit that decide its role, so near-copies of one measurement share a role (§10.2).</td></tr>
 <tr><td><b>Roofline</b></td><td>An estimate of a primitive's time as the larger of its compute time at peak FLOPs and its memory time at peak bandwidth.</td></tr>
+<tr><td><b>Router table</b></td><td>The substrate&rsquo;s map from a router a run used to the nearest policy llm-d&rsquo;s router offers (§11).</td></tr>
 <tr><td><b>Runtime interface (seams)</b></td><td>The points where the router fork reads time, starts work, draws random numbers or makes calls, so BLIS can supply simulated versions.</td></tr>
 <tr><td><b>Scenario</b></td><td>The YAML file a user gives BLIS: the engine and router configuration, the cluster, the workload and the seed.</td></tr>
 <tr><td><b>Scoring harness</b></td><td>The accuracy dashboard's tool that turns measured benchmark runs into scenarios, runs a given simulator build, and compares. The only end-to-end scorer (§11.7).</td></tr>
 <tr><td><b>Seed-holding job</b></td><td>One of the four kinds of CI job that hold the role seed: the release job, the select job, the error job and the gate job. They run only code from <code>main</code>, never a pull request's code. Only these can compute <code>select</code>, <code>validate</code> and <code>held</code> roles (§10.2).</td></tr>
 <tr><td><b>Selected-version lint</b></td><td>A check that reads the versions Go actually chose for a build (<code>go list -m all</code>), not the versions written in <code>go.mod</code>.</td></tr>
 <tr><td><b>Simulated runtime</b></td><td>The router fork's runtime when BLIS hosts it: clock, timers, randomness and goroutines driven by simulated time (§7.3).</td></tr>
-<tr><td><b>Stack CI</b></td><td>The CI job that builds and tests a review set's branch heads together, before anything is merged (§13.6). Its file, <code>stack.lock</code>, lists those heads.</td></tr>
-<tr><td><b>stack.json</b></td><td>The record, published with each <code>inference-sim</code> release, of the exact version of every BLIS module and upstream release it was built and tested with, its Go toolchain version and its llm-d guides commit (<span class="inv">SIM-3</span>).</td></tr>
-<tr><td><b>Substrate</b></td><td>The engine-independent foundation: <code>blis-substrate</code>.</td></tr>
-<tr><td><b>Surface list</b></td><td>The generated list of every feature an upstream release offers, each with a BLIS status.</td></tr>
+<tr><td><b>Slice</b></td><td>The points that share an attribute value, such as one chip. Below <code>min_points</code> no aggregate is shown (<span class="inv">COV-13</span>).</td></tr>
+<tr><td><b>stack.json</b></td><td>The record, published with each <code>inference-sim</code> release, of its own commit, the router fork&rsquo;s commit, the upstream commit each engine module models, its Go toolchain version and its llm-d guides commit (<span class="inv">SIM-3</span>).</td></tr>
+<tr><td><b>Substrate</b></td><td>The engine-independent foundation: the <code>substrate/</code> directory of <code>inference-sim</code> (§3).</td></tr>
+<tr><td><b>Surface list</b></td><td>The generated list of every feature an upstream commit offers, each with a BLIS status.</td></tr>
 <tr><td><b>Terminating run, steady-state run</b></td><td>A run that ends by its stop rule (terminating), or one that measures a system after it has settled (steady-state) (§8.8).</td></tr>
 <tr><td><b>Time advance</b></td><td>How long until a component's next internal event, given its state (§8.1).</td></tr>
 <tr><td><b>Token record</b></td><td>The per-request counts an engine emits: prompt tokens, tokens served from local and external caches, tokens computed and tokens emitted (<span class="inv">SIM-12</span>).</td></tr>
+<tr><td><b>TP, DP, EP</b></td><td>Tensor, data and expert parallelism.</td></tr>
+<tr><td><b>Training data</b></td><td>Every unit whose role is fit, select or validate, and all data from sources with no held-out role (§10.2).</td></tr>
 <tr><td><b>Trigger</b></td><td>An outside event that starts BLIS work, such as a new upstream release or a new model (§12).</td></tr>
+<tr><td><b>TRT-LLM</b></td><td>NVIDIA&rsquo;s TensorRT-LLM serving engine. A new engine of this kind meets the same bar as vLLM and SGLang, with its C++ code checked through bindings (§7).</td></tr>
 <tr><td><b>Unit, role</b></td><td>A unit is the smallest piece of data the ledger tracks. Its role says what it may be used for.</td></tr>
+<tr><td><b>Upgrade report</b></td><td>The report an engine upgrade generates: the surface diff, the field demand, the source diff and, for each model the new commit supports, whether the catalog has it, whether it needs model support and which coefficients it lacks (§12.4).</td></tr>
 <tr><td><b>Upstream</b></td><td>The project BLIS reproduces: vLLM, SGLang or llm-d.</td></tr>
-<tr><td><b>Upstream record</b></td><td>The <code>Upstream</code> value in an engine repository's <code>provenance.go</code>: the one upstream release, and its commit, that the repository models (<span class="inv">LIF-5</span>).</td></tr>
-<tr><td><b>Upstream-tracking repository</b></td><td><code>blis-vllm</code>, <code>blis-sglang</code>, <code>blis-kvstore</code> or the router fork. The first two are also called <b>engine repositories</b>. <code>blis-kvstore</code> tracks several upstreams, one package each.</td></tr>
+<tr><td><b>Upstream record</b></td><td>The <code>Upstream</code> value in an engine module&rsquo;s <code>provenance.go</code>: the upstream commit the module models, the release that commit descends from, and any listed model backport (<span class="inv">LIF-5</span>).</td></tr>
 <tr><td><b>Validity domain</b></td><td>The range of models, chips, layouts, concurrencies, sequence lengths and replica counts that held-out data cover (§8.9).</td></tr>
-<tr><td><b>Verdict</b></td><td>A CI result or the review agent&rsquo;s review, including its answers to review questions. Each names the tree it judged (<span class="inv">X22</span>).</td></tr>
 <tr><td><b>Verification, validation</b></td><td>Checking that the simulator does what its model says (verification), and checking that the model matches the real system (validation) (§8.9).</td></tr>
 <tr><td><b>Warm-up</b></td><td>The stretch at the start of a steady-state run that is discarded because the system has not settled (§8.8).</td></tr>
 <tr><td><b>Workload identity</b></td><td>The key under which a workload-dependent quantity, such as speculative acceptance or expert routing balance, is stored (<span class="inv">D8</span>).</td></tr>
-
 </tbody></table></div>
-
+<!-- ============================================================ -->
+<h2 id="appC"><span class="secno">C</span>Rule IDs from v1.0.0</h2>
+<p>A citation of a rule in v1.0.0 can be followed here to its place in this version. A rule is <b>kept</b> when its meaning is unchanged, <b>changed</b> when it survives under the same identifier with a different meaning, <b>merged</b> when another rule now states it, and <b>retired</b> when no rule in this version states it.</p>
+<div class="tbl"><table>
+<caption><b>Every rule identifier defined in v1.0.0 has one row here, with its fate in this version and the reason.</b></caption>
+<thead><tr><th>v1.0.0 ID</th><th>Fate</th><th>This version</th><th>Reason</th></tr></thead>
+<tbody>
+<tr><td><code>X1</code></td><td>changed</td><td><span class="inv">X1</span></td><td>Engine checks run per engine module; the stores block leaves the scenario-key check.</td></tr>
+<tr><td><code>X2</code></td><td>changed</td><td><span class="inv">X2</span></td><td>Covers the substrate directory; coefficients keyed by kernel implementation or code identity; import-graph check added.</td></tr>
+<tr><td><code>X3</code></td><td>changed</td><td><span class="inv">X3</span></td><td>Engine behaviour and lowering live only in engine modules; the store-package clauses and checks leave.</td></tr>
+<tr><td><code>X4</code></td><td>changed</td><td><span class="inv">X4</span></td><td>Inference-sim imports the fork's pkg/embed.New and the hosting contract.</td></tr>
+<tr><td><code>X5</code></td><td>changed</td><td><span class="inv">X5</span></td><td>Runs per engine module; upstream code may be C++ through bindings.</td></tr>
+<tr><td><code>X6</code></td><td>changed</td><td><span class="inv">X6</span></td><td>Pinned commits replace module versions; lint settings of the fork are its own.</td></tr>
+<tr><td><code>X7</code></td><td>changed</td><td><span class="inv">X7</span></td><td>Dependencies follow Table 1 on an import graph; the fork depends on no BLIS module and owns the hosting contract.</td></tr>
+<tr><td><code>X8</code></td><td>changed</td><td><span class="inv">X8</span></td><td>One repository; success criteria fixed before held-out data is read.</td></tr>
+<tr><td><code>X9</code></td><td>changed</td><td><span class="inv">X9</span></td><td>Surface list is per modelled commit; blis-kvstore leaves; the upgrade report shows the share of modelled items.</td></tr>
+<tr><td><code>X10</code></td><td>retired</td><td>&mdash;</td><td>No bottom-up merge: the moved repositories are directories of one repository.</td></tr>
+<tr><td><code>X11</code></td><td>changed</td><td><span class="inv">X11</span></td><td>The substrate is no longer pinned; the one pin is the router fork, and stack.json also names each engine module's modelled upstream commit. One replace (the router fork); pins between the moved repositories disappear; applications still pin inference-sim releases.</td></tr>
+<tr><td><code>X12</code></td><td>changed</td><td><span class="inv">X12</span></td><td>Name scan covers committed files; review of commit, pull-request and issue text is maintainer practice.</td></tr>
+<tr><td><code>X13</code></td><td>changed</td><td><span class="inv">X13</span></td><td>Behavioural tests required, not structural ones; corpus selection by nightly record leaves.</td></tr>
+<tr><td><code>X14</code></td><td>changed</td><td><span class="inv">X14</span></td><td>Process rule; now maintainer practice.</td></tr>
+<tr><td><code>X15</code></td><td>changed</td><td><span class="inv">X15</span></td><td>Validation lives in substrate/validate; the lint over Python scripts leaves.</td></tr>
+<tr><td><code>X16</code></td><td>changed</td><td><span class="inv">X16</span></td><td>Seven-day staleness rule and status page leave (custom process automation).</td></tr>
+<tr><td><code>X17</code></td><td>changed</td><td><span class="inv">X17</span></td><td>Adds review by a maintainer with write access and no CODEOWNERS.</td></tr>
+<tr><td><code>X18</code></td><td>kept</td><td><span class="inv">X18</span></td><td>Unchanged.</td></tr>
+<tr><td><code>X19</code></td><td>kept</td><td><span class="inv">X19</span></td><td>Unchanged.</td></tr>
+<tr><td><code>X20</code></td><td>changed</td><td><span class="inv">X20</span></td><td>Process rule; the commit-policy check is now maintainer practice.</td></tr>
+<tr><td><code>X21</code></td><td>changed</td><td><span class="inv">X21</span></td><td>NOTICE is kept in inference-sim for code derived from vLLM and SGLang.</td></tr>
+<tr><td><code>X22</code></td><td>changed</td><td><span class="inv">X22</span></td><td>Process rule; verdicts naming a tree hash leave; stale approvals are dismissed by branch protection; item counts and exit-code lint stay.</td></tr>
+<tr><td><code>X23</code></td><td>changed</td><td><span class="inv">X23</span></td><td>Versions are stated for components of inference-sim; upstream commits replace releases.</td></tr>
+<tr><td><code>X24</code></td><td>changed</td><td><span class="inv">X24</span></td><td>Process rule; now maintainer practice; the nightly reopening job leaves.</td></tr>
+<tr><td><code>X25</code></td><td>changed</td><td><span class="inv">X25</span></td><td>Clean-container check stays; the quarantine list is maintainer practice.</td></tr>
+<tr><td><code>X26</code></td><td>changed</td><td><span class="inv">X26</span></td><td>Shortened; the reference check covers pages for agents.</td></tr>
+<tr><td><code>X27</code></td><td>changed</td><td><span class="inv">X27</span></td><td>Process rule; the release-bot block is now maintainer practice.</td></tr>
+<tr><td><code>X28</code></td><td>changed</td><td><span class="inv">X28</span></td><td>Process rule; the nightly job leaves; now maintainer practice.</td></tr>
+<tr><td><code>X29</code></td><td>changed</td><td><span class="inv">X29</span></td><td>READMEs per directory of inference-sim; process rule, now maintainer practice.</td></tr>
+<tr><td><code>SUB-1</code></td><td>changed</td><td><span class="inv">SUB-1</span></td><td>contracts/embed and contracts/conformance/embedtest move to the router fork, contracts/kvstore and kvstoretest retire, and the substrate has no version of its own. One module: an incompatible change is one pull request; version-number clauses leave; the hosting contract follows the same rule in the fork.</td></tr>
+<tr><td><code>SUB-2</code></td><td>kept</td><td><span class="inv">SUB-2</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SUB-3</code></td><td>changed</td><td><span class="inv">SUB-3</span></td><td>Shortened; example removed.</td></tr>
+<tr><td><code>SUB-4</code></td><td>kept</td><td><span class="inv">SUB-4</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SUB-5</code></td><td>kept</td><td><span class="inv">SUB-5</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SUB-6</code></td><td>kept</td><td><span class="inv">SUB-6</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SUB-7</code></td><td>kept</td><td><span class="inv">SUB-7</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SUB-8</code></td><td>kept</td><td><span class="inv">SUB-8</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SUB-9</code></td><td>kept</td><td><span class="inv">SUB-9</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SUB-10</code></td><td>changed</td><td><span class="inv">SUB-10</span></td><td>Runs for the cost model and every engine module.</td></tr>
+<tr><td><code>SUB-11</code></td><td>kept</td><td><span class="inv">SUB-11</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SUB-12</code></td><td>kept</td><td><span class="inv">SUB-12</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SUB-13</code></td><td>changed</td><td><span class="inv">SUB-13</span></td><td>The one Go module is inference-sim, not blis-substrate; no nested go.mod and the 100 MB module-zip bound now cover the whole module. States the rule for inference-sim as one Go module.</td></tr>
+<tr><td><code>SUB-14</code></td><td>kept</td><td><span class="inv">SUB-14</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SUB-15</code></td><td>changed</td><td><span class="inv">SUB-15</span></td><td>The deriver writes checkpoint facts only; lowering lives only in engine modules.</td></tr>
+<tr><td><code>SUB-16</code></td><td>kept</td><td><span class="inv">SUB-16</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SUB-17</code></td><td>kept</td><td><span class="inv">SUB-17</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SUB-18</code></td><td>kept</td><td><span class="inv">SUB-18</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SUB-19</code></td><td>kept</td><td><span class="inv">SUB-19</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SUB-20</code></td><td>kept</td><td><span class="inv">SUB-20</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SUB-21</code></td><td>kept</td><td><span class="inv">SUB-21</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SUB-22</code></td><td>kept</td><td><span class="inv">SUB-22</span></td><td>Unchanged.</td></tr>
+<tr><td><code>VLM-1</code></td><td>kept</td><td><span class="inv">VLM-1</span></td><td>Unchanged.</td></tr>
+<tr><td><code>VLM-2</code></td><td>changed</td><td><span class="inv">VLM-2</span></td><td>Provenance names commits and model backports; the adapter-package clause leaves with the KV store contract.</td></tr>
+<tr><td><code>VLM-3</code></td><td>changed</td><td><span class="inv">VLM-3</span></td><td>Modelled commit replaces pinned release; release-plan exception and milestone clause leave.</td></tr>
+<tr><td><code>VLM-4</code></td><td>changed</td><td><span class="inv">VLM-4</span></td><td>Modelled commit replaces pinned release.</td></tr>
+<tr><td><code>VLM-5</code></td><td>kept</td><td><span class="inv">VLM-5</span></td><td>Unchanged.</td></tr>
+<tr><td><code>VLM-6</code></td><td>kept</td><td><span class="inv">VLM-6</span></td><td>Unchanged.</td></tr>
+<tr><td><code>VLM-7</code></td><td>changed</td><td><span class="inv">VLM-7</span></td><td>Modelled commit replaces pinned release.</td></tr>
+<tr><td><code>VLM-8</code></td><td>kept</td><td><span class="inv">VLM-8</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SGL-1</code></td><td>changed</td><td><span class="inv">SGL-1</span></td><td>Modelled commit replaces pinned tag.</td></tr>
+<tr><td><code>SGL-2</code></td><td>kept</td><td><span class="inv">SGL-2</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SGL-3</code></td><td>changed</td><td><span class="inv">SGL-3</span></td><td>Modelled commit replaces pinned release.</td></tr>
+<tr><td><code>SGL-4</code></td><td>changed</td><td><span class="inv">SGL-4</span></td><td>Modelled commit replaces pinned release.</td></tr>
+<tr><td><code>SGL-5</code></td><td>kept</td><td><span class="inv">SGL-5</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SGL-6</code></td><td>changed</td><td><span class="inv">SGL-6</span></td><td>Modelled commit replaces pinned release.</td></tr>
+<tr><td><code>SGL-7</code></td><td>kept</td><td><span class="inv">SGL-7</span></td><td>Unchanged.</td></tr>
+<tr><td><code>KVS-1</code></td><td>retired</td><td>&mdash;</td><td>blis-kvstore and the KV store contract are out of scope.</td></tr>
+<tr><td><code>KVS-2</code></td><td>retired</td><td>&mdash;</td><td>blis-kvstore and the KV store contract are out of scope.</td></tr>
+<tr><td><code>KVS-3</code></td><td>retired</td><td>&mdash;</td><td>blis-kvstore and the KV store contract are out of scope.</td></tr>
+<tr><td><code>KVS-4</code></td><td>retired</td><td>&mdash;</td><td>blis-kvstore and the KV store contract are out of scope.</td></tr>
+<tr><td><code>KVS-5</code></td><td>retired</td><td>&mdash;</td><td>blis-kvstore and the KV store contract are out of scope.</td></tr>
+<tr><td><code>KVS-6</code></td><td>retired</td><td>&mdash;</td><td>blis-kvstore and the KV store contract are out of scope.</td></tr>
+<tr><td><code>KVS-7</code></td><td>retired</td><td>&mdash;</td><td>blis-kvstore and the KV store contract are out of scope.</td></tr>
+<tr><td><code>RTR-1</code></td><td>kept</td><td><span class="inv">RTR-1</span></td><td>Unchanged.</td></tr>
+<tr><td><code>RTR-2</code></td><td>kept</td><td><span class="inv">RTR-2</span></td><td>Unchanged.</td></tr>
+<tr><td><code>RTR-3</code></td><td>changed</td><td><span class="inv">RTR-3</span></td><td>The fork owns the hosting contract and its conformance suite; the API diff runs in the fork.</td></tr>
+<tr><td><code>RTR-4</code></td><td>kept</td><td><span class="inv">RTR-4</span></td><td>Unchanged.</td></tr>
+<tr><td><code>RTR-5</code></td><td>kept</td><td><span class="inv">RTR-5</span></td><td>Unchanged.</td></tr>
+<tr><td><code>RTR-6</code></td><td>kept</td><td><span class="inv">RTR-6</span></td><td>Unchanged.</td></tr>
+<tr><td><code>RTR-7</code></td><td>kept</td><td><span class="inv">RTR-7</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SIM-1</code></td><td>changed</td><td><span class="inv">SIM-1</span></td><td>Engine kinds model a commit; the legacy engine_version clause leaves.</td></tr>
+<tr><td><code>SIM-2</code></td><td>kept</td><td><span class="inv">SIM-2</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SIM-3</code></td><td>changed</td><td><span class="inv">SIM-3</span></td><td>Stack.json lists the commits of inference-sim and the fork and each engine's modelled commit.</td></tr>
+<tr><td><code>SIM-4</code></td><td>kept</td><td><span class="inv">SIM-4</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SIM-5</code></td><td>kept</td><td><span class="inv">SIM-5</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SIM-6</code></td><td>kept</td><td><span class="inv">SIM-6</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SIM-7</code></td><td>kept</td><td><span class="inv">SIM-7</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SIM-8</code></td><td>kept</td><td><span class="inv">SIM-8</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SIM-9</code></td><td>kept</td><td><span class="inv">SIM-9</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SIM-10</code></td><td>kept</td><td><span class="inv">SIM-10</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SIM-11</code></td><td>changed</td><td><span class="inv">SIM-11</span></td><td>Stores block leaves with blis-kvstore.</td></tr>
+<tr><td><code>SIM-12</code></td><td>kept</td><td><span class="inv">SIM-12</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SIM-13</code></td><td>kept</td><td><span class="inv">SIM-13</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SIM-14</code></td><td>kept</td><td><span class="inv">SIM-14</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SIM-15</code></td><td>kept</td><td><span class="inv">SIM-15</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SIM-16</code></td><td>kept</td><td><span class="inv">SIM-16</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SIM-17</code></td><td>kept</td><td><span class="inv">SIM-17</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SIM-18</code></td><td>kept</td><td><span class="inv">SIM-18</span></td><td>Unchanged.</td></tr>
+<tr><td><code>CFG-1</code></td><td>kept</td><td><span class="inv">CFG-1</span></td><td>Unchanged.</td></tr>
+<tr><td><code>CFG-2</code></td><td>kept</td><td><span class="inv">CFG-2</span></td><td>Unchanged.</td></tr>
+<tr><td><code>CFG-3</code></td><td>kept</td><td><span class="inv">CFG-3</span></td><td>Unchanged.</td></tr>
+<tr><td><code>CFG-4</code></td><td>kept</td><td><span class="inv">CFG-4</span></td><td>Unchanged.</td></tr>
+<tr><td><code>CFG-5</code></td><td>kept</td><td><span class="inv">CFG-5</span></td><td>Unchanged.</td></tr>
+<tr><td><code>CFG-6</code></td><td>kept</td><td><span class="inv">CFG-6</span></td><td>Unchanged.</td></tr>
+<tr><td><code>FID-1</code></td><td>changed</td><td><span class="inv">FID-1</span></td><td>Worded for engine modules and the modelled commit; paths follow the consolidated layout.</td></tr>
+<tr><td><code>FID-2</code></td><td>changed</td><td><span class="inv">FID-2</span></td><td>Oracle locks to the modelled commit (any upstream commit); for a C++ upstream the oracle drives the upstream code through its bindings.</td></tr>
+<tr><td><code>FID-3</code></td><td>changed</td><td><span class="inv">FID-3</span></td><td>Review of a changed trace is maintainer practice; the update flag and the oracle comparison stay automated.</td></tr>
+<tr><td><code>FID-4</code></td><td>kept</td><td><span class="inv">FID-4</span></td><td>Unchanged.</td></tr>
+<tr><td><code>FID-5</code></td><td>kept</td><td><span class="inv">FID-5</span></td><td>Unchanged.</td></tr>
+<tr><td><code>FID-6</code></td><td>kept</td><td><span class="inv">FID-6</span></td><td>Unchanged.</td></tr>
+<tr><td><code>FID-7</code></td><td>changed</td><td><span class="inv">FID-7</span></td><td>Compares against the upstream at the modelled commit.</td></tr>
+<tr><td><code>FID-8</code></td><td>kept</td><td><span class="inv">FID-8</span></td><td>Unchanged.</td></tr>
+<tr><td><code>FID-9</code></td><td>changed</td><td><span class="inv">FID-9</span></td><td>Engine modules, not repositories.</td></tr>
+<tr><td><code>FID-10</code></td><td>kept</td><td><span class="inv">FID-10</span></td><td>Unchanged.</td></tr>
+<tr><td><code>FID-11</code></td><td>kept</td><td><span class="inv">FID-11</span></td><td>Unchanged.</td></tr>
+<tr><td><code>FID-12</code></td><td>changed</td><td><span class="inv">FID-12</span></td><td>Subject was KV store packages modelled in blis-kvstore, which is out of scope; now a connector or backend whose decisions live outside the tree is refused by name.</td></tr>
+<tr><td><code>DEV-1</code></td><td>kept</td><td><span class="inv">DEV-1</span></td><td>Unchanged.</td></tr>
+<tr><td><code>DEV-2</code></td><td>kept</td><td><span class="inv">DEV-2</span></td><td>Unchanged.</td></tr>
+<tr><td><code>DEV-3</code></td><td>kept</td><td><span class="inv">DEV-3</span></td><td>Unchanged.</td></tr>
+<tr><td><code>DEV-4</code></td><td>kept</td><td><span class="inv">DEV-4</span></td><td>Unchanged.</td></tr>
+<tr><td><code>DEV-5</code></td><td>kept</td><td><span class="inv">DEV-5</span></td><td>Unchanged.</td></tr>
+<tr><td><code>DEV-6</code></td><td>kept</td><td><span class="inv">DEV-6</span></td><td>Unchanged.</td></tr>
+<tr><td><code>DEV-7</code></td><td>kept</td><td><span class="inv">DEV-7</span></td><td>Unchanged.</td></tr>
+<tr><td><code>DEV-8</code></td><td>kept</td><td><span class="inv">DEV-8</span></td><td>Unchanged.</td></tr>
+<tr><td><code>DEV-9</code></td><td>kept</td><td><span class="inv">DEV-9</span></td><td>Unchanged.</td></tr>
+<tr><td><code>DEV-10</code></td><td>kept</td><td><span class="inv">DEV-10</span></td><td>Unchanged.</td></tr>
+<tr><td><code>DEV-11</code></td><td>kept</td><td><span class="inv">DEV-11</span></td><td>Unchanged.</td></tr>
+<tr><td><code>DEV-12</code></td><td>changed</td><td><span class="inv">DEV-12</span></td><td>Process only (change class in pull-request template) becomes a Maintainer practice statement with no check.</td></tr>
+<tr><td><code>DEV-13</code></td><td>kept</td><td><span class="inv">DEV-13</span></td><td>Unchanged.</td></tr>
+<tr><td><code>VAL-1</code></td><td>changed</td><td><span class="inv">VAL-1</span></td><td>Validator path follows the consolidated layout.</td></tr>
+<tr><td><code>VAL-2</code></td><td>changed</td><td><span class="inv">VAL-2</span></td><td>Assumed entry for every chip in families without a roofline and in every new family; the point names the method.</td></tr>
+<tr><td><code>VAL-3</code></td><td>kept</td><td><span class="inv">VAL-3</span></td><td>Unchanged.</td></tr>
+<tr><td><code>VAL-4</code></td><td>changed</td><td><span class="inv">VAL-4</span></td><td>Removal approval is maintainer practice; precedence and refusal checks stay.</td></tr>
+<tr><td><code>VAL-5</code></td><td>kept</td><td><span class="inv">VAL-5</span></td><td>Unchanged.</td></tr>
+<tr><td><code>VAL-6</code></td><td>changed</td><td><span class="inv">VAL-6</span></td><td>Landing decision for unjudged entries and regressions is a maintainer decision; lane defined at first use; gate paths follow the layout.</td></tr>
+<tr><td><code>VAL-7</code></td><td>changed</td><td><span class="inv">VAL-7</span></td><td>Ratchet raise approval is maintainer practice; the ratchet test stays.</td></tr>
+<tr><td><code>VAL-8</code></td><td>changed</td><td><span class="inv">VAL-8</span></td><td>Engine-path costs match on code identity; carry-over is per engine commit; kernel_impls.json of the modelled commit.</td></tr>
+<tr><td><code>VAL-9</code></td><td>kept</td><td><span class="inv">VAL-9</span></td><td>Unchanged.</td></tr>
+<tr><td><code>VAL-10</code></td><td>kept</td><td><span class="inv">VAL-10</span></td><td>Unchanged.</td></tr>
+<tr><td><code>VAL-11</code></td><td>changed</td><td><span class="inv">VAL-11</span></td><td>Review guidance block becomes a Maintainer practice sentence; the lint stays.</td></tr>
+<tr><td><code>D1</code></td><td>kept</td><td><span class="inv">D1</span></td><td>Unchanged.</td></tr>
+<tr><td><code>D2</code></td><td>kept</td><td><span class="inv">D2</span></td><td>Unchanged.</td></tr>
+<tr><td><code>D3</code></td><td>changed</td><td><span class="inv">D3</span></td><td>A source with a live feed joins continuously, each row pinned by id and content hash; the archive and the feed split at a cutoff id and a run keeps one date across it.</td></tr>
+<tr><td><code>D4</code></td><td>changed</td><td><span class="inv">D4</span></td><td>Legacy-side detail moved to the prose of 10.2; the rule keeps per-role-key draws, append-only roles and alias tables.</td></tr>
+<tr><td><code>D5</code></td><td>kept</td><td><span class="inv">D5</span></td><td>Unchanged.</td></tr>
+<tr><td><code>D6</code></td><td>kept</td><td><span class="inv">D6</span></td><td>Unchanged.</td></tr>
+<tr><td><code>D7</code></td><td>changed</td><td><span class="inv">D7</span></td><td>Seed-holding jobs and aggregates use min_points; a new source's first cut-points allot training roles only; approvals became maintainer practice.</td></tr>
+<tr><td><code>D8</code></td><td>kept</td><td><span class="inv">D8</span></td><td>Same rule, shortened; release label and private deployment figures removed.</td></tr>
+<tr><td><code>COV-1</code></td><td>kept</td><td><span class="inv">COV-1</span></td><td>Unchanged.</td></tr>
+<tr><td><code>COV-2</code></td><td>changed</td><td><span class="inv">COV-2</span></td><td>No age limit: older anchor units are scored at their own grade, and the measured date is a slice attribute.</td></tr>
+<tr><td><code>COV-3</code></td><td>kept</td><td><span class="inv">COV-3</span></td><td>Unchanged.</td></tr>
+<tr><td><code>COV-4</code></td><td>kept</td><td><span class="inv">COV-4</span></td><td>Unchanged.</td></tr>
+<tr><td><code>COV-5</code></td><td>kept</td><td><span class="inv">COV-5</span></td><td>Unchanged.</td></tr>
+<tr><td><code>COV-6</code></td><td>changed</td><td><span class="inv">COV-6</span></td><td>Scoring is by commit distance from the modelled commit; a run on the modelled commit is the same build and can be G1 or G2.</td></tr>
+<tr><td><code>COV-7</code></td><td>changed</td><td><span class="inv">COV-7</span></td><td>Coverage is a funnel per scored source (11.6); the provisional-point rule keeps its content without launcher commit hashes.</td></tr>
+<tr><td><code>COV-8</code></td><td>kept</td><td><span class="inv">COV-8</span></td><td>Workflow file name removed.</td></tr>
+<tr><td><code>COV-9</code></td><td>kept</td><td><span class="inv">COV-9</span></td><td>Unchanged.</td></tr>
+<tr><td><code>COV-10</code></td><td>kept</td><td><span class="inv">COV-10</span></td><td>Unchanged.</td></tr>
+<tr><td><code>COV-11</code></td><td>changed</td><td><span class="inv">COV-11</span></td><td>The small-slice minimum moves to COV-13 (min_points).</td></tr>
+<tr><td><code>COV-12</code></td><td>kept</td><td><span class="inv">COV-12</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-M1</code></td><td>changed</td><td><span class="inv">T-M1</span></td><td>Onboarding is one to three pieces; one catalog-only pull request holds only for a model with no model support and no new primitive family.</td></tr>
+<tr><td><code>T-M2</code></td><td>changed</td><td><span class="inv">T-M2</span></td><td>The simulator refuses by name; the onboard --plan command is removed.</td></tr>
+<tr><td><code>T-M3</code></td><td>kept</td><td><span class="inv">T-M3</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-D1</code></td><td>kept</td><td><span class="inv">T-D1</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-D2</code></td><td>changed</td><td><span class="inv">T-D2</span></td><td>A new source has no held-out role.</td></tr>
+<tr><td><code>T-D3</code></td><td>changed</td><td><span class="inv">T-D3</span></td><td>Rows are pinned by id or hash as well as revisions.</td></tr>
+<tr><td><code>T-D4</code></td><td>kept</td><td><span class="inv">T-D4</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-A1</code></td><td>kept</td><td><span class="inv">T-A1</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-A2</code></td><td>kept</td><td><span class="inv">T-A2</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-A3</code></td><td>kept</td><td><span class="inv">T-A3</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-A4</code></td><td>kept</td><td><span class="inv">T-A4</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-E1</code></td><td>changed</td><td><span class="inv">T-E1</span></td><td>The engine models a commit; the simulator change is the commit bump.</td></tr>
+<tr><td><code>T-E2</code></td><td>changed</td><td><span class="inv">T-E2</span></td><td>Names the new commit; a listed model backport may remain.</td></tr>
+<tr><td><code>T-E3</code></td><td>changed</td><td><span class="inv">T-E3</span></td><td>Lists are regenerated at the commit.</td></tr>
+<tr><td><code>T-E4</code></td><td>kept</td><td><span class="inv">T-E4</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-E5</code></td><td>kept</td><td><span class="inv">T-E5</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-E6</code></td><td>changed</td><td><span class="inv">T-E6</span></td><td>Old commits are served by inference-sim release branches, not per-engine branches.</td></tr>
+<tr><td><code>T-R1</code></td><td>kept</td><td><span class="inv">T-R1</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-R2</code></td><td>kept</td><td><span class="inv">T-R2</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-R3</code></td><td>kept</td><td><span class="inv">T-R3</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-R4</code></td><td>kept</td><td><span class="inv">T-R4</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-R5</code></td><td>kept</td><td><span class="inv">T-R5</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-N1</code></td><td>kept</td><td><span class="inv">T-N1</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-N2</code></td><td>kept</td><td><span class="inv">T-N2</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-B1</code></td><td>kept</td><td><span class="inv">T-B1</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-B2</code></td><td>kept</td><td><span class="inv">T-B2</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-B3</code></td><td>changed</td><td><span class="inv">T-B3</span></td><td>One capability per pull request is maintainer practice.</td></tr>
+<tr><td><code>T-C1</code></td><td>kept</td><td><span class="inv">T-C1</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-P1</code></td><td>merged</td><td><span class="inv">T-E2</span></td><td>An upstream patch release is one more commit under the engine-upgrade procedure; per-engine blis tags retire.</td></tr>
+<tr><td><code>T-F1</code></td><td>changed</td><td><span class="inv">T-F1</span></td><td>Release-note naming of the issue is maintainer practice.</td></tr>
+<tr><td><code>T-G1</code></td><td>kept</td><td><span class="inv">T-G1</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-K1</code></td><td>changed</td><td><span class="inv">T-K1</span></td><td>One pull request in inference-sim; the router fork changes in its own repository.</td></tr>
+<tr><td><code>T-G2</code></td><td>kept</td><td><span class="inv">T-G2</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-S1</code></td><td>changed</td><td><span class="inv">T-S1</span></td><td>Moved into the new-data-source procedure (12.2).</td></tr>
+<tr><td><code>T-L1</code></td><td>kept</td><td><span class="inv">T-L1</span></td><td>Unchanged.</td></tr>
+<tr><td><code>LIF-1</code></td><td>changed</td><td><span class="inv">LIF-1</span></td><td>The release-bot check leaves; tag rules and branch protection are maintainer practice.</td></tr>
+<tr><td><code>LIF-2</code></td><td>changed</td><td><span class="inv">LIF-2</span></td><td>Pin consistency between BLIS modules is moot in one repository; the router fork pin and the toolchain rules stay.</td></tr>
+<tr><td><code>LIF-3</code></td><td>changed</td><td><span class="inv">LIF-3</span></td><td>A maintainer cuts each release; the release bot and its manual procedure leave.</td></tr>
+<tr><td><code>LIF-4</code></td><td>merged</td><td><span class="inv">LIF-3</span></td><td>Release notes are written by the maintainer who cuts the release, so the rule joins LIF-3.</td></tr>
+<tr><td><code>LIF-5</code></td><td>changed</td><td><span class="inv">LIF-5</span></td><td>An engine module models an upstream commit; the tag format leaves with engine tags and the router fork clause moves to §14.1.</td></tr>
+<tr><td><code>LIF-6</code></td><td>changed</td><td><span class="inv">LIF-6</span></td><td>Names a commit in place of a release; KV stores leave.</td></tr>
+<tr><td><code>LIF-7</code></td><td>changed</td><td><span class="inv">LIF-7</span></td><td>Directories replace repositories; the release-bot refusal is maintainer practice and the dead-code check stays.</td></tr>
+</tbody></table></div>
 <footer>
 <p>BLIS Target Design · standing design. Claims about upstream code are cited at pinned releases; claims marked <span class="inferred">inferred</span> await confirmation by recorded traces.</p>
 </footer>

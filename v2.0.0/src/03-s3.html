@@ -34,7 +34,7 @@
 │   └── data.go         package substrate: go:embed of catalog/ and registry/
 ├── engines/            one directory per engine (§7)
 ├── sim/, cmd/          the simulator
-├── tools/              the release bot (§13.6) and other tools
+├── tools/              generators and other tools (§13)
 └── go.mod              the one Go module: github.com/inference-sim/inference-sim
 </code></pre>
 <p>The hosting contract (<code>embed</code> and its conformance suite) is not in <code>contracts/</code>. It lives in the router fork (§5), so that the fork imports no BLIS code.</p>
