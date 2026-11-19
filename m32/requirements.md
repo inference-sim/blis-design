@@ -2,7 +2,7 @@
 
 These are the working requirements for M3.2, the release after M3.1, captured with the maintainer from
 2026-11-18. They are not yet a plan, and more will be added. The design they build on is
-[design v2.0.0](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html).
+[design v2.1.0](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html).
 
 **Labels.** Each item says whose it is:
 - **Maintainer**: stated or decided by the maintainer.
@@ -59,7 +59,7 @@ Until the migration lands, the three repositories below still exist, and the iss
   InferenceX rows published after the dump and added to the ledger one by one, each pinned by its row id and the
   SHA-256 of its content.
 
-**Design rules and sections.** IDs such as X7, SUB-15, LIF-5, COV-6, T-M1 or D6 name rules of design v2.0.0. The
+**Design rules and sections.** IDs such as X7, SUB-15, LIF-5, COV-6, T-M1 or D6 name rules of design v2.1.0. The
 letters group them: X across components, SUB substrate, LIF versions and releases, COV accuracy coverage, VAL
 coefficients, D the ledger, T a trigger's test. Each citation here says what the rule requires where that matters.
 A design section is written "design §n". A bare § number is this file's own section (§0 to §5, §3A to §3C); the
@@ -158,10 +158,11 @@ proven inert, and every coefficient measured or calibrated.**
 
 ## DC. Design changes, adopted in design v2.0.0
 
-**Status.** Design v2.0.0 ([the design](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html))
+**Status.** Design v2.0.0 ([the design](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html))
 adopts the design changes this section first proposed on 2026-11-18. The design now states the rules and the
 procedures. This section keeps each decision in one statement and lists, in one place, what M3.2 builds for it. Its
-Appendix C maps every v1.0.0 rule to its place in v2.0.0. Rule IDs and sections cited here are those of v2.0.0.
+Appendix C maps every v1.0.0 rule to its place in v2.0.0. M3.2 implements design v2.1.0, which adds the
+simplifications at the end of Table DC; rule IDs and sections cited here are those of v2.1.0.
 
 **Why.** Changes crossed repositories in sequence: the per-pool offload fix took blis-substrate#402, blis-vllm#302
 and inference-sim#2252, one after another, with full CI at each. And the new data (§1) is pinned to engine commits,
@@ -173,11 +174,11 @@ not releases, which BLIS could not model.
 A run on the modelled commit is the same build and can be graded G1 or G2. A run on any other commit names its
 commit distance and is graded G3 or G4. A model that lands upstream between upgrades is added as a model backport,
 which carries model code only. An engine upgrade produces an upgrade report of the models the new commit supports.
-In the design: [§2.2](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s2-2) Table 1
-(engine modules), [§7.1](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s7-1),
-[§11.3](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s11-3) (grades),
-[§12.4](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s12-4) (engine upgrade, upgrade
-report) and [§12.5](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s12-5) (model
+In the design: [§2.2](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s2-2) Table 1
+(engine modules), [§7.1](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s7-1),
+[§11.3](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s11-3) (grades),
+[§12.4](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s12-4) (engine upgrade, upgrade
+report) and [§12.5](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s12-5) (model
 support, backport); LIF-5, LIF-6, COV-6, T-E1 to T-E6, FID-14. A maintainer with write access decides an on-demand
 upgrade and records it in an issue (design §12.4). A backport is graded by commit distance (design §12.5).
 
@@ -186,25 +187,25 @@ The catalog's graph deriver writes checkpoint facts and nothing else. The `onboa
 simulating the requested scenario and the upgrade report answer the same questions. The substrate has no rule
 layer, so `contracts/rules/` is removed. A model that needs no model support and no new primitive family is
 onboarded by one catalog pull request. In the design: SUB-15, SUB-12,
-[§12.1](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s12-1) with T-M1 and T-M2.
+[§12.1](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s12-1) with T-M1 and T-M2.
 
 **DC3. blis-substrate, blis-vllm and blis-sglang become directories of inference-sim.**
 They are packages of inference-sim's one Go module (`substrate/`, `engines/vllm`, `engines/sglang`). The router fork,
 accuracy-dashboard, blis-config-search and blis-design stay separate. The router fork owns the hosting contract and
 its conformance suite, so it depends on no BLIS module and inference-sim imports it without a cycle. In the design:
-[§2.1](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s2-1) and
-[§2.2](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s2-2) Table 1,
-[§3.2](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s3-2) (layout),
-[§3.4](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s3-4) (checks by directory),
-[§5.3](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s5-3) (the router fork),
-[§14.4](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s14-4) (release branches); X7, X11,
+[§2.1](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s2-1) and
+[§2.2](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s2-2) Table 1,
+[§3.2](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s3-2) (layout),
+[§3.4](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s3-4) (checks by directory),
+[§5.3](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s5-3) (the router fork),
+[§14.4](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s14-4) (release branches); X7, X11,
 SUB-1, SUB-13, RTR-3. The bottom-up merge order (X10) is retired. Review ownership is maintainer practice: no
 `CODEOWNERS` file and no custom automation (maintainer, 2026-11-19).
 
 **DC4** is an M3.2 requirement, not a design change; it follows the build list below.
 
 **DC5. The standing design.** Every design change DC1 to DC3 needed is in v2.0.0, including engine-path
-coefficients keyed by the identity of the code that does the work ([design §9.2](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s9-2), VAL-8; this file's §3.2). The review questions are closed:
+coefficients keyed by the identity of the code that does the work ([design §9.2](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s9-2), VAL-8; this file's §3.2). The review questions are closed:
 Q1 and Q2 by design §12.4 and §12.5, Q3 by SUB-12 (the removal is in M3.2), Q4 by DC3 (consolidate), and Q5 by the
 maintainer (DC4 is in M3.2). What remains is the release plan: move the M4 lowering item into M3.2, add the build
 list below and DC4 to the M3.2 section, and map the moved issues (§0, `m31-carried.tsv`).
@@ -222,35 +223,40 @@ Implementation particulars with their full wording are in `evidence/DESIGN-V2-PL
 | Hosting contract | Move `contracts/embed` and `contracts/conformance/embedtest` (about 2,300 lines of Go; 12 commits of history touch them) into the router fork as new files in `blisembed/`. New files cost none of the fork's patch budget (`hack/hosting-lint/budget.txt`); the edits to its `go.mod` and `go.sum` do. The fork's import test (`TestImportsOnlySubstrateContracts`) then forbids every `github.com/inference-sim/` package. Update the checks that name blis-substrate as the contract's home: `hack/embed-apidiff.sh` and its test, `hack/fork-policy/main.go` and `.github/workflows/hosting-lint.yml` in the fork; `contracts/architecture_test.go` and the SUB-1 API-diff check in blis-substrate. The conformance suite runs in the fork's CI. inference-sim imports the contract through its one `replace`, under llm-d's module path (`github.com/llm-d/llm-d-router/blisembed`) | X7, X11, SUB-1, RTR-3 |
 | Subtree merge | Merge blis-substrate, blis-vllm and blis-sglang into inference-sim as `substrate/`, `engines/vllm` and `engines/sglang`, with a subtree merge that keeps their history. Every moved directory becomes a package of the one Go module | SUB-13 |
 | Issues | Transfer the open issues of the three repositories and map the old numbers to the new. Re-map §0 and `m31-carried.tsv` when they land | |
-| Checks | Replace the repository boundaries with an import-graph lint over directories (`go list`, required in CI) and the path-reference lint of X7. Consolidate each repository's merge rules, checks and workflows. Make heavy CI path-filtered, so a change runs only the jobs of the directories it touches. Restate each invariant's "Runs in" by directory in `substrate/contracts/invariants`. Add the module-size check | X2, X7, SUB-13, [§3.4](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s3-4) |
-| Releases | Per-engine release branches become release branches of inference-sim, which already cuts `release-v0.18`. Re-point the pins of accuracy-dashboard and blis-config-search | [§14.4](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s14-4), X11 |
+| Checks | Replace the repository boundaries with an import-graph lint over directories (`go list`, required in CI) and the path-reference lint of X7. Consolidate each repository's merge rules, checks and workflows. Make heavy CI path-filtered, so a change runs only the jobs of the directories it touches. Restate each invariant's "Runs in" by directory in `substrate/contracts/invariants`. Add the module-size check | X2, X7, SUB-13, [§3.4](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s3-4) |
+| Releases | Per-engine release branches become release branches of inference-sim, which already cuts `release-v0.18`. Re-point the pins of accuracy-dashboard and blis-config-search | [§14.4](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s14-4), X11 |
 | Retire | Archive blis-substrate, blis-vllm and blis-sglang with a pointer to inference-sim, once the issues are transferred | |
 | **Lowering (DC2)** | | |
 | Deriver | Move all vLLM lowering out of the catalog's graph deriver into `engines/vllm`; the deriver writes checkpoint facts only, and its `--check` and rederivation test stay | SUB-15 |
 | Rules layer | Remove `contracts/rules/` and move model values into graph fields; each engine module's refusal is the engine layer of validation | SUB-12 |
 | **Any commit (DC1), all engines** | | |
 | Generators | Make `gen_surface.py`, `gen_kernel_impls.py` and `gen_fields.py` work at any commit. Today `gen_surface.py` refuses a checkout at another commit, `gen_kernel_impls.py` needs one `kernels/<tag>/attention.json` per release, and `gen_fields.py` holds release-specific paths. Lock the oracle environment to the commit | X9, FID-2, T-E3 |
-| Upgrade report | Generate the report of §12.4 (surface diff, field demand, source diff, and for each model the catalog entry, model support and missing coefficients). Every new surface entry gets a status. The dashboard uses the same diff generator to grade a run. Include the Transformers-backed fallback paths of vLLM and SGLang as surface-list items, and list the models that run only through them | X9, [§12.4](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s12-4), [§11.3](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s11-3) |
+| Upgrade report | Generate the report of §12.4 (surface diff, field demand, source diff, and for each model the catalog entry, model support and missing coefficients). Every new surface entry gets a status. The dashboard uses the same diff generator to grade a run. Include the Transformers-backed fallback paths of vLLM and SGLang as surface-list items, and list the models that run only through them | X9, [§12.4](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s12-4), [§11.3](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s11-3) |
 | Commit identity | Name commits in `stack.json` and in the scenario refusal; accept an on-demand commit in the release watcher; grade by commit distance in the dashboard | LIF-6, SIM-3, COV-6 |
 | Backports | List backported commits in the Upstream record and check that every catalog model that does not use one has identical plans and traces with and without it | FID-14, T-M5 |
 | **vLLM (`engines/vllm`)** | | |
-| Tuned MoE configuration | Lowering selects the per-device fused-MoE configuration file that vLLM selects, and hashes it into the kernel's `CodeHash`. A run is G1 only when its tuned configuration is the one BLIS selected | [§9.2](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s9-2), G1 |
+| Tuned MoE configuration | Lowering selects the per-device fused-MoE configuration file that vLLM selects, and hashes it into the kernel's `CodeHash`. A run is G1 only when its tuned configuration is the one BLIS selected | [§9.2](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s9-2), G1 |
 | Defaults at two commits | `gpu_memory_utilization` changed its default between commits. The diff generator reads defaults, constants and registry contents at any two commits, so that G3 compares a run's resolved defaults with the modelled commit's | FID-14, G3 |
 | Platform preferences | Use a faked-device CUDA platform class for the block-size preferences, instead of transcribing them | FID-1 |
-| KV events | Settle full-block and partial-block KV-event emission under each report mode from the block pool and coordinator source at the modelled commit, and record it in the surface list | [§7.5](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s7-5) |
+| KV events | Settle full-block and partial-block KV-event emission under each report mode from the block pool and coordinator source at the modelled commit, and record it in the surface list | [§7.5](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s7-5) |
 | Step boundary | Record the step N+2 behaviour under asynchronous scheduling in the declared step boundary | DEV-3 |
-| Backport paths | Record in the Upstream record the model directories, config parsers and architecture registry that a backport may change | [§12.5](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s12-5), FID-14 |
+| Backport paths | Record in the Upstream record the model directories, config parsers and architecture registry that a backport may change | [§12.5](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s12-5), FID-14 |
 | **SGLang (`engines/sglang`)** | | |
-| P/D allocation | The setting is `disaggregation_decode_allocation_policy`, `early` (the default) or `prefill_complete`. The port reproduces both, and the surface list records the setting and its default | SGL-3, [§6.4](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s6-4) |
+| P/D allocation | The setting is `disaggregation_decode_allocation_policy`, `early` (the default) or `prefill_complete`. The port reproduces both, and the surface list records the setting and its default | SGL-3, [§6.4](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s6-4) |
 | Radix-tree core | The Rust core is the default. The oracle runs both cores, the Go port follows the default, a T2 differential case compares them, and the surface list names their divergences | FID-2, SGL-1 |
-| Surface list | Record the admission look-ahead ratio (`new_token_ratio`), maximum prefill tokens, retraction, output limits, maximum running requests under speculative decoding, KV-event hashing, the radix cache and drafter lists, and the NIXL storage-plugin mapping at the modelled commit | SGL-3, [§7.5](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s7-5) |
+| Surface list | Record the admission look-ahead ratio (`new_token_ratio`), maximum prefill tokens, retraction, output limits, maximum running requests under speculative decoding, KV-event hashing, the radix cache and drafter lists, and the NIXL storage-plugin mapping at the modelled commit | SGL-3, [§7.5](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s7-5) |
 | **Substrate and simulator** | | |
-| Code identity | Generate `code_paths.json` (the closure of engine-path code that each host, scheduler and graph cost depends on) for both engines, and add `CodeID` to `HostPlan` and `GraphPolicy`. This is the key for engine-path coefficients (§3.2) | [§9.2](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s9-2), VAL-8 |
-| Host CPU | Add the `host_cpu` fact to node packaging (x86 hosts for H100 and H200, Grace for GB200) and scope engine-path coefficients by it | SUB-3, [§9.2](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s9-2) |
-| Kernel lists | Generate each engine's `kernel_impls.json` as an engine-neutral copy under `substrate/registry/inputs/` with a freshness check, and move the VAL-8 cross-check into a simulator-package test. Connector and backend names of the vLLM and SGLang KV trees live only in each engine's surface list | X7, VAL-8, [§7.5](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s7-5) |
-| Cross-generation transfer | Validate the GB200 (Blackwell) to Hopper transfer rules (leave one generation out) before use. Until then a cross-generation transfer ranks as roofline | VAL-5, [§9.2](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s9-2) |
-| Ledger multiples | Record InferenceX's client multiples (10 measured, 2 warm-up, 12 in all) for `measurement_contaminated` in the ledger's source record | [§10.2](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s10-2) |
-| **A future engine (TensorRT-LLM)** | The first cases for the native-code step of [§12.6](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html#s12-6). Not built in M3.2; the sites are recorded in the evidence file: the eviction policy's steady-clock read, the `getenv` of the window-size shares, the native and Python capacity schedulers (the oracle runs both), the pool allocation sites, an instrumented build for branch coverage, and a per-layer launch and shape dump for the engine-plan path | FID-1, FID-2, FID-4, FID-7, FID-11 |
+| Code identity | Generate `code_paths.json` (the closure of engine-path code that each host, scheduler and graph cost depends on) for both engines, and add `CodeID` to `HostPlan` and `GraphPolicy`. This is the key for engine-path coefficients (§3.2) | [§9.2](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s9-2), VAL-8 |
+| Host CPU | Add the `host_cpu` fact to node packaging (x86 hosts for H100 and H200, Grace for GB200) and scope engine-path coefficients by it | SUB-3, [§9.2](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s9-2) |
+| Kernel lists | Generate each engine's `kernel_impls.json` as an engine-neutral copy under `substrate/registry/inputs/` with a freshness check, and move the VAL-8 cross-check into a simulator-package test. Connector and backend names of the vLLM and SGLang KV trees live only in each engine's surface list | X7, VAL-8, [§7.5](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s7-5) |
+| Cross-generation transfer | Validate the GB200 (Blackwell) to Hopper transfer rules (leave one generation out) before use. Until then a cross-generation transfer ranks as roofline | VAL-5, [§9.2](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s9-2) |
+| Ledger multiples | Record InferenceX's client multiples (10 measured, 2 warm-up, 12 in all) for `measurement_contaminated` in the ledger's source record | [§10.2](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s10-2) |
+| **Simplifications (design v2.1.0)** | | |
+| Simulator commands | Remove the `ledger`, `invariants` and `compose` commands from inference-sim, with their tests and docs pages, and the `blis invariants` mention in the README. Nothing calls them: the dashboard reads the ledger from the release checkout, and the substrate's own tool renders the invariant blocks | [COV-2](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s11-9), X29, DEV-7 |
+| Ledger embedding | Stop embedding `catalog/ledger/published/` in the simulator's data; the loader ignores everything under `catalog/ledger/` | [§3.3](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s3-3), [§10.2](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s10-2) |
+| Dashboard nightly | Delete the stale "TEMPORARY until `blis ledger --list anchor`" comment in `api-nightly.yml`. It already reads the anchor list from the pinned checkout | COV-2 |
+| Gated-config nightly | Delete the substrate's `nightly-fetch-configs.yml` and its entries in `.github/check-runs.yaml`; remove the `config-fetch` environment and its `HF_TOKEN` secret. Keep `fetch_pinned_configs.py` and `derive_graph.py --check --fetched`, which a maintainer runs. Add the gated-model step to the catalog README and a checkbox to the pull-request template, outside the generated block | X12 |
+| **A future engine (TensorRT-LLM)** | The first cases for the native-code step of [§12.6](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html#s12-6). Not built in M3.2; the sites are recorded in the evidence file: the eviction policy's steady-clock read, the `getenv` of the window-size shares, the native and Python capacity schedulers (the oracle runs both), the pool allocation sites, an instrumented build for branch coverage, and a per-layer launch and shape dump for the engine-plan path | FID-1, FID-2, FID-4, FID-7, FID-11 |
 
 ### DC4. Support requested by a team: Mistral-Large-4 and Inkling-2-Small on GB200
 

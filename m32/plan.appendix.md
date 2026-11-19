@@ -20,7 +20,7 @@ These are still requirements, not yet an executable plan. The carried M3.1 issue
 [`m31-carried.tsv`](m31-carried.tsv), but the M3.2 work needs an ordered sequence of pull requests. Table W gives
 the workstreams in dependency order; pull-request numbers are assigned when the plan is made.
 
-**Table W. Seventeen workstreams in dependency order; rows 1 to 4 build section DC and the design v2.0.0 changes,
+**Table W. Eighteen workstreams in dependency order; rows 1 to 4 and 18 build section DC and the design changes,
 and once row 1 lands, a row that names blis-substrate, blis-vllm or blis-sglang is done in inference-sim.**
 
 | # | Workstream | Owner repositories | Depends on rows |
@@ -42,6 +42,7 @@ and once row 1 lands, a row that names blis-substrate, blis-vllm or blis-sglang 
 | 15 | blis-config-search#110's four successor workstreams (§0.5) | blis-config-search | only the first depends on 10 |
 | 16 | CI: editing a pull request's text must not change its merge state (§5) | each repository's `ci.yml` (inference-sim's after row 1) | none |
 | 17 | The 150 open M3.1 issues (§0.4), each taken into the row its plan item matches | as listed in `m31-carried.tsv` | per row |
+| 18 | Simplifications of design v2.1.0: the `ledger`, `invariants` and `compose` commands removed, the ledger no longer embedded, the gated-config nightly deleted with its environment and secret, the gated-model step in the catalog README and PR template, the stale dashboard comment (Table DC) | inference-sim, blis-substrate, accuracy-dashboard | none; after row 1, the substrate part is done in inference-sim |
 
 Row 13's gates must be written and merged before any fitting reads the new sources (VAL-6: the split and success
 criteria are committed first). Row 5 has no design issue or pull request yet and blocks every per-engine cost, so it is

@@ -4,8 +4,9 @@ Working material for the M3.2 release, started 2026-11-18. It is not yet a desig
 reading and editing; it is never merged into `main`, which holds the standing design.
 
 Start with [`requirements.md`](requirements.md). Its Terms section defines the project's terms. Section DC records
-the design changes that [design v2.0.0](https://inference-sim.github.io/blis-design/v2.0.0/blis-target-design.html)
-adopted and lists what M3.2 builds for them; section 0 lists what M3.1 left for M3.2. Each requirement is
+the design changes that design v2.0.0 adopted and lists what M3.2 builds for them. M3.2 implements
+[design v2.1.0](https://inference-sim.github.io/blis-design/v2.1.0/blis-target-design.html). Section 0 lists what
+M3.1 left for M3.2. Each requirement is
 marked **Maintainer** (decided), **Proposal (accepted)**, **Proposal** (open to correction) or **Open** (undecided).
 
 For a one-page overview of the data sources and the calibration process, download
