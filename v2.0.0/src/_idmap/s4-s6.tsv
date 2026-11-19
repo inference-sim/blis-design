@@ -7,7 +7,7 @@ X5	changed	X5	runs per engine module; upstream code may be C++ through bindings
 X6	changed	X6	pinned commits replace module versions; lint settings of the fork are its own
 X7	changed	X7	dependencies follow Table 1 on an import graph, and a path-reference lint covers every language and data-file reads; the fork depends on no BLIS module and owns the hosting contract
 X8	changed	X8	one repository; success criteria fixed before held-out data is read
-X9	changed	X9	surface list is per modelled commit and includes model architectures; blis-kvstore leaves; the upgrade report shows the share of modelled items
+X9	changed	X9	surface list is per modelled commit and includes model architectures; the store clauses leave; the upgrade report shows the share of modelled items
 X10	retired		no bottom-up merge: the moved repositories are directories of one repository
 X11	changed	X11	one replace (the router fork); the pin list names the harness pin file beside the application pins; pins between the moved repositories disappear
 X12	changed	X12	name scan covers committed files; review of commit, pull-request and issue text is maintainer practice
@@ -31,7 +31,7 @@ SUB-3	changed	SUB-3	shortened; example removed
 SUB-10	changed	SUB-10	runs for the cost model and every engine module
 SUB-13	changed	SUB-13	states the rule for inference-sim as one Go module
 SUB-15	changed	SUB-15	the deriver writes checkpoint facts only; lowering lives only in engine modules (DC2)
-VLM-2	changed	VLM-2	provenance names commits and model backports; the adapter-package clause leaves with the KV store contract
+VLM-2	changed	VLM-2	provenance names commits and model backports; the adapter-package clause leaves
 VLM-3	changed	VLM-3	modelled commit replaces pinned release; release-plan exception and milestone clause leave
 VLM-4	changed	VLM-4	modelled commit replaces pinned release
 VLM-7	changed	VLM-7	modelled commit replaces pinned release
@@ -41,16 +41,19 @@ SGL-4	changed	SGL-4	modelled commit replaces pinned release
 SGL-6	changed	SGL-6	modelled commit replaces pinned release
 RTR-3	changed	RTR-3	the fork owns the hosting contract and its conformance suite; the API diff runs in the fork
 SIM-3	changed	SIM-3	stack.json lists the commits of inference-sim and the fork and each engine's modelled commit
-SIM-11	changed	SIM-11	stores block leaves with blis-kvstore
-KVS-1	retired		blis-kvstore and the KV store contract are out of scope
-KVS-2	retired		blis-kvstore and the KV store contract are out of scope
-KVS-3	retired		blis-kvstore and the KV store contract are out of scope
-KVS-4	retired		blis-kvstore and the KV store contract are out of scope
-KVS-5	retired		blis-kvstore and the KV store contract are out of scope
-KVS-6	retired		blis-kvstore and the KV store contract are out of scope
-KVS-7	retired		blis-kvstore and the KV store contract are out of scope
+SIM-11	changed	SIM-11	stores block leaves
+KVS-1	retired		External KV-cache providers are out of scope; a later MINOR version may add them
+KVS-2	retired		External KV-cache providers are out of scope; a later MINOR version may add them
+KVS-3	retired		External KV-cache providers are out of scope; a later MINOR version may add them
+KVS-4	retired		External KV-cache providers are out of scope; a later MINOR version may add them
+KVS-5	retired		External KV-cache providers are out of scope; a later MINOR version may add them
+KVS-6	retired		External KV-cache providers are out of scope; a later MINOR version may add them
+KVS-7	retired		External KV-cache providers are out of scope; a later MINOR version may add them
 RTR-1	changed	RTR-1	the commit and history checks leave; merge strategy and upstream-merge review are maintainer practice
 SUB-12	changed	SUB-12	the second validation layer is each engine module's refusal; the substrate has no rule layer (contracts/rules/ is removed)
 SIM-1	changed	SIM-1	engine kinds model a commit; version is a commit hash or a listed alias; the legacy engine_version clause leaves
 CFG-2	changed	CFG-2	the bot's pull request leaves; a committed report is the generator's output and never hand-edited (maintainer practice)
 SIM-18	changed	SIM-18	The rule shares one file system for each (model, root_dir) pair; the clause on two models leaves
+VLM-5	changed	VLM-5	the check is a determinism test and a lint
+SUB-11	changed	SUB-11	Transfer is written as plan.Transfer; the sentence on settings the cost model never reads leaves
+SUB-20	changed	SUB-20	the checks are a perturbation test and a lint; the example of an attention node leaves

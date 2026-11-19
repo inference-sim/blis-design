@@ -1,6 +1,6 @@
 v1_id	fate	v2_id	reason
 SUB-13	changed	SUB-13	The one Go module is inference-sim, not blis-substrate; no nested go.mod and the 100 MB module-zip bound now cover the whole module (restated in section 3.2; the rule is defined in section 5)
-SUB-1	changed	SUB-1	contracts/embed and contracts/conformance/embedtest move to the router fork, contracts/kvstore and kvstoretest retire, and the substrate has no version of its own (section 3.2 cites it; the rule is defined in section 5)
+SUB-1	changed	SUB-1	contracts/embed and contracts/conformance/embedtest move to the router fork, two further packages retire, and the substrate has no version of its own (section 3.2 cites it; the rule is defined in section 5)
 LIF-2	changed	LIF-2	The pin-consistency and scratch-copy parts of section 3.2 are moot in one module; the toolchain-version part stays (the rule is defined in section 14)
 X10	retired		No bottom-up merge in one repository (section 3.1 no longer describes a release sequence; the rule is defined in section 4)
 X11	changed	X11	The substrate is no longer pinned; the one pin is the router fork, and stack.json also names each engine module's modelled upstream commit (section 3.3 cites it; the rule is defined in section 4)

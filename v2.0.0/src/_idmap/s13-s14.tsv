@@ -4,5 +4,5 @@ LIF-2	changed	LIF-2	Pin consistency between BLIS modules is moot in one reposito
 LIF-3	changed	LIF-3	A maintainer cuts each release; the release bot and its manual procedure leave
 LIF-4	merged	LIF-3	Release notes are written by the maintainer who cuts the release, so the rule joins LIF-3
 LIF-5	changed	LIF-5	An engine module models an upstream commit; the tag format leaves with engine tags and the router fork clause moves to section 14.1; the source-reading check is a lint beside the oracle tiers
-LIF-6	changed	LIF-6	Names a commit in place of a release; engine.version is a commit hash or a listed alias; KV stores leave
+LIF-6	changed	LIF-6	Names a commit in place of a release; engine.version is a commit hash or a listed alias; the store clauses leave
 LIF-7	changed	LIF-7	Directories replace repositories; the release-bot refusal is maintainer practice and the dead-code check stays
