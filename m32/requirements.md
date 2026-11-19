@@ -488,13 +488,13 @@ role draw does not change (Terms). The held-out units grow because the same shar
 points. Table 3A.8 gives upper bounds from the dashboard nightly of 2026-11-18 and the ledger.
 
 **Table 3A.8. Scored InferenceX anchor units could grow from 238 to about 2,800, or up to about 4,700; configiq's
-anchor units could grow from none to between about 187 and about 630.**
+anchor units could grow from none to between about 373 and about 1,257.**
 
 | | Today | M3.2 ceiling | What opens it |
 |---|---|---|---|
 | InferenceX anchor units scored | 238 | about 2,800; up to about 4,700 | the list below |
 | InferenceX held units | not on the dashboard | about 1.5 times the anchor units | the same sources; held units are 1.5 times anchor units both for new units (30% and 20%) and within the older held group (60% and 40%) |
-| configiq anchor units (all configiq units are anchor units) | none, until they are published (below) | about 187 if only forge-written H200 and B200 units are scored (half of 373, current revision, §3C.1; every configiq unit is an anchor unit, so the full 373 is the upper bound); about 630 if all 1,257 H200 and B200 units are (pinned revision) | §3C's rule for each writer; the points are provisional (below). The draw is per role key (328 keys), so the share is approximate |
+| configiq anchor units (all configiq units are anchor units) | none, until they are published (below) | about 373 if only forge-written H200 and B200 units are scored (current revision, §3C.1); about 1,257 if all H200 and B200 units are (pinned revision). Every configiq unit is an anchor unit, so these are the full counts | §3C's rule for each writer; the points are provisional (below). Every unit is an anchor, so no draw applies |
 
 The InferenceX anchor ceiling adds up as follows:
 - the 238 scored today;
