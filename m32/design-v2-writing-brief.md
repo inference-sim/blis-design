@@ -26,7 +26,7 @@ v2.0.0 is v1.0.0 edited, not a new document.
   - A commit is a release tag or any upstream commit.
   - The engine upgrade and model support are distinct.
   - A model backport is model code only, and is graded by commit distance.
-  - The owner of an engine's directory decides an on-demand upgrade, recorded in an issue.
+  - A maintainer with write access decides an on-demand upgrade, recorded in an issue.
   - Each upgrade generates an upgrade report.
   - A run on the modelled commit counts as the same build for grading (G1 or G2 possible).
 - **Lowering lives only in engine modules (DC2).**
@@ -52,6 +52,8 @@ v2.0.0 is v1.0.0 edited, not a new document.
   - There is no age limit on scoring.
   - Coverage is reported as a funnel per scored source.
   - Accuracy is sliceable by any recorded attribute. Below `min_points` no aggregate is shown.
+- **Review.** Maintainers with write access decide on pull requests. There is no CODEOWNERS file, and v2.0.0 must
+  not require one.
 - **Testing.** Correctness and invariants are checked by behavioural tests: conformance, differential, mutation,
   metamorphic and property tests. Never structural tests, such as tests of source text, order, hashes or goldens
   used as a shortcut.

@@ -314,7 +314,7 @@ file or a rule that does not change.**
 | No engine name or policy in blis-substrate (X2); the cost model imports no engine module; no engine module imports another (the blis-sglang card) | an import-graph lint over directories (`go list`), required in CI |
 | The router fork depends on no BLIS module (X7, the router card) | the fork's import test, extended to forbid every `github.com/inference-sim/` package |
 | Each area's heavy CI (oracles, mutation sweeps, byte gate) | path-filtered workflows, so a change runs only the jobs of the directories it touches |
-| Review ownership | a `CODEOWNERS` file per directory, and the review agent's questions per area |
+| Review ownership | maintainers with write access decide on each pull request, and the review agent answers each area's questions; there is no `CODEOWNERS` file (maintainer, 2026-11-19) |
 | One upstream commit of each engine per build (LIF-6) | unchanged: each engine directory names one commit |
 
 **What changes.** One pull request can span the contracts, an engine and the simulator. The bottom-up merge order
@@ -325,7 +325,7 @@ already cuts `release-v0.18`. The rule that blis-substrate is one Go module (SUB
 inference-sim. A model's catalog entry, model support and coefficients become one pull request.
 
 **What is lost.** The boundary between repositories. A simulator change could edit catalog data in the same pull
-request, so the lints and `CODEOWNERS` must do what the boundary did. Each repository's merge rules, checks and
+request, so the lints and the review must do what the boundary did. Each repository's merge rules, checks and
 workflows have to be consolidated.
 
 **Timing.** If adopted: at a release boundary, as the first M3.2 item, because DC1 and DC2 are easier in one

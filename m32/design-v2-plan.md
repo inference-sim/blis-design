@@ -20,8 +20,8 @@ from `m32/requirements.md` there: the Terms, DC1 to DC5, §1.4, §1.6, §2, §3.
 ## Decided (binding on every task)
 
 - **Open questions of DC, settled as the author's calls under the maintainer's "adopt everything":**
-  - Q1: the owner of an engine's directory (its `CODEOWNERS`) decides an on-demand engine upgrade, recorded in an
-    issue.
+  - Q1: a maintainer with write access decides an on-demand engine upgrade, recorded in an issue. There is no
+    CODEOWNERS file (maintainer, 2026-11-19).
   - Q2: a model backport has no grade of its own; it is graded by commit distance.
   - Q3: `contracts/rules/` is removed together with the lowering move.
   - Q4: the three repositories are consolidated.
