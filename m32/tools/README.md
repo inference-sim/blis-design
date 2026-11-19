@@ -1,4 +1,4 @@
-# m32/tools — the plan generator
+# m32/tools: the plan generator
 
 `plan.html` is **generated**, not hand-edited, so it cannot drift from the requirements.
 
@@ -18,12 +18,12 @@ python3 m32/tools/build_plan.py --check  # exit 1 if the committed plan.html is 
 ```
 
 Edit a **source** (`requirements.md`, `plan.preamble.md`, `plan.appendix.md`, or `tools/plan.css`),
-then regenerate. Never edit `plan.html` directly — `--check` will fail the next build if you do.
+then regenerate. Never edit `plan.html` directly: `--check` fails the next build if you do.
 
 ## Why
 
 A plan review (blis-design PR #34) found that the hand-kept `plan.html` had drifted from
-`requirements.md` — a stale coverage ceiling, an un-chosen date rule, stale counts. Generating the
+`requirements.md`: a stale coverage ceiling, an un-chosen date rule, stale counts. Generating the
 M3.2 body straight from `requirements.md` makes those impossible: the numbers and rules are rendered
 from the one source every time. Only the delivered-milestone summary (which is history, not M3.2) and
 the plan-level decisions/execution (which state no number the requirements do not also state) live in the two plan-authored files.

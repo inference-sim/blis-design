@@ -1,45 +1,48 @@
-## Plan decisions — now in the requirements
+## Plan decisions, now in the requirements
 
-The decisions drafted here have been folded into the requirements above, where they are authoritative:
-the small-slice guard (§3B), the configuration-level partition rule (§1.4), the calibration acceptance
-gates (§1.5, proposed; the thresholds are still to be set), and the `blis-config-search#110` disposition (§0.4). This section is kept only as an index
-to them, so the plan carries no decision that the requirements do not.
+The decisions first drafted in this plan now live in the requirements, which are authoritative: the rule for small
+slices (§3B), roles drawn per role key (§1.4), the calibration acceptance gates (§1.5, a proposal whose thresholds
+are still to be set), and what becomes of blis-config-search#110 (§0.5). This section only points to them, so the
+plan holds no decision the requirements do not.
 
-## Prerequisites — start now
+## Prerequisites, to start now
 
-- **Harvest the expiring sources immediately.** The SGLang nightly job logs and `consolidated-metrics`,
-  and Tritonbench, expire at ~90 days. Begin the pinned private archive now, so the window keeps growing
-  instead of rolling off before M3.2 starts.
-- **No new GPU or cluster runs, with no exceptions (§1.6).** The real-vLLM load-timing test (blis-vllm#305)
-  uses already-recorded real data. The GB200 custom all-reduce (blis-substrate#116) stays transferred until a
-  source measures it (§0.5).
+- **Archive the sources that expire.** SGLang's nightly job logs and `consolidated-metrics` artifacts are kept
+  about 90 days. Begin the pinned private archive now, so their history keeps growing instead of rolling off before
+  M3.2 starts (§4.1). Tritonbench (90 days) and SGLang's AMD P/D artifacts (30 days) join it if §1.3 brings them in.
+- **No new GPU or cluster runs, with no exceptions (§1.6).** The test of CPU-load completion steps
+  (blis-vllm#305) uses runs already recorded. The GB200 custom all-reduce (blis-substrate#116) stays transferred
+  until a source measures it (§0.6).
 
-## Execution — ownership and sequence
+## Execution: ownership and order
 
-Still requirements, not yet an executable plan. The carried M3.1 issues have a proposed outcome each
-([`m31-carried.tsv`](m31-carried.tsv)), but the M3.2 work needs an ordered PR sequence. Workstreams in
-dependency order (PR numbers to be assigned at the cut):
+These are still requirements, not yet an executable plan. The carried M3.1 issues are listed in
+[`m31-carried.tsv`](m31-carried.tsv), but the M3.2 work needs an ordered sequence of pull requests. Table A1 gives
+the workstreams in dependency order; pull-request numbers are assigned when the plan is made.
 
-| # | Workstream | Owner repo(s) | Depends on |
+**Table A1. Seventeen workstreams in dependency order; rows 1 to 4 belong to section DC and stay conditional until
+its review closes, and row 1 changes the owner of most other rows if adopted.**
+
+| # | Workstream | Owner repositories | Depends on rows |
 |---|---|---|---|
-| 1 | Engine-path coefficient contract — host/scheduler/launch/replay keyed by code identity (§3) | blis-design, blis-substrate | — **(no issue/PR yet; gates every per-engine cost)** |
-| 2 | Ingestion: ledger-follows-source auto-pin + dump/API reconciliation (§3A.1, §3A.9) | blis-substrate | — |
-| 3 | Archival of the expiring sources (start immediately) | blis-substrate | — (not blocked on ingestion) |
-| 4 | New calibration sources ingested, fit-only roles (§1, §1.4) | blis-substrate | 2, 3 |
-| 5 | Input-recoverability census, no simulation (§3A.8) | accuracy-dashboard | — (pre-plan; does not wait on ingestion) |
-| 6 | Engine/table coverage: SGLang field list, router table, vLLM settings tail (§3A.4) | blis-sglang, blis-vllm, inference-sim, blis-substrate | 1 |
-| 7 | Scoring: no age gate, named release differences (commit distance under D1), funnels for InferenceX and configiq (§3A.2/§3A.5/§3A.6) | accuracy-dashboard | 2, 5 |
-| 8 | configiq as a ledger source, family rule, pinned revision (§3C) | blis-substrate, accuracy-dashboard | 2 |
-| 9 | Calibration acceptance gates + partition rule precommitted | blis-substrate | 1, 4 — before any fit |
-| 10 | Dashboard UI: slicing, small-slice guard, min_points legibility | accuracy-dashboard | 7 |
-| 11 | blis-config-search#110 successors — the four workstreams (§0.4) | blis-config-search | only (i) on 6; (ii)/(iii)/(iv) independent |
-| 12 | CI: a PR text edit must not change merge state (§5) | blis-design + each repo's ci.yml | — |
-| 13 | *If D1 is adopted:* engines model an upstream commit; model backports; the upgrade report (§D1) | blis-design, blis-vllm, blis-sglang | D3 if adopted |
-| 14 | *If D2 is adopted:* lowering out of the graph deriver; `contracts/rules/` removal (§D2) | blis-design, blis-substrate, blis-vllm, blis-sglang | — |
-| 15 | *If D3 is adopted:* consolidation into inference-sim; owners in this table become directories (§D3) | blis-design, all four repositories, inference-sim | a sizing first |
-| 16 | Mistral-Large-4 and Inkling-2-Small on GB200: upgrade, catalog entries, model support, coefficients (§D4) | blis-vllm, blis-substrate | D1 or the v0.34.0/v0.35 upgrades |
+| 1 | *If DC3 is adopted:* consolidate blis-substrate, blis-vllm, blis-sglang and blis-kvstore into inference-sim (DC3) | blis-design, the four repositories, inference-sim | a sizing first |
+| 2 | *If DC1 is adopted:* engines model an upstream commit; model backports; the upgrade report (DC1) | blis-design, blis-vllm, blis-sglang | 1, if adopted |
+| 3 | *If DC2 is adopted:* lowering out of the graph deriver; the `contracts/rules/` removal if Q3 brings it in (DC2) | blis-design, blis-substrate, blis-vllm, blis-sglang | 1, if adopted |
+| 4 | Mistral-Large-4 and Inkling-2-Small on GB200: engine upgrade, catalog entries, model support, coefficients (DC4) | blis-vllm, blis-substrate | 2, or the v0.34.0 and v0.35 upgrades |
+| 5 | Engine-path coefficients keyed by the identity of the code that does the work (§3.2) | blis-design, blis-substrate | none; no issue or pull request yet, and it gates every per-engine cost |
+| 6 | Ingestion: the ledger follows each source, and the dump is reconciled with the API (§3A.1, §3A.9) | blis-substrate | none |
+| 7 | Archive of the sources that expire (start now) | blis-substrate | none |
+| 8 | The new calibration sources ingested, with training-only roles (§1, §1.4) | blis-substrate | 6, 7 |
+| 9 | Count of anchor units whose inputs can be recovered, without simulating (§3A.8) | accuracy-dashboard | none; before the plan |
+| 10 | Engine and table coverage: SGLang field list, router table, the settings no engine module models (§3A.4) | blis-sglang, blis-vllm, inference-sim, blis-substrate | 5 |
+| 11 | Scoring: no age limit, release differences (commit distances under DC1), funnels for InferenceX and configiq (§3A.2, §3A.5, §3A.6) | accuracy-dashboard | 6, 9 |
+| 12 | configiq as a ledger source: the rule for each writer, and a pinned revision (§3C) | blis-substrate, accuracy-dashboard | 6 |
+| 13 | Calibration acceptance gates fixed in advance, and roles drawn per role key (§1.4, §1.5) | blis-substrate | 5, 8; before any fit |
+| 14 | Dashboard: slicing by any attribute, and the rule for small slices (§3B) | accuracy-dashboard | 11 |
+| 15 | blis-config-search#110's four successor workstreams (§0.5) | blis-config-search | only the first depends on 10 |
+| 16 | CI: editing a pull request's text must not change its merge state (§5) | blis-design and each repository's `ci.yml` | none |
+| 17 | The 150 open M3.1 issues (§0.4), each taken into the row its plan item matches | as listed in `m31-carried.tsv` | per row |
 
-Rows 13 to 16 are proposals under review (section D) and stay conditional until it closes.
-
-Workstream 9's gates must be written and merged **before** any fitting reads the new sources (X8).
-Workstream 1 has no design issue or PR yet and blocks every per-engine cost; file it first.
+Row 13's gates must be written and merged before any fitting reads the new sources (X8: thresholds are fixed before
+held-out data is read). Row 5 has no design issue or pull request yet and blocks every per-engine cost, so it is
+filed first.

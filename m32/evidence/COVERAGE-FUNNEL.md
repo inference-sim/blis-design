@@ -1,28 +1,74 @@
-# Why only ~200 points are scored (checked 2026-11-18)
+# Why few InferenceX and configiq units are scored
 
-Snapshot: accuracy-dashboard origin/main data/latest/summary.json, 2026-11-17_blis-v0.17.1_ix-api-2026-11-17
-(simulator v0.17.1, engine vLLM 0.32.0; before M3.1's SGLang field list).
+Checked 2026-11-18 and 2026-11-19. Sources:
+- the accuracy-dashboard summary of the nightly `2026-11-18_blis-v0.18.0_ix-api-2026-11-18` (inference-sim v0.18.0,
+  the M3.0 release);
+- blis-substrate's ledger on `main` (`catalog/ledger/`);
+- the InferenceX API, fetched 2026-11-18.
 
-## InferenceX funnel
-1. Ledger: 82,347 units from db-dump/2026-09-28 (+16 supplement records). vLLM 40,941, trt 18,034, sglang 14,010.
-2. Not in the ledger at all: rows published after the dump. The API serves 1,287 in-scope (non-AMD) rows dated
-   after 2026-09-26; 794 of them single-node vLLM/SGLang (b300 269, b200 201, gb300 95, h200 89, gb200 70, h100 32).
-3. Dashboard denominator = anchor role only: 20,364 units (ledger.yaml cut-points; anchor 20% of new units,
-   40% of the HELD legacy side). Fit/select/validate/held units are not on the headline by design.
-4. AMD out of scope: 7,182 anchors. In scope: 13,182.
-5. 180-day window (api.WINDOW_DAYS, Discussion #15 "Retention"): 12,491 in-scope anchors are outside it, and that is
-   their only reason. Months: 2025-10 6,449; 2025-11 2,276; 2025-12 1,246; 2026-01..09 ~2,400.
-   - The API still serves ~1 row per config (latest), back to 2025-10: 1,698 in-scope served rows are older than
-     the window. vLLM server logs for out-of-window rows return 200 (ids 96001 2026-02-25, 97040 2026-03-27).
-   - Superseded older measurements are not served by the API; only the dump has them (log availability unknown).
-   - Non-vLLM rows: /server-log returns 404 (by design, vLLM logs); SGLang launch comes from job log or the
-     recipe script at the run's commit (pull.freeze_launch_command).
-6. In window: ~691 in-scope anchors; 199 graded (all G4, vLLM). Blockers: sglang no field list 186 (109 alone);
-   dynamo-router 252; trt engine 111; field_not_modelled long tail (data_parallel_rpc_port 76, NCCL/flashinfer envs).
+## InferenceX
+
+**Table F1. 238 of 13,182 in-scope anchor units are scored; most of the rest are older than the age limit.**
+
+| Stage | Units | Note |
+|---|---|---|
+| Units in the ledger | 82,347 | from db-dump/2026-09-28 and 16 supplement records |
+| Anchor units (the dashboard's denominator) | 20,364 | the other roles are training data or held units |
+| Anchor units on AMD parts, out of scope | 7,182 | no coefficients for AMD parts before M4 |
+| Anchor units in scope | 13,182 | |
+| Scored | 238 | all G4 |
+| Not scored: older than the 180-day age limit | 11,555 | measured before 2026-05-23 |
+| Not scored: inside the age limit, but the API no longer serves the row | 949 | a newer measurement of the configuration superseded it |
+| Not scored: in the nightly's pull, refused for another reason | 440 | see Table F3 |
+
+238 + 11,555 + 949 + 440 = 13,182. The dashboard records the second and third causes under one reason,
+`value_not_recorded:not_in_pull_window`.
+
+**Table F2. The in-scope anchor units the nightly did not pull, by engine family and measurement date.**
+
+| Family | Before 2026-02 | 2026-02 to the age limit | Inside the age limit, superseded | Total |
+|---|---|---|---|---|
+| vLLM-family (vllm, dynamo-vllm, llmd-vllm, vllm-disagg) | 3,758 | 520 | 623 | 4,901 |
+| SGLang-family (sglang, dynamo-sglang, mori-sglang) | 1,913 | 563 | 300 | 2,776 |
+| TRT-LLM-family (trt, dynamo-trt) | 4,575 | 226 | 26 | 4,827 |
+| Total | 10,246 | 1,309 | 949 | 12,504 |
+
+The InferenceX API's `/server-log` was queried for 33 vLLM single-turn records that only the dump holds, three per
+month. Every record from 2025-09 to 2026-01 returned 404; every record from 2026-02 to 2026-07 returned a log. So
+the 3,758 vLLM-family units before 2026-02 have no server log on the API. Whether the dump holds their logs is not
+checked. SGLang points take their launch command from the recipe at the run's commit, so the 1,913 older
+SGLang-family units may still be recoverable.
+
+**Table F3. The 440 in-scope anchor units the nightly pulled but did not score, by first reason.**
+
+| First reason | Units |
+|---|---|
+| Dynamo's router has no entry in the router table (`router_unsupported`) | 252 |
+| No SGLang field list in M3.0 (`field_unclassified`) | 96 |
+| TRT-LLM has no engine (`engine_unsupported`) | 51 |
+| Other: settings not modelled or not in the release, workload not stated, rows that differ from the ledger | 41 |
+
+Counting every reason a unit carries, not only its first: 254 units are blocked by the router table, and 173 by the
+missing SGLang field list (96 of them by nothing else). By family, the 440 are 173 SGLang-family, 156 vLLM-family
+and 111 TRT-LLM-family.
+
+**Rows published after the dump.** On 2026-11-18 the API served 1,216 in-scope rows dated after 2026-09-28 (AMD and
+TPU parts excluded): 799 SGLang-family, 334 vLLM-family, 72 TRT-LLM-family and 11 others. The 1,133 vLLM- and
+SGLang-family rows form about 1,090 distinct configurations at a concurrency, which approximates the units they
+would make; 728 of the rows are single-node and not disaggregated. None is a ledger unit yet.
+
+**Units in the ledger by framework.** vllm 40,941; trt 18,034; sglang 14,010; dynamo-trt 3,502; dynamo-sglang
+2,404; atom 1,143; dynamo-vllm 1,036; mori-sglang 968; vllm-disagg 167; mooncake-atom 99; atom-disagg 20; llmd-vllm
+12; tilert 11. Total 82,347.
 
 ## configiq
-- 1,702 units (H200 1,031, MI355X 417, B200 226, MI300X 28), vLLM 0.13-0.33.
-- chunked_prefill_enabled blank in all 1,702; max_num_seqs blank 1,644; kv_quantization blank 1,247;
-  prefix_caching blank 779. Frame (stop rule, warm-up, window, client release) never recorded.
-- A blank is value_not_recorded (G5) unless the row matches a launcher preset (provisional rule) -> only matching
-  rows score. M3.1 notes: 213 simulation-eligible train+validation units.
+
+- The ledger holds 1,702 configiq units from dataset revision `21cc6eb`: 1,031 on H200, 226 on B200, 417 on MI355X
+  and 28 on MI300X. AMD parts are out of scope, leaving 1,257.
+- 328 role keys cover the 1,702 units, so a share drawn per role key applies only approximately to units.
+- Every unit's `chunked_prefill_enabled` is blank, 1,644 have a blank `max_num_seqs`, 1,247 a blank
+  `kv_quantization` and 779 a blank `prefix_caching`. The run's frame (stop rule, warm-up, measurement duration,
+  client version) is never recorded.
+- Today a blank counts as "not recorded" unless the row matches a forge preset. In M3.1, 213 of configiq's training
+  and validation units could be simulated on that basis.
+- configiq's units are not in the published anchor and fit lists on blis-substrate `main`.
