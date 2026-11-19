@@ -19,7 +19,8 @@ Raw samples are not in the repository.
 ## Step / host / scheduler level
 - SGLang ci-data traces (github.com/sgl-project/ci-data, ~105 GB, last push 2026-07-21). Verified repo; agent opened 2 traces.
   Kineto traces rank 0, EXTEND + DECODE per bs/il; ~45 model/variant dirs (DeepSeek V3.2/V4-Pro, Kimi, GLM, gpt-oss, MiniMax, Qwen3.5).
-  Step spans, scheduler host spans, cudaGraphLaunch, every GPU kernel. No commit recorded.
+  Step spans, scheduler host spans, cudaGraphLaunch, every GPU kernel. No commit is recorded in the trace itself; it is recoverable through the Actions run
+  (SETTINGS-PROVENANCE.md).
 - SGLang nightly job logs (90 days): server_args dumps, sampled Prefill/Decode batch lines.
 - vLLM blog interactive pages (vllm-project/vllm-project.github.io assets/interactive_pages):
   DeepSeek-V4.1-Flash P/D wide-EP decode step breakdown DEP4..DEP32 (GB200/GB300), prefill tables, EPLB.

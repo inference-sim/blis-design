@@ -20,6 +20,12 @@ says whether the maintainer stated it or it is a proposal open to correction.
 
 Figures are as of 2026-11-18. Raw downloads behind the notes are not in the repository.
 
+Also here:
+- [`plan.html`](plan.html): the M3.2 plan, generated from `plan.preamble.md`, `requirements.md` and
+  `plan.appendix.md` by [`tools/build_plan.py`](tools/README.md). Never edit it by hand.
+- [`m31-carried.tsv`](m31-carried.tsv): the M3.1 plan issues no M3.1 body names yet, with a proposed outcome each (§0.3).
+
 ## How to contribute
 
-Push to the `m32` branch. Mark a new requirement as **Maintainer.** (decided) or **Proposal.** (open).
+Push to the `m32` branch, or open a pull request into `m32` for a proposal the team should review first. Mark each
+requirement **Maintainer** (decided), **Proposal (accepted)** or **Proposal** (open).

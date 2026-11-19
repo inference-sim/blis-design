@@ -3,10 +3,12 @@
 Status: being captured with the maintainer; more requirements to come. Not yet a design or plan.
 **2026-11-18: the maintainer accepted the proposals in sections 1, 2 and 3** (1.2, 2.2-2.4, 3.2). 1.3 stays open.
 **Section D (design changes) is a proposal under team review**; nothing in it is decided.
-Each item says whose it is: **maintainer** (stated by them) or **proposal** (open to correction).
+Each item says whose it is: **Maintainer** (stated or decided by the maintainer), **Proposal (accepted)** (a
+proposal the maintainer accepted) or **Proposal** (open to correction).
 Supporting evidence is in `evidence/` next to this file: what each project publishes (`INVENTORY.md`), where each
 new source records its settings (`SETTINGS-PROVENANCE.md`), why so few points are scored (`COVERAGE-FUNNEL.md`),
-and how configiq rows are produced (`CONFIGIQ-FINDINGS.md`).
+how configiq rows are produced (`CONFIGIQ-FINDINGS.md`), and what the two requested models need on GB200
+(`NEW-MODELS-GB200.md`).
 
 ## D. Design changes M3.2 needs (proposal, for team review)
 
@@ -21,52 +23,74 @@ request to `main`, then in code. Whether D4 belongs in M3.2 or in a patch releas
   was first held out because that cascade "cannot be green in the window". The per-pool offload fix took three
   sequential pull requests: blis-substrate#402, blis-vllm#302 and inference-sim#2252.
 - *Teams ask for models that only an unreleased engine build supports* (D4).
-- *The new data is pinned to engine commits, not releases.* Every vLLM CI perf row names a vLLM commit, and every
-  SGLang nightly names an SGLang commit (§1, §2.3). Today BLIS can model only a release, so those runs are all
-  release differences.
+- *The new data is pinned to engine commits, not releases.* Nearly every vLLM CI perf row names a vLLM commit
+  (a few say `nightly` or a release tag), and every SGLang nightly names an SGLang commit (§1, §2.3). Today
+  BLIS can model only a release, so it cannot fit against the exact engine code those runs used.
+
+### D0. Terms used in this section
+
+- **Engine upgrade.** Porting the diff of the code an engine module already models (scheduler, KV-cache manager,
+  connectors, defaults, lowering) from one upstream commit to another. It changes behaviour for every model.
+  "Port" and "move the modelled commit" mean the same thing here.
+- **Model support.** Work in an engine module for one model, needed only when that model brings engine-facing
+  code of its own (D1 lists the cases). It is separate from the upgrade.
+- **Onboarding a model.** Up to three pieces of work, done after any engine upgrade the model needs:
+  - *Catalog entry* (always): the model's `config.json`, its catalog entry, and a graph handler if the
+    architecture is new. A new kind of layer also needs new graph vocabulary, and then the engine must learn to
+    lower it, which makes the engine piece depend on this one.
+  - *Model support* in the engine module, when needed.
+  - *Coefficients*, required when a kernel the model runs on the target chip has neither a registry entry nor
+    a coded fallback. The cost model refuses a missing coefficient rather than defaulting it
+    (blis-substrate `kernel/new.go`: "A missing coefficient … is an error rather than a default"). A
+    transferred or assumed entry, written by its family's writer script (SUB-4), makes the model run; a
+    measured entry, fitted on fit units, makes it accurate.
+- **Commit distance.** How far a run's engine commit is from the modelled one: commits apart, and releases
+  apart where the two sit in different releases. Under D1 it is named on a point beside its grade, as the
+  release difference is today (§3A.5); the G3 and G4 rule for a different engine build (COV-6) is unchanged.
 
 ### D1. Model any upstream commit, not only a release (vLLM and SGLang)
 
 **Today.** An engine module models one upstream release (LIF-5). A build runs one release of each engine, and a
 scenario that names another is refused (LIF-6). A run on another release is scored as a named release
-difference (§3A.5).
+difference (§3A.5, §11.5, COV-6).
 
 **Proposal.**
-- An engine module models one upstream **commit**. It may be a release tag or a commit on the upstream's main or
-  release branch. The Upstream record names the commit, and the release it descends from. A build still runs
-  one commit of each engine, so LIF-6's refusal stays as it is, with a commit in place of a release.
-- A move between upstream commits is ported as a diff, as v0.32.0 to v0.33.0 was. The generators (`fields.json`, `surface.json`, `kernel_impls.json`) already take the
-  upstream reference as a parameter. The oracle environment is locked per commit.
-- **Grading.** A point whose run used the modelled commit is not a release difference. Any other point names its
-  distance: commits apart, and releases apart where the two commits sit in different releases.
-- **Model backport.** This is the narrow case. The upstream commits that add one model are applied onto the
-  modelled commit and listed in the Upstream record. A backport carries model code only, never scheduler, KV or
-  connector changes. It folds away when the modelled commit contains it.
-- **When to move.** Move the modelled commit on each upstream release, and on demand when a team scenario needs
-  a later commit. Each move re-runs the oracle and the goldens.
-- **Two kinds of engine work.** They are separate and should not be confused.
-  - The *engine upgrade* ports the diff of the code an engine module already models: the scheduler, KV-cache
-    manager, connectors, defaults and lowering. It changes behaviour for every model.
-  - *Model support* is work in the same engine module for one model. It is needed only when the model brings
-    engine-facing code of its own. That code mostly lives in the model's folder (for example
-    `vllm/models/inkling2/`), which an upgrade does not port:
-    - a KV-cache layout the module has not seen (as DeepSeek-V4's sliding-window cache and compressor were,
-      `core/kv/layers.go`);
-    - its own kernels, or a backend choice the module does not lower (as Muse Spark's fused kernels were,
-      blis-vllm#272);
-    - a new drafting method or scheduler hook.
-  - A model that brings none of these needs only catalog onboarding.
+- An engine module models one upstream **commit**: a release tag, or a commit on the upstream's main or release
+  branch. The Upstream record names the commit and the release it descends from. A build still runs one commit
+  of each engine, so LIF-6's refusal stays, with a commit in place of a release.
+- An upgrade is ported as a diff, as v0.32.0 to v0.33.0 was. The generators (`fields.json`, `surface.json`,
+  `kernel_impls.json`) already take the upstream reference as a parameter. The oracle environment is locked per
+  commit.
+- A point whose run used the modelled commit has no release difference. Any other point names its commit
+  distance (D0).
+- **Model backport**, the narrow case: the upstream commits that add one model are applied onto the modelled
+  commit and listed in the Upstream record. A backport carries model code only, never scheduler, KV or connector
+  changes, and folds away when the modelled commit contains it.
+- **When to move.** On each upstream release, and on demand when a team scenario needs a later commit. Each move
+  re-runs the oracle and the goldens.
+- **Model support is needed** only when a model brings engine-facing code that an upgrade does not port, because
+  it lives mostly in the model's folder (for example `vllm/models/inkling2/`):
+  - a KV-cache layout the module has not seen, as DeepSeek-V4's sliding-window cache and compressor were
+    (`core/kv/layers.go`);
+  - its own kernels, or a backend choice the module does not lower, as Muse Spark's fused kernels were
+    (blis-vllm#272);
+  - a new drafting method or scheduler hook.
+- A model that brings none of these needs no model support. Onboarding it is the catalog entry, plus any
+  coefficients its kernels lack (D0).
 - **Upgrade report.** Every engine upgrade generates a report of the models the new commit supports. For each
   model it gives:
   - whether the catalog has it;
-  - whether it needs model support, and for what (from the regenerated surface, field and kernel lists, which
-    must give every new entry a status, X9, and from the model's own code paths);
-  - the measured coefficients it lacks on each catalog chip.
-  The report is the to-do list for model requests. A team's request for a model the report marks catalog-only is
-  answered by onboarding alone.
+  - whether it needs model support, and for what. This comes from the regenerated surface, field and kernel
+    lists, which must give every new entry a status (X9), and from the model's own code paths;
+  - for each catalog chip, the coefficients it lacks: those it cannot run without (no entry and no fallback),
+    and those running on transferred or assumed values.
+- The report is the to-do list for model requests, in advance. A run of the requested scenario gives the same
+  answer for one model: a missing catalog entry is refused by name (`not_in_catalog`), an engine refuses what it
+  cannot lower, a missing coefficient is refused with its name, and the Result records each coefficient's
+  method. No separate preflight command is needed (D2).
 
-**Effect.** New models on upstream main can be modelled (D4). The vLLM CI perf and SGLang nightly runs can be
-fitted against the exact engine code that produced them (§1). Release-difference grading becomes commit
+**Effect.** A new model on upstream main can be supported (D4). The vLLM CI perf and SGLang nightly runs can be
+fitted against the exact engine code that produced them (§1). A named release difference becomes a named commit
 distance, which is finer.
 
 ### D2. Lowering out of blis-substrate, brought forward from M4
@@ -75,20 +99,17 @@ distance, which is finer.
 contract-change review set that removes `contracts/rules/` with model values moved into graph fields, from M3 to
 M4 (2026-11-17). The design already says a graph holds only what the checkpoint states, and that sharding,
 fusion, padding and the nodes emitted under a layout are lowering (SUB-15). It also says onboarding a model is
-one blis-substrate pull request with no engine code (§12.1, T-M1). Neither is true yet.
+one blis-substrate pull request with no engine code (§12.1, T-M1). Neither holds yet, and the second can hold
+only for a model that needs no model support or coefficients (D0).
 
 **Proposal.** Bring both into M3.2.
 - Move all lowering into the engine modules.
 - Remove `contracts/rules/`, as the contract-change review set (§12.8).
+- Drop the onboarding preflight command that §12.1 describes (`inference-sim onboard --plan`, never built). A run
+  of the requested scenario, and the upgrade report (D1), answer the same questions.
 
-No separate preflight command is needed. §12.1 describes one (`inference-sim onboard --plan`), which was never
-built. A run of the requested scenario already answers the same questions: a missing catalog entry or graph
-handler is refused by name (`not_in_catalog`), an engine refuses what it cannot lower, and the Result records
-which method each coefficient came from, which the dashboard reads as `coefficient_method`.
-
-**Effect.** Onboarding a new architecture becomes a graph handler plus data, and each engine lowers the new
-primitives in its own code. A team's model request is answered by running its scenario: what runs, what is
-refused and why, and which coefficients come from which method.
+**Effect.** A new architecture built from existing kinds of layer is onboarded with a graph handler plus data;
+each engine lowers it with the lowering it already has. A new kind of layer still needs engine lowering (D0).
 
 ### D3. Consolidate blis-substrate, blis-vllm, blis-sglang and blis-kvstore into inference-sim
 
@@ -114,53 +135,50 @@ subtree merge) and transferring their open issues.
 **What changes.** One pull request can span the contracts, an engine and the simulator. The bottom-up merge
 order and the cascade of pins between BLIS repositories go away (X10, X11). Per-engine release branches (§14.4)
 become release branches of inference-sim, which already cuts `release-v0.18`. The rule that blis-substrate is
-one Go module (SUB-13) is restated for the new layout.
+one Go module (SUB-13) is restated for the new layout. A model's catalog entry, model support and coefficients
+(D0) become one pull request.
 
 **What is given up.** The hard wall between repositories. A simulator change could edit catalog data in the same
 pull request, so the lints and `CODEOWNERS` must do what the walls did. Each repository's merge rules, checks and
 workflows have to be consolidated.
 
-**Timing.** At a release boundary, after the M3.1 cut, as the first M3.2 item, because D1 and D2 are easier in
-one repository. The migration is not sized yet. A sizing from the actual workflows, checks and open issues comes
-before the decision.
+**Timing.** If adopted: at a release boundary, after the M3.1 cut, as the first M3.2 item, because D1 and D2 are
+easier in one repository. The migration is not sized yet; a sizing from the actual workflows, checks and open
+issues comes before the decision.
 
 ### D4. Support requested by a team: Mistral-Large-4 and Inkling-2-Small on GB200
 
 **Request.** A GB200 configuration for both models on 16 GPUs (Muse Spark's capacity), for the team to use and
 verify.
 
-**Facts** (checked 2026-11-18).
+**Facts** (checked 2026-11-18; `evidence/NEW-MODELS-GB200.md`).
 - **Mistral-Large-4.** `MistralLarge4ForCausalLM`, with a DSpark drafter. It is in vLLM v0.34.0, released
-  2026-11-16, and not in v0.33.0, which blis-vllm models. Its Hugging Face repository is gated.
+  2026-11-16, and on main; it is not in v0.33.0, which blis-vllm models. Its Hugging Face repository is gated.
 - **Inkling-2-Small.** `Inkling2ForConditionalGeneration`, 594B. It is only on vLLM main, in vllm-project/vllm#67325,
   merged 2026-11-18 as `abb8194dc3`, and not in v0.34.0. Recent vLLM releases came about two weeks apart.
   blis-substrate#88 tracks it.
 
-**Proposal.**
-- Mistral-Large-4 comes with the v0.34.0 port.
-- Inkling-2-Small comes with D1, at `abb8194dc3` or later, or with the v0.35 port if that release is near.
-- Each model gets its catalog entry and graph handler, and its drafters, under D2.
-- Answer each request with its confidence. Neither model has measured runs on GB200, so the configuration is a
-  prediction with no held-out evidence. GB200 decode is about 1.35 times slow per token until blis-substrate#140
-  and blis-vllm#272 land (§0.2).
+**Engine upgrade.** One modelled commit can serve both: a vLLM main commit at or after `abb8194dc3` carries both
+models (D1). Without D1, Mistral-Large-4 comes with the v0.34.0 upgrade and Inkling-2-Small waits for v0.35.
 
-**What each model needs** (checked 2026-11-18; `evidence/NEW-MODELS-GB200.md`).
-- *No new kind of layer.*
-  - Inkling-2-Small is Inkling (v1), which the catalog already has, plus cheap elementwise additions (block
-    attention residuals, MoE softcaps) and a DSpark drafter. It needs a branch in the existing handler.
-  - Mistral-Large-4 combines patterns the catalog already models: DSA sparse attention (GLM-5), and a layer
-    reading another layer's KV and reusing another layer's indexer (DeepSeek-V4.1). It needs a new handler.
-    This is to be confirmed from its `config.json`, which is gated: an access token is needed.
-  - So for both, the catalog change and the engine change are independent.
-- *Kernels with no GB200 measurement.*
-  - NVFP4 and MXFP8 grouped MoE GEMMs have coefficients on H100 and H200 only, none on any Blackwell part.
-    Inkling-2-Small runs them on its own CUDA kernel.
-  - Sparse-MLA attention has 31 entries, all on H100 and H200.
-  - The MLA decode floor on GB200 is assumed.
-  - Relative-position attention is priced as plain attention.
-  - Drafter acceptance is borrowed.
-  - Until these are fitted, the main costs on GB200 run on transferred or assumed values. AISimulate's GB200
-    collection is the likeliest fit data; whether it covers these two kernel families is not yet checked.
+**Onboarding, piece by piece (D0).**
+
+| Piece | Inkling-2-Small | Mistral-Large-4 |
+|---|---|---|
+| Catalog entry | a branch of the existing Inkling handler; new nodes are of existing kinds (block attention residuals and MoE softcaps as elementwise nodes), and its DSpark drafter follows the catalog's other DSpark drafters | a new handler combining kinds the catalog has: DSA sparse attention (GLM-5), a layer reading another layer's KV and reusing another layer's indexer (DeepSeek-V4.1); to confirm from its gated `config.json` |
+| New graph vocabulary | none expected | none expected |
+| Model support | likely needed: it ships its own kernels (relative-position FA4 attention, a custom TRT-LLM batched GEMM for its MoE, its own all-reduce), which blis-vllm must lower | probably small: its KV sharing and sparse index groups are close to DeepSeek-V4.1's, to check against `core/kv` |
+| Coefficients on GB200 | NVFP4 and MXFP8 grouped MoE GEMMs have no entry on any Blackwell part; at least transferred entries are required unless a coded fallback covers them (not yet checked). Relative-position attention is priced as plain attention | sparse-MLA attention has no GB200 entry (31 entries, all H100 and H200); the same applies. The MLA decode floor on GB200 is assumed |
+| Drafter acceptance | borrowed | borrowed |
+
+Because neither model brings a new kind of layer, the catalog entry and the engine pieces are independent of each
+other. AISimulate's GB200 collection is the likeliest fit data for the missing coefficients; whether it covers
+these two kernel families is not yet checked.
+
+**Answer to the team.** Give each configuration with its confidence. Neither model has measured runs on GB200, so
+a configuration is a prediction with no held-out evidence, with its main costs on transferred or assumed values
+until fitted. GB200 decode is about 1.35 times slow per token until blis-substrate#140 and blis-vllm#272 land
+(§0.2).
 
 ### D5. Changes blis-design needs
 
@@ -172,14 +190,15 @@ except where items share lines.
 | §2 Shape, §2.2 ownership table, the repository tree | the four repositories become directories of inference-sim; `contracts/` its own module | D3 |
 | §5 repository cards | merge the blis-substrate, blis-vllm, blis-sglang and blis-kvstore cards into inference-sim's, keep a card for the `contracts` module; restate each check's "Runs in" by directory | D3 |
 | §6 engine boundary, X2, KVS-2 | the same rules, checked by an import-graph lint over directories | D3 |
-| §7.6 port as a unit; §7.1 engine port frame | "at an exact pin" means an upstream commit; the model backport | D1 |
+| §7.1 engine port frame; §7.5 surface list (X9); §7.6 porting a framework before its features | an engine models an upstream commit; the model backport; the upgrade report from the regenerated lists | D1 |
 | §8 lowering; SUB-15 | lowering lives only in engine modules; the deriver writes checkpoint facts only | D2 |
-| §11.2 to §11.4 grading | release difference becomes commit distance | D1 |
-| §12.1 onboarding; T-M1 | one pull request touching the catalog directory; a run of the requested scenario is the preflight, and the `onboard --plan` command is removed from the design | D2, D3 |
+| §11.2 to §11.5, COV-6 | the named release difference becomes a named commit distance beside G3 and G4 | D1 |
+| §12.1 onboarding; T-M1 | onboarding is up to three pieces (D0); "one pull request, no engine code" holds only for a model that needs no model support or coefficients; a run of the requested scenario and the upgrade report replace the `onboard --plan` command | D0, D1, D2 |
 | §12.8 contract-change review set | one pull request in one repository, plus the router fork | D3 |
-| §13 automation | the release bot without the pin cascade; path-filtered CI | D3 |
+| §13 automation | the release bot without the pin cascade; path-filtered CI; the upgrade report | D1, D3 |
 | §14 versions: LIF-2, LIF-4, LIF-5, LIF-6, §14.4; X10, X11; SUB-13 | an engine models one commit; one repository's release branches; pins only to `contracts` and the router fork | D1, D3 |
 | The invariant registry (`contracts/invariants`) and its generated appendix | each record's "Runs in" and check names follow the new layout | D3 |
+| The coefficient registry's scope rules | engine-path costs keyed by the identity of the code that does the work (§3.2, not part of D but a design change too) | §3.2 |
 | The release plan | move the M4 lowering item into M3.2; add D1 to D4 to the M3.2 section; map the moved issues | D1 to D4 |
 
 ### How D relates to the rest of this document
@@ -187,18 +206,19 @@ except where items share lines.
 - §1, §2: per-commit data matches per-commit engines (D1).
 - §3.2: engine-path coefficients are keyed by the code that does the work. With D1, that code is pinned by
   upstream commit.
-- §3A.5 and 4.2: commit distance replaces release distance.
+- §3A intro, §3A.5, §3A.9 and §3B use "release difference" and "release distance". Under D1 these read as commit
+  distance (D0). They stay as written until D1 is decided.
 - §0: the carried M3.1 items are unchanged. After D3, the re-pin cascades behind several of them go away.
 
 ### Open questions for the review
 
-1. D1: how often to move the modelled commit, and who decides an on-demand move.
-2. D1: does a backport need its own grade, or is commit distance enough?
-3. D2: is the `contracts/rules/` removal in scope for M3.2 or only the lowering move?
-4. D3: consolidate, or keep the repositories and remove the cascade with tooling (a local `go.work`, a bot that
-   runs the cascade, and one CI job that tests every repository at the pull request heads)? Tooling keeps the
-   walls, but cross-repository changes stay non-atomic.
-5. D4: M3.2, or a patch release of M3.1?
+- **Q1.** D1: who decides an on-demand move of the modelled commit, beyond the move on each release?
+- **Q2.** D1: does a backport need its own grade, or is commit distance enough?
+- **Q3.** D2: should the `contracts/rules/` removal come into M3.2 with the lowering move, or stay in M4?
+- **Q4.** D3: consolidate, or keep the repositories and remove the cascade with tooling (a local `go.work`, a bot that
+  runs the cascade, and one CI job that tests every repository at the pull request heads)? Tooling keeps the
+  walls, but cross-repository changes stay non-atomic.
+- **Q5.** D4: M3.2, or a patch release of M3.1?
 
 ## 0. Carried from M3.1
 
@@ -218,7 +238,7 @@ from the final pull-request bodies at the cut.
 - *Per-pool KV connector and offload* (blis-substrate#307, required for M3.1 by review). blis-substrate#402 is
   merged; blis-vllm#302 and inference-sim#2252 are open. CPU-offload sweeps on P/D in config-search
   (blis-config-search#94) follow once #307 lands; that change is not yet in a pull request.
-- *Borrowed acceptance named on stderr* (inference-sim#2079): inference-sim#2250 is open.
+- *Borrowed acceptance named on stderr* (inference-sim#2079): done, inference-sim#2250 merged 2026-11-18 16:52 UTC.
 - *config-search review fixes*: the acceptance entry (part of #93), probe packaging and the demo re-run are in
   blis-config-search#155, which is open.
 - *A simulator refusal is a named not-scored point*: accuracy-dashboard#158 and blis-design#32 are open.
@@ -230,7 +250,8 @@ Already fixed in review, merged into the integration branches:
 - P/D per-instance measured window, #2218 (inference-sim#2246);
 - p2p at unequal TP, #2214 and #2220 (inference-sim#2251);
 - the router check, #2219 (inference-sim#2247);
-- the all-reduce lane keyed by backend, blis-substrate#116 (blis-substrate#373);
+- the all-reduce lane keyed by backend, part of blis-substrate#116 (blis-substrate#373); the GB200 value is still
+  transferred (§0.5);
 - the body corrections.
 
 **0.2 Moved to M3.2 by decision.**
@@ -245,7 +266,9 @@ Already fixed in review, merged into the integration branches:
   rows, the DeepSeek-V4 environment-variable bundle, and the "same kernels" wording of blis-substrate#294 and
   blis-vllm#298.
 - On the dashboard: the chip-split card, and SGLang rows on the public cards.
-- Scored lanes for the internal studies: none is scored yet (accuracy-dashboard#133 review). This is covered by §3A.
+- Scored lanes for the internal studies (accuracy-dashboard#133 review): under 1.4 the internal experiments are
+  training and validation data, so they get no accuracy lane. How well BLIS reproduces them is reported as a
+  labelled training diagnostic (4.3).
 
 **0.3 M3.1 plan issues the M3.1 set does not close.** Of the 189:
 - 21 are already closed, and 26 close when the set merges;
@@ -254,29 +277,32 @@ Already fixed in review, merged into the integration branches:
 
 One mutually-exclusive outcome per issue, reconciling to the whole: 21 + 26 + 36 + 106 = 189.
 
-Some of the 108 were advanced by item pull requests merged into the integration branches without a closing
+Some of the 106 were advanced by item pull requests merged into the integration branches without a closing
 line. Each is checked against the final bodies at the cut, and is closed there if it is done. The rest carry
 into M3.2.
 
-| Item | Advanced, not closed | Not closed or named |
-|---|---|---|
-| P1 Release by commit | substrate #193, #343, #345 | sim #2145, #2149; substrate #204, #340 |
-| P2 M3.0 review debt | substrate #335, #337 | substrate #331, #332, #338 |
-| H1 Pull requests held from M3.0 | – | sim #1493, #1495, #2052, #2129 |
-| B1 Correctness | substrate #310; vllm #214 | config-search #129, #133; dashboard #100; sglang #55, #91; sim #2152 |
-| A1 Launch and step cost per chip | substrate #242; vllm #161, #191 | substrate #93, #114, #115, #121, #134, #136, #140, #152; vllm #72 |
-| C1 Dashboard coverage | – | dashboard #22, #58, #62, #63, #65, #79, #83, #87, #89, #90, #110, #111 |
-| C2 SGLang end to end | – | sglang #32, #40, #44, #56, #57, #62, #63, #64, #65, #66, #67, #68, #70, #71, #73, #74, #75, #76 |
-| S1 Every capability sweepable | config-search #93, #125, #138 | – |
-| R1 Command-line surface | – | sim #2216 |
-| A2 Time before the engine, and prefill | – | sim #2094; substrate #75, #94 |
-| A3 KV capacity and memory | sim #1969; substrate #255, #281; vllm #73, #129, #158 | substrate #73, #76, #132, #294 |
-| C3 Closeness grades | – | dashboard #53; sim #2101, #2103; substrate #41, #43 |
-| C5 Catalog by points blocked | substrate #317 | dashboard #7; substrate #91, #105, #106, #109, #126, #179, #188, #245, #258 |
-| A4 Collectives and MoE paths | substrate #150; vllm #75 | substrate #118, #123, #137, #146; vllm #74, #108 |
-| A5 Speculative acceptance | substrate #125, #164 | dashboard #59, #80; sim #2115, #2125, #2136, #2141, #2142; substrate #144 |
-| T1 Data-parallel serving and network structure | sim #2126; substrate #48, #49, #346; vllm #64 | dashboard #61, #64, #91; sim #1988, #2146, #2164; substrate #50, #51, #153, #161 |
-| T2 KV tiers under P/D | vllm #47, #132, #146 | sim #2202, #2203; vllm #184, #190, #204 |
+| Item | Advanced, not closed (16:55 UTC snapshot) | Not named: closing line at the cut (groups 1–2) | Not named: carries into M3.2 (groups 3–4) |
+|---|---|---|---|
+| P1 Release by commit | substrate #193, #343, #345 | – | sim #2145, #2149; substrate #204, #340 |
+| P2 M3.0 review debt | substrate #335, #337 | substrate #338 | substrate #331, #332 |
+| H1 Pull requests held from M3.0 | – | sim #1493, #1495, #2129 | sim #2052 |
+| B1 Correctness | substrate #310; vllm #214 | sim #2214 | config-search #129, #133; dashboard #100; sglang #55, #91; sim #2152 |
+| A1 Launch and step cost per chip | substrate #242; vllm #161, #191 | substrate #93, #115, #121, #136, #152 | substrate #114, #134; vllm #72 |
+| C1 Dashboard coverage | – | – | dashboard #22, #58, #62, #63, #65, #79, #83, #87, #89, #90, #110, #111 |
+| C2 SGLang end to end | – | – | sglang #32, #40, #44, #56, #57, #62, #63, #64, #65, #66, #67, #68, #70, #71, #73, #74, #75, #76 |
+| S1 Every capability sweepable | config-search #93, #125, #138 | – | – |
+| R1 Command-line surface | – | – | sim #2216 |
+| A2 Time before the engine, and prefill | – | sim #2094 | substrate #94 |
+| A3 KV capacity and memory | sim #1969; substrate #255, #281; vllm #73, #129, #158 | substrate #76, #294 | substrate #73, #132 |
+| C3 Closeness grades | – | – | dashboard #53; sim #2101, #2103; substrate #41, #43 |
+| C5 Catalog by points blocked | substrate #317 | substrate #245, #258 | dashboard #7; substrate #91, #105, #106, #109, #126, #179, #188 |
+| A4 Collectives and MoE paths | substrate #150; vllm #75 | – | substrate #118, #123; vllm #74, #108 |
+| A5 Speculative acceptance | substrate #125, #164 | sim #2079, #2115 | dashboard #59, #80; sim #2125, #2136, #2141, #2142; substrate #144 |
+| T1 Data-parallel serving and network structure | sim #2126; substrate #48, #49, #346; vllm #64 | substrate #161 | dashboard #61, #64, #91; sim #1988, #2146, #2164; substrate #50, #51, #153 |
+| T2 KV tiers under P/D | vllm #47, #132, #146 | sim #2202, #2203; vllm #184, #204 | vllm #190 |
+
+The two right-hand columns come from [`m31-carried.tsv`](m31-carried.tsv) (106 issues: 22 need only a closing
+line, 84 carry into M3.2). The advanced column is the 16:55 UTC snapshot, 32 of the 36 now advanced.
 
 In C2, SGLang speculation, attention-DP, EP and P/D (sglang #64 to #71) stay refused in M3.1, as blis-sglang#126
 states. A blis-substrate#51 comment says what remains after switch groups. Repositories are `inference-sim/<repo>`.
@@ -310,7 +336,8 @@ Only (i) depends on the engine's native speculative field list; (ii), (iii) and 
 - *GB200 custom all-reduce still transferred from GB300* (blis-substrate#116). #373 fixed only the lane (the price
   now follows the resolved backend); the value is unchanged — 13.16 µs, `transferred_from: gb300`, against a ~7 µs
   estimate for the custom lane. Measure the GB200 4- and 8-rank custom all-reduce on GB200 itself; keep #116 open
-  until then, or file the measurement as its own issue.
+  until then, or file the measurement as its own issue. **Open:** this is a new GPU measurement, and M3.2 runs no
+  new GPU or cluster experiments; it needs the maintainer's explicit exception, or data that already exists.
 
 ## 1. New data sources for calibration
 
@@ -320,7 +347,7 @@ Only (i) depends on the engine's native speculative field list; (ii), (iii) and 
 - SGLang nightly job logs and `consolidated-metrics` artifacts (scheduler behaviour, resolved server arguments).
 
 1.2 **Maintainer.** Licence is not a blocker: the data is queried, not redistributed.
-**Proposal.** So none of it is committed to a public repo (D6). Units are built from a pinned fetch at fit
+**Proposal (accepted).** So none of it is committed to a public repo (standing-design rule D6). Units are built from a pinned fetch at fit
 time, the way the private internal data is handled, and a public figure cites the source URL and fetch date.
 
 1.3 **Open.** Whether the rest of the inventory (Tritonbench nightly, SGLang AMD P/D nightly, llm-d Prism
@@ -333,7 +360,8 @@ else is available to M3.2 for training, fitting and validation, used however ser
 - *Roles for new sources.* Each new source's ledger rule draws only fit, select and validate roles, with no held
   or anchor share. The split among those three is M3.2's choice per source.
 - *What stays held out.* InferenceX and configiq keep their held and anchor shares, untouched. Accuracy figures
-  come only from those.
+  come only from those. Here "held-out" means both shares: the published headline is computed on anchor units,
+  and held units are evaluated once per pre-registered change and reported with that change (standing-design §10).
 - *Everything else* is training or validation data: InferenceX's and configiq's fit, select and validate shares,
   AISimulate's sweeps and forward-pass set, the internal experiments, and any source added under 1.3.
 - *Partition at the configuration level.* InferenceX and configiq provide both training and held partitions; the
@@ -356,11 +384,11 @@ fitting until they are.
 cluster, GPU type, model and engine settings. Getting these right is what makes the comparison like for
 like. Identifying the settings correctly is part of the M3.2 calibration process, not a one-off.
 
-2.2 **Proposal.** Follow the standing rule: every value comes from the run's own records; a value no
+2.2 **Proposal (accepted).** Follow the standing rule: every value comes from the run's own records; a value no
 record holds is a named substitution with its source and lowers the grade; never a BLIS default. Each
 source's scenario writer has a test that checks every field against the record it came from.
 
-2.3 **Proposal.** Per source, the record that settles each setting (from SETTINGS-PROVENANCE.md):
+2.3 **Proposal (accepted).** Per source, the record that settles each setting (from SETTINGS-PROVENANCE.md):
 
 | Setting | vLLM CI perf API | SGLang nightly metrics + logs | SGLang traces |
 |---|---|---|---|
@@ -373,7 +401,7 @@ source's scenario writer has a test that checks every field against the record i
 | Metric definition | `vllm bench serve` means/medians/p99, seconds, aggregated over 3 repetitions | `latency`, `last_ttft` (last request, not mean) | per-step spans, rank 0 only |
 | Host / cluster | `lib/gpu_profiles.yaml` (env, docker vs k8s) | runner definition | runner definition |
 
-2.4 **Proposal.** Values to confirm before any fit: the statistic `aggregate_perf.py` uses over
+2.4 **Proposal (accepted).** Values to confirm before any fit: the statistic `aggregate_perf.py` uses over
 repetitions; `vllm bench` seed and range ratio at each commit; how the recipe's revision is matched to a
 row's date when the recipe changed that day.
 
@@ -383,7 +411,7 @@ row's date when the recipe changed that day.
 improve one engine (because of the fit-the-engine-you-predict match) is still used, not ignored. Some
 coefficients are shared and others are not, and that is fine.
 
-3.2 **Proposal.** Kernel coefficients stay keyed by kernel implementation, so SGLang data fits vLLM's
+3.2 **Proposal (accepted).** Kernel coefficients stay keyed by kernel implementation, so SGLang data fits vLLM's
 value wherever both run the same implementation. Engine-path costs (host, scheduler, launch, CUDA-graph
 replay) get keyed by the identity of the code that does the work, so each engine has its own value
 without an engine name in substrate (X2). Today host overheads are scoped by hardware and model only; this
@@ -396,7 +424,7 @@ is a design change that lands before the plan.
 units can be simulated. The funnel and its evidence are in `evidence/COVERAGE-FUNNEL.md`:
 the losses are mostly policy and a frozen ledger, not missing data.
 
-**Proposal (accepted by the maintainer as my recommendation, 2026-11-18).** Older points count in the headline
+**Proposal (accepted, 2026-11-18).** Older points count in the headline
 at their own grade; they are not split off. The grade already says how close a point's setup is to what BLIS
 ran, and a separate table would hide coverage. The headline always shows its grade breakdown, so the
 same-release figure is one slice away (3B).
@@ -411,7 +439,7 @@ draw their roles by the existing rule, so no partition change is needed. Today 1
 after the dump are not units at all (794 single-node vLLM/SGLang). Every new source in §1 also joins the ledger
 continuously, with training roles only (1.4).
 
-3A.2 **No age limit on scoring.** The 180-day window stops being a gate: every anchor whose inputs can be
+3A.2 **Maintainer (2026-11-18). No age limit on scoring.** The 180-day window stops being a gate: every anchor whose inputs can be
 recovered is scored, at its grade. It removes 12,491 in-scope anchors today, as their only reason. A date range
 becomes a slice (3B).
 
@@ -421,12 +449,12 @@ becomes a slice (3B).
   already does this).
 - Measurements the API has superseded: the dump.
 - Inputs that expire (GitHub job logs and artifacts, about 90 days; agentic exports): archived privately as they
-  are pulled, never committed publicly (D6), so a point stays re-scorable after the source deletes them.
+  are pulled, never committed publicly (standing-design rule D6), so a point stays re-scorable after the source deletes them.
 A point whose inputs are truly gone is G5 with a reason that says which record is gone.
 
 3A.4 **Engine and table gaps, ranked by points held back.**
 - SGLang: scored from M3.1's blis-sglang field list (186 in-window anchors blocked today, 109 by that alone; about
-  5,000 SGLang and Dynamo-SGLang anchors in all).
+  2,950 in-scope SGLang and Dynamo-SGLang anchors in all, about 5,400 with AMD parts, nightly 2026-11-18).
 - The router table maps Dynamo's router (252 in-window anchors).
 - The not-modelled settings tail (`data_parallel_rpc_port`, NCCL and FlashInfer environment variables,
   `use_trtllm_attention`, `moe_backend`, ...): each is modelled, proven inert, or given an estimation rule, in
@@ -436,8 +464,9 @@ A point whose inputs are truly gone is G5 with a reason that says which record i
 3A.5 **Older engine releases are scored, not refused.** A run on a release other than the one an engine repo
 models is a named release difference at a lower grade (the existing rule), for both engines.
 
-3A.6 **Coverage is reported as a funnel for each source**, every release: held by the source, units, in scope,
-inputs recoverable, scored, by grade, with the top blockers by points they alone hold back. A drop at any stage
+3A.6 **Coverage is reported as a funnel for InferenceX and configiq**, every release: held by the source, units, in
+scope, inputs recoverable, scored, by grade, with the top blockers by points they alone hold back. The new
+sources (1.4) get a training-coverage count instead: rows held, units, inputs recoverable, used in a fit. A drop at any stage
 is a visible number, not an absence.
 
 3A.7 **configiq.** Waiting on the configiq team's answers (the maintainer asked them). Meanwhile their repos
@@ -450,21 +479,21 @@ scorable points. Upper bounds from the 2026-11-17 nightly and the ledger:
 
 | | Today | M3.2 ceiling | What opens it |
 |---|---|---|---|
-| InferenceX anchors scored | 199 | about 2,700, up to about 4,600 | the ~490 unscored in-window anchors; out-of-window anchors measured from 2026-02 on (1,143 vLLM-family, 850 SGLang-family); about 260 anchors among the 1,287 rows published after the dump; up to 1,913 more SGLang-family anchors from before 2026-02 if their recipes at the run's commit still resolve. TRT's 4,827 stay refused. |
+| InferenceX anchors scored | 199 | about 2,800, up to about 4,700 | the 199; the 381 non-TRT unscored in-window anchors; out-of-window anchors measured from 2026-02 on (1,143 vLLM-family, 850 SGLang-family); about 240 non-TRT anchors among the 1,287 rows published after the dump (20% of 1,215); up to 1,913 more SGLang-family anchors from before 2026-02 if their recipes at the run's commit still resolve. TRT stays refused. |
 | InferenceX held units | not counted on the dashboard | about 1.5 times the anchors | the same levers; held is 30% against anchor's 20% for new units |
 | configiq held-out units | not yet published (below) | about 850 of 1,702 (50%) by proportion; about 185 of the 373 forge-written H200/B200 units | §3C's family rule |
 
 These are ceilings, not forecasts. The real count depends mostly on how many old runs' inputs can still be
-recovered. The API serves only the latest measurement per configuration, and in M3.1, 213 of 573 matched vLLM
-points had their record gone (404).
+recovered. The API serves only the latest measurement per configuration, and in M3.1, 213 of the 573 vLLM points
+of AISimulate's matched set had their record gone (404). That 213 is unrelated to configiq's 213 eligible units.
 
 **Measured 2026-11-18:** the API's `/server-log` was queried for 33 vLLM single-turn records that only the dump
 holds, three per month. Every record from 2025-09 to 2026-01 returned 404, and every record from 2026-02 to
 2026-07 returned 200. So the 3,758 vLLM-family anchors measured before 2026-02 cannot be rebuilt from their
 logs. They stay G5 with that reason unless another record of their settings is found. SGLang points take their
 launch command from the recipe at the run's commit, not from this endpoint, so the older SGLang anchors are
-counted as "up to" until that path is checked. It also depends on the Dynamo router mapping and the not-modelled settings
-tail. **Proposal:** measure it first, with a pull of every anchor that only checks whether its inputs can be
+counted as "up to" until that path is checked. The count also depends on the Dynamo router mapping and the
+not-modelled settings tail. **Proposal:** measure it first, with a pull of every anchor that only checks whether its inputs can be
 fetched (no simulation), and report the count before planning.
 configiq's units are not yet in the published anchor and fit lists on `main`, so its held-out set must be
 published before it can be scored.
@@ -484,9 +513,10 @@ watermark that does not state this. To apply:
   dashboard pull takes the date from the ledger). The constraint is on the automation: it must never ingest
   new API rows apart from the dump. A test should pin it, with a run whose records straddle the cutoff and
   one unit and date on both sides.
-- *Grade and route by release distance.* Old-release dump runs carry the 3A.5 grade. Under 1.4's draw, their
-  fit, select and validate shares feed calibration. Their held and anchor shares count in the headline at that
-  lower grade (3A, the maintainer's decision), and the same-release figure is the release-distance slice (3B).
+- *Grade and route by release difference.* Old-release dump runs carry the 3A.5 named release difference. Under
+  1.4's draw, their fit, select and validate shares feed calibration. Their anchor share counts in the headline at
+  its grade (3A, the maintainer's decision), their held share in pre-registered evaluations (1.4), and the
+  same-release figure is a slice (3B).
 - *Make the split visible.* Keep each point's source (`dump` / `api`) and release distance, and have the
   3A.6 funnel and 3B slices report what share of the held-out set is the frozen dump versus the live API,
   so a headline dominated by old dump runs is a visible number.
@@ -505,7 +535,8 @@ multi-node and estimate tier over a fixed model / hardware / framework grouping.
 with every aggregate recomputed from the points that survive (as `filter.ts` already does):
 - source and role;
 - model, precision, chip, node count, interconnect;
-- engine, engine release, release distance from the modelled release;
+- engine, engine release or commit, and its distance from the modelled one (release difference today, commit
+  distance under D1);
 - topology (TP, DP, EP, P/D pools), speculative method, offload and KV tiers, router;
 - workload type, ISL/OSL, concurrency, arrival process, prefix sharing;
 - measured date;
@@ -513,7 +544,7 @@ with every aggregate recomputed from the points that survive (as `filter.ts` alr
 Each slice shows its point count and coverage beside its accuracy, so a small slice can't pass for a strong
 result.
 
-**Proposal (decided, colleague review).** Make the small-slice guard legible and unambiguous. A figure over fewer
+**Proposal (accepted, colleague review).** Make the small-slice guard legible and unambiguous. A figure over fewer
 than `min_points` (10) points reads as a contradiction with the per-point table below it, and the text covers most
 fine slices. Decision: raw point rows stay visible at every `n`; an aggregate accuracy figure is **always withheld
 below `min_points` at every level** — headline and every drilled-in leaf alike — and a withheld aggregate is
@@ -533,7 +564,8 @@ or Model Furnace row can hide a value the run set. `prefix_caching` blank never 
 
 All proposal, pending the team's answers:
 
-3C.1 **Classify each row by writer.** Family A is forge, recognised by a `/v1/...` request type and prefix caching
+3C.1 **Classify each row by writer.** Counts are on the current dataset revision (1,710 whole-run units); the
+ledger's pinned revision has 1,702 (3A). Family A is forge, recognised by a `/v1/...` request type and prefix caching
 on: 779 units, 373 on H200 or B200. Family C is manual imports, 128 units. Family D is Model Furnace and older
 manual imports, 803 units. The family decides how blanks are read.
 
@@ -558,7 +590,8 @@ row must agree with the frame used. Only successful requests are compared.
 
 3C.6 **Pin the dataset revision.** It is not append-only: 444 rows were removed between revisions.
 
-3C.7 **Ask Red Hat** (the maintainer owns this conversation):
+3C.7 **Ask Red Hat**, beyond the questions the maintainer already sent (3A.7; the maintainer owns this
+conversation):
 - publish an allow-listed `runtime_args`, the image tag, the GuideLLM version, the cluster tag, the start and end
   times, DP and the turn index;
 - fix the case mismatch that drops DP;
@@ -566,10 +599,11 @@ row must agree with the frame used. Only successful requests are compared.
 
 ## 4. Proposals not yet discussed
 
-4.1 Start harvesting the 90-day sources now (SGLang job logs and metrics artifacts; Tritonbench), before
-M3.2 starts, so the window keeps growing instead of rolling off.
-4.2 Points on engine releases other than the one each engine repo models are scored as a named release
-difference (vLLM rows across many nightlies; SGLang traces from before v0.5.23).
+4.1 Start harvesting the 90-day sources now (SGLang job logs and metrics artifacts; Tritonbench if §1.3 brings it
+in), before M3.2 starts, so the window keeps growing instead of rolling off. The plan lists this as a
+prerequisite.
+4.2 *Superseded by 3A.5 and 1.4:* InferenceX and configiq runs on other releases are scored with a named release
+difference (3A.5); the new sources are fitted, never scored.
 4.3 *Superseded by 1.4:* new sources are not reported on accuracy-dashboard. The dashboard may still show how
 well the fitted model reproduces them, as a training diagnostic labelled as such, never as accuracy.
 
