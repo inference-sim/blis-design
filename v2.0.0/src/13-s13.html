@@ -1,9 +1,9 @@
 <!-- ============================================================ -->
 <h2 id="s13"><span class="secno">13</span>Automation: how the rules are kept</h2>
 
-<p>Rules are kept in three ways (<a href="#s4-kinds">§4.2</a>). This section describes the first, automated checks, and the agent work that runs against them. Review, approval, merge, release and signing decisions are maintainer practice, kept with branch protection, required reviews and signed commits. No automated check reads a pull request&rsquo;s title or body, and none polices process.</p>
+<p>Rules are kept in three ways (<a href="#s4-kinds">§4.2</a>). This section describes the first, automated checks, and the agent work that runs against them. Review, approval, merge, release and signing decisions are maintainer practice, kept with branch protection, required reviews and signed commits. No automated check reads a pull request&rsquo;s title or body.</p>
 <ol>
-<li><b>Deterministic checks</b> decide everything that can be decided mechanically and that protects the product&rsquo;s correctness or accuracy: import-graph boundaries, conformance suites, differential, mutation, metamorphic and property tests, data validators, and the staleness of generated files. Given the same commit, a check gives the same answer.</li>
+<li><b>Deterministic checks</b> decide everything that can be decided mechanically and protects the product&rsquo;s correctness or accuracy: import-graph boundaries, conformance suites, differential, mutation, metamorphic and property tests, data validators, and the staleness of generated files. Given the same commit, a check gives the same answer.</li>
 <li><b>Agents</b> do bounded work: porting a changed function, classifying a new field, fitting a coefficient. They work from the upgrade report or the requested scenario (<a href="#s12">§12</a>), against the checks.</li>
 <li><b>Maintainers</b> review, merge and release, and set direction.</li>
 </ol>
@@ -40,46 +40,46 @@
       runs: pull_request
   status: ci                      # ci | partial | none</code></pre>
 <p>The status <code>partial</code> means some of a rule&rsquo;s checks are written and others are not. A rule that is a maintainer practice (<a href="#s4-kinds">§4.2</a>) has no checks. Each check runs on <code>pull_request</code>, <code>nightly</code> or <code>release</code>, and names a known-bad input that must make it fail (<span class="inv">X18</span>).</p>
-<p>A generator renders these records into a section of each repository&rsquo;s <code>AGENTS.md</code>. A rendered copy that does not match its record fails CI. Appendix A is kept complete by a check on this document: it fails when a rule defined in the text is missing from the index, or when the index lists a rule the text does not define.</p>
+<p>A generator renders these records into a section of each repository&rsquo;s <code>AGENTS.md</code>, and a copy that does not match its record fails CI. A check on this document fails when a rule defined in the text is missing from Appendix A, or when the index lists a rule the text does not define.</p>
 
 <h3 id="s13-2">13.2 Agent guidance</h3>
-<p><b>What a repository&rsquo;s <code>AGENTS.md</code> holds.</b> It is the first file an agent reads, so it is short. In this order it holds: what the repository is and owns, and what it must never hold (Table 1, <a href="#s2-2">§2.2</a>); the rules that apply to a change here, rendered from the invariant registry; the commands that build, test and run every check, as CI runs them; what a change must also update (the <code>README.md</code>, a generated copy, the registry record); and where to look next. It states no version, count or list of supported features. It does not restate a rule that a check enforces and an agent cannot get wrong; it states the rules a check cannot decide.</p>
-<p><b>Review questions.</b> A rule that depends on judgement may carry a <b>review question</b> with a trigger: the paths it concerns, or a description of the change, such as &ldquo;a floating-point reduction is added&rdquo;. Maintainer practice: the reviewer applies each question whose trigger matches the change and records yes or no, with a reason and the files and lines that support it. A reviewer may be a person, or an agent that a maintainer asks. A question is guidance for that review and never a check: no job runs, fails or waits on it.</p>
+<p><b>What a repository&rsquo;s <code>AGENTS.md</code> holds.</b> It is the first file an agent reads, so it is short. In this order it holds: what the repository is and owns, and what it must never hold (Table 1, <a href="#s2-2">§2.2</a>); the rules that apply to a change here, rendered from the invariant registry; the commands that build, test and run every check, as CI runs them; what a change must also update (the <code>README.md</code>, a generated copy, the registry record); and where to look next. It states no version, count or list of supported features, and states the rules a check cannot decide rather than those it enforces.</p>
+<p><b>Review questions.</b> A rule that depends on judgement may carry a <b>review question</b> with a trigger: the paths it concerns, or a description of the change, such as &ldquo;a floating-point reduction is added&rdquo;. Maintainer practice: the reviewer, a person or an agent a maintainer asks, applies each question whose trigger matches the change and records yes or no, with a reason and the files and lines that support it. A question is guidance for that review and never a check: no job runs, fails or waits on it.</p>
 
 <h3 id="s13-3">13.3 On every pull request</h3>
-<p>CI runs per component directory, with path filters: a change runs the checks of the directories it touches, and the cross-directory checks (<a href="#s3-4">§3.4</a>). The last column of Table 1 (<a href="#s2-2">§2.2</a>) names each component&rsquo;s checks.</p>
+<p>CI runs per component directory, with path filters: a change runs the checks of the directories it touches, and the cross-directory checks (<a href="#s3-4">§3.4</a>). Table 1 (<a href="#s2-2">§2.2</a>) names each component&rsquo;s checks.</p>
 <ul>
-<li>A workflow starts on a pull request only when the code can have changed: <code>opened</code>, <code>synchronize</code>, <code>reopened</code>, and a change of base branch. Editing a pull request&rsquo;s title or body starts nothing and changes no merge state, and no check reads that text.</li>
+<li>A workflow starts on a pull request only when the code can have changed: <code>opened</code>, <code>synchronize</code>, <code>reopened</code>, and a change of base branch. Editing a pull request&rsquo;s title or body starts nothing.</li>
 <li>The checks are required in branch protection (<span class="inv">X17</span>), so a pull request cannot merge while one fails.</li>
 <li>A pull request that can change prices also generates the <b>price-change report</b>: each benchmark scenario&rsquo;s step prices before and after the change.</li>
-<li>Heavy checks (oracles, mutation sweeps, the byte gate) run only for the directory whose code they test. Whole-run accuracy gates run as <a href="#s13-5">§13.5</a> describes.</li>
+<li>Heavy checks (oracles, mutation sweeps, the byte gate) run only for the directory whose code they test; accuracy gates run as <a href="#s13-5">§13.5</a> describes.</li>
 </ul>
 
 <h3 id="s13-4">13.4 Every night</h3>
 <ul>
-<li>The <b>nightly build</b> builds and tests <code>inference-sim</code> at the head of its main branch and of each open release branch (<a href="#s14-4">§14.4</a>), on three platforms, against the router fork commit each one pins. It checks the import graph against Table 1.</li>
+<li>The <b>nightly build</b> builds and tests <code>inference-sim</code> at the head of its main branch and of each open release branch (<a href="#s14-4">§14.4</a>), on three platforms, against the router fork commit each pins, and checks the import graph against Table 1.</li>
 <li><b>Full-data gates</b> rerun the coefficient registry writers, the landing gates and fixture-agreement checks on the full data, which a pull request&rsquo;s CI cannot hold.</li>
 <li><b>Detectors</b> poll upstream commits and releases and the data sources, and open an issue for a maintainer.</li>
 <li>The <b>dashboard</b> scores, publishes coverage and grades, and updates the backlog.</li>
 </ul>
 
 <h3 id="s13-5">13.5 Where accuracy gates run</h3>
-<p>An accuracy gate compares a candidate with held-out data (<span class="inv">VAL-6</span>). Where it runs depends on what it needs:</p>
+<p>An accuracy gate compares a candidate with held-out data (<span class="inv">VAL-6</span>). Where it runs depends on what it needs, and the partition secret stays in the jobs of <span class="inv">D7</span>:</p>
 <ul>
-<li><b>Operator-level gates</b> need only the cost model and the coefficient registry, for example &ldquo;does this attention coefficient predict the held-out sweep points?&rdquo; They run in <code>inference-sim</code>&rsquo;s gate job, which holds the partition secret in a protected environment (<span class="inv">D7</span>).</li>
-<li><b>Whole-run gates</b> need engines and the simulator, for example &ldquo;does this change improve end-to-end latency on held-out InferenceX deployments?&rdquo; They run the dashboard&rsquo;s scoring harness (<a href="#s11-7">§11.7</a>), the only end-to-end scorer, at the commit that <code>inference-sim</code>&rsquo;s harness pin file names (<span class="inv">X7</span>). A <b>candidate job</b> in the pull request&rsquo;s own repository builds the candidate and runs the harness with no secret and a read-only token, on every unit not on the published <code>fit</code>, <code>anchor</code> or <code>report</code> lists, and writes one prediction per unit. <code>accuracy-dashboard</code>&rsquo;s <b>gate job</b> holds the partition secret (<span class="inv">D7</span>), runs only its own <code>main</code>, refuses predictions made by a harness commit that is not on its <code>main</code> branch, reads them as untrusted input, reduces them to aggregates and reports the result on the pull request.</li>
+<li><b>Operator-level gates</b> need only the cost model and the coefficient registry, for example whether an attention coefficient predicts the held-out sweep points. They run in <code>inference-sim</code>&rsquo;s gate job.</li>
+<li><b>Whole-run gates</b> need engines and the simulator, for example whether a change improves end-to-end latency on held-out deployments. They run the dashboard&rsquo;s scoring harness (<a href="#s11-7">§11.7</a>), the only end-to-end scorer, at the commit that <code>inference-sim</code>&rsquo;s harness pin file names (<span class="inv">X7</span>). A <b>candidate job</b> in the pull request&rsquo;s own repository builds the candidate and runs the harness with no secret, as <a href="#s10-2">§10.2</a> describes. <code>accuracy-dashboard</code>&rsquo;s <b>gate job</b> refuses predictions made by a harness commit that is not on its <code>main</code> branch, reduces them to aggregates and reports the result on the pull request.</li>
 </ul>
-<p>The gate compares two trees: the base, which is the pull request&rsquo;s merge base, and the candidate, which is its head. Comparing against the merge base, not the last release, keeps unrelated changes already on <code>main</code> out of the comparison. Each tree&rsquo;s catalog and coefficient registry are passed with <code>--catalog</code> and <code>--registry</code>.</p>
+<p>The gate compares two trees: the base, which is the pull request&rsquo;s merge base, and the candidate, which is its head. Comparing against the merge base, not the last release, keeps unrelated changes already on <code>main</code> out of the comparison.</p>
 <ul>
 <li>If the pull request changes only files under <code>substrate/catalog/</code> and <code>substrate/registry/</code>, both trees load under the released simulator&rsquo;s validators, and the code outside those directories at the merge base is identical to the code of the release, the gate runs the released simulator twice, once per tree. No rebuild is needed. If <code>main</code> carries unreleased code changes, the next case applies, so the data are judged with the code they will ship with.</li>
-<li>Otherwise, for example when the pull request changes the cost model or an engine module, or uses a data field the released simulator cannot read, the job builds one simulator from the base and one from the candidate, and each runs on its own tree.</li>
+<li>Otherwise, as when the pull request changes the cost model or an engine module, or uses a data field the released simulator cannot read, the job builds one simulator from the base and one from the candidate, and each runs on its own tree.</li>
 </ul>
-<p>Before a release is cut, the whole-run gate job runs once more, comparing the release candidate with the previous release, and with the best published release for each lane, on held units. A lane that gets worse by the test of <span class="inv">VAL-6</span> against either fails the check, unless it is recorded as a defect in another term and approved (<span class="inv">VAL-11</span>). That final check covers changes that were each fine alone but interact. In every case the import graph holds (<span class="inv">X7</span>): the candidate job runs the pinned harness and imports none of its code.</p>
-<p>The gate job runs on pull requests that carry a pre-registration, and again nightly on the full data. Any pull request, draft or not, may also run the harness on published units for review (<a href="#s11-7">§11.7</a>); that run holds no partition secret and decides nothing.</p>
+<p>Before a release is cut, the whole-run gate job runs once more, comparing the release candidate with the previous release, and with the best published release for each lane, on held units. A lane that gets worse by the test of <span class="inv">VAL-6</span> against either fails the check, unless it is recorded as a defect in another term and approved (<span class="inv">VAL-11</span>). That final check covers changes that were each fine alone but interact. In every case the candidate job runs the pinned harness and imports none of its code (<span class="inv">X7</span>).</p>
+<p>The gate job runs on pull requests that carry a pre-registration, and again nightly on the full data. Any pull request may also run the harness on published units for review (<a href="#s11-7">§11.7</a>); that run holds no secret and decides nothing.</p>
 
 <h3 id="s13-6">13.6 Releases</h3>
 <p><code>inference-sim</code> is the one tagged release (<a href="#s14">§14</a>). Cutting it is maintainer practice (<span class="inv">LIF-3</span>). The generated inputs to a release are the list of pull requests merged since the previous release, the price-change report (<a href="#s13-3">§13.3</a>) and <code>stack.json</code> (<span class="inv">SIM-3</span>).</p>
-<p><code>accuracy-dashboard</code> and <code>blis-config-search</code> each pin an <code>inference-sim</code> release and run nightly on the newest one. Neither cuts a release of its own.</p>
+<p><code>accuracy-dashboard</code> and <code>blis-config-search</code> each pin an <code>inference-sim</code> release, run nightly on the newest one, and cut no release of their own.</p>
 
 <h3 id="s13-7">13.7 What agents may and may not do</h3>
 <div class="tbl"><table>
@@ -89,12 +89,6 @@
 <tr><td>Work an issue, an upgrade report or a requested scenario, in a branch</td><td>Edit a recorded trace without the update flag and a review line; edit a generated file by hand</td></tr>
 <tr><td>Port changed functions; classify fields and surface items; write tests; fit coefficients from <code>fit</code> units; draft pre-registrations</td><td>Weaken, skip or delete a check; change a success criterion after reading held-out data; change the ledger&rsquo;s cut-points or partition version</td></tr>
 <tr><td>Iterate until the checks pass</td><td>Approve a merge, cut a release, or review a change they wrote</td></tr>
-<tr><td>Review a change when a maintainer asks (<a href="#s13-2">§13.2</a>)</td><td>Load recorded traces, vendored data or data files into context, instead of the tool summaries</td></tr>
+<tr><td>Review a change when a maintainer asks (<a href="#s13-2">§13.2</a>)</td><td>Load recorded traces, vendored data or data files into context, instead of tool summaries</td></tr>
 </tbody></table></div>
-<p>CI or permissions enforce most of the prohibitions. Three depend on the agent&rsquo;s instructions and on review: working within the task, not weakening a check, and not loading generated files into context.</p>
-<ul>
-<li>Maintainer practice: the reviewer rejects a change that skips a test, suppresses a lint or loosens a threshold without a stated reason.</li>
-<li>Held-out data is never read before the success criterion is committed (<a href="#s9">§9</a>, <a href="#s10">§10</a>).</li>
-<li>Trace and generated-file guards are CI checks.</li>
-<li>Agent credentials have no permission to merge or tag.</li>
-</ul>
+<p>CI or permissions enforce most of the prohibitions: trace and generated-file guards are CI checks, and agent credentials have no permission to merge or tag. Held-out data is never read before the success criterion is committed (<a href="#s9">§9</a>, <a href="#s10">§10</a>). Maintainer practice: the reviewer rejects a change that skips a test, suppresses a lint or loosens a threshold without a stated reason, and a change that loads generated files into an agent&rsquo;s context.</p>

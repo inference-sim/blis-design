@@ -37,7 +37,6 @@
 <tr><td><b>Error, accuracy</b></td><td>The error of a point is its absolute relative error. The accuracy of a set of points is the median of their errors, role key by role key (§11.8).</td></tr>
 <tr><td><b>Estimation rule</b></td><td>An engine module&rsquo;s rule for a field the run did not record or the engine does not model: leave it unset, stand in with a stated setting, or none (§11.2).</td></tr>
 <tr><td><b>Exactly pinned, experimental</b></td><td>A run is exactly pinned when the simulator is an <code>inference-sim</code> release tag or a full commit, its <code>stack.json</code> names the router fork commit and each engine&rsquo;s modelled commit, its catalog and coefficient registry hashes equal the embedded hashes of that commit, and it uses no overlay and no uncommitted change. Any other run is experimental. Only exactly pinned results are published.</td></tr>
-<tr><td><b>Event level</b></td><td>Validation of simulated against measured requests, paired by request identity (§8.9).</td></tr>
 <tr><td><b>Experimental frame</b></td><td>The recorded description of what a run measures: its input generator, initial state, phases (warm-up, measured window, drain), stop rule, acceptance conditions and metric definitions (§8.6).</td></tr>
 <tr><td><b>Extrapolated, unidentified</b></td><td>Flags on a lookup or coefficient. Extrapolated: used outside the range of inputs its fit covered. Unidentified: its fit data do not determine its value. Both lower its rank for <span class="inv">VAL-3</span> (§9.3, <span class="inv">VAL-10</span>).</td></tr>
 <tr><td><b>Fate</b></td><td>How a request ended: completed, dropped with a reason, timed out, in flight or queued at the horizon, or not started. Written once per request (<span class="inv">DEV-9</span>).</td></tr>
@@ -80,7 +79,6 @@
 <tr><td><b>Maintainer practice</b></td><td>A rule about process (review, approval, merge, issue handling, pull-request text, release notes, signing) that a maintainer with write access keeps with standard git and GitHub mechanisms such as branch protection, required reviews and signed commits. It is written as &ldquo;Maintainer practice:&rdquo; and has no check (§4.2).</td></tr>
 <tr><td><b>Manifest</b></td><td>The list of everything the oracle replaces.</td></tr>
 <tr><td><b>Memory pool</b></td><td>In SGLang, a store of KV cache or recurrent state in GPU memory, or, for HiCache, in host memory. A separate allocator hands out its slots or pages. Each attention layout (full attention in its MHA and MLA forms, sliding window, Mamba, hybrid, sparse) has its own pool type (§7.1).</td></tr>
-<tr><td><b>Message class</b></td><td>One of a fixed order of message kinds, used with time, sender and the sender&rsquo;s send count to order messages at one instant (§8.2)</td></tr>
 <tr><td><b>Metric registry</b></td><td>The list in <code>contracts/</code> of every metric&rsquo;s definition: formula, statistic, population, window and unit (§8.7, <span class="inv">DEV-8</span>).</td></tr>
 <tr><td><b>MLA</b></td><td>Multi-head latent attention: attention that stores a compressed latent instead of full keys and values.</td></tr>
 <tr><td><b>Minimum sample</b></td><td>The least number of measured requests for which a quantile is scored: 10 / (1 &minus; <i>q</i>) (§11.8).</td></tr>
@@ -103,7 +101,6 @@
 <tr><td><b>Output function</b></td><td>What a model component sends, evaluated just before an internal or confluent transition (§8.1).</td></tr>
 <tr><td><b>Overlay</b></td><td>A directory given with <code>--catalog-overlay</code> or <code>--registry-overlay</code>. Each entry replaces the entry with the same identity in the data in use, or is added if none exists (§3.3).</td></tr>
 <tr><td><b>P/D</b></td><td>Prefill/decode disaggregation: one pool of engines processes prompts (prefill), another generates tokens (decode), and the KV cache moves between them.</td></tr>
-<tr><td><b>Paired bootstrap</b></td><td>A way to put an interval on the difference between a candidate&rsquo;s error and the base&rsquo;s error on the same units, by resampling the units and recomputing the difference. The landing gate fails a lane only when the whole interval lies above zero (<span class="inv">VAL-6</span>).</td></tr>
 <tr><td><b>Parallel DEVS</b></td><td>The form of DEVS in which all outputs at an instant are collected before any model component changes state (§8.2).</td></tr>
 <tr><td><b>Partition secret</b></td><td>The 256-bit secret that, with a role key, decides a unit&rsquo;s role. Only the secret-holding jobs read it (§10.2).</td></tr>
 <tr><td><b>Partition version</b></td><td>A numbered version of the ledger&rsquo;s role assignment. A new version is needed to change any existing unit&rsquo;s role.</td></tr>
@@ -136,7 +133,6 @@
 <tr><td><b>Round</b></td><td>One pass within an instant, in which every imminent model component makes one transition and the messages it sends are delivered in the next pass (§8.2).</td></tr>
 <tr><td><b>Router fork</b></td><td>llm-d&rsquo;s router code, made runnable in simulated time and kept in a repository of its own. It owns the hosting contract and depends on no BLIS module (§2.1, §5.3).</td></tr>
 <tr><td><b>Router table</b></td><td>The substrate&rsquo;s map from a router a run used to the nearest policy llm-d&rsquo;s router offers (§11.4).</td></tr>
-<tr><td><b>Runtime interface (seams)</b></td><td>The points where the router fork reads time, starts work, draws random numbers or makes calls, so BLIS can supply simulated versions.</td></tr>
 <tr><td><b>Scenario</b></td><td>The YAML file a user gives BLIS: the engine and router configuration, the cluster, the workload and the seed.</td></tr>
 <tr><td><b>Scoring harness</b></td><td>The accuracy dashboard&rsquo;s tool that turns measured benchmark runs into scenarios, runs a given simulator build, and compares. The only end-to-end scorer (§11.7).</td></tr>
 <tr><td><b>Secret-holding job</b></td><td>One of the four kinds of CI job that hold the partition secret: the release job, the select job, the error job and the gate job. They run only code from <code>main</code>, never a pull request&rsquo;s code. Only these can compute <code>select</code>, <code>validate</code> and <code>held</code> roles (§10.2).</td></tr>

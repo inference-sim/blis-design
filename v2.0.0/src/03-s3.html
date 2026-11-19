@@ -7,7 +7,7 @@
 <li>A model whose architecture is already supported needs only a catalog entry. A model with something new in its architecture usually needs a new data field, a catalog entry, new coefficients and a change to the cost model, all at once.</li>
 <li>The validators check the data, and the cost model is tested against the data.</li>
 </ul>
-<p>Such a change is one pull request, one review and one release, and it can include the engine module and the simulator change that use it. Each release embeds its own data, which is small enough to compile into the program. A path overrides the embedded copy, so a data-only recalibration that the released validators accept needs no rebuild (<a href="#s3-3">§3.3</a>).</p>
+<p>Such a change is one pull request, one review and one release, and it can include the engine module and the simulator change that use it. Each release embeds its own data, which is small enough to compile into the program.</p>
 
 <h3 id="s3-2">3.2 Layout</h3>
 <pre><code>inference-sim/
@@ -38,17 +38,17 @@
 └── go.mod              the one Go module: github.com/inference-sim/inference-sim
 </code></pre>
 <p>The hosting contract (<code>embed</code> and its conformance suite) is not in <code>contracts/</code>. It lives in the router fork (§5), so that the fork imports no BLIS code.</p>
-<p><code>inference-sim</code> is one Go module (<span class="inv">SUB-13</span>). The directory name <code>kernel/</code> does not refer to a GPU kernel: it is named for the <code>Kernel</code> interface in <code>contracts/kernel/</code> that the cost model implements. Packages under <code>contracts/</code> import only what <span class="inv">SUB-1</span> allows, and engine modules import only these packages. The cost model, the validators and the loader are imported by the simulator and, for the loader, by the cost model (Table 1). A refit changes data and no contract, so it needs no change in any engine module. A contract changes only as <span class="inv">SUB-1</span> allows.</p>
-<p><b>What one module costs.</b> Anyone who fetches the module downloads all of it, mostly vendor <code>config.json</code> files (Go&rsquo;s limit for a module is 500 MB). Go compiles only the packages a program imports, so an engine build never compiles the cost model or the embedded data. A CI check fails if the module exceeds 100 MB uncompressed, well before Go&rsquo;s limit (<span class="inv">SUB-13</span>).</p>
+<p><code>inference-sim</code> is one Go module (<span class="inv">SUB-13</span>). The directory name <code>kernel/</code> does not refer to a GPU kernel: it is named for the <code>Kernel</code> interface in <code>contracts/kernel/</code> that the cost model implements. A refit changes data and no contract, so it needs no change in any engine module.</p>
+<p><b>What one module costs.</b> Anyone who fetches the module downloads all of it, mostly vendor <code>config.json</code> files. Go compiles only the packages a program imports, so an engine build never compiles the cost model or the embedded data. A CI check fails if the module exceeds 100 MB uncompressed (<span class="inv">SUB-13</span>).</p>
 
 <h3 id="s3-3">3.3 Data: a path first, the embedded copy as the default</h3>
 <p>The catalog and the coefficient registry reach a running program in one of two ways. Both are always available, and every run records which one it used.</p>
 <ul>
-<li><b>A path.</b> <code>--catalog &lt;dir&gt;</code> and <code>--registry &lt;dir&gt;</code> (or <code>BLIS_CATALOG</code> and <code>BLIS_REGISTRY</code>) name directories with the same layout as <code>substrate/catalog/</code> and <code>substrate/registry/</code>, such as a checkout, a working tree or an exported revision. When a path is given, the run uses that directory <em>instead of</em> the embedded copy. Recalibration uses this. A fitting script writes candidate coefficients to a directory, and the released simulator scores them with no rebuild. Comparing two coefficient registries means running one binary twice with two paths.</li>
+<li><b>A path.</b> <code>--catalog &lt;dir&gt;</code> and <code>--registry &lt;dir&gt;</code> (or <code>BLIS_CATALOG</code> and <code>BLIS_REGISTRY</code>) name directories with the same layout as <code>substrate/catalog/</code> and <code>substrate/registry/</code>. When a path is given, the run uses that directory <em>instead of</em> the embedded copy. Recalibration uses this. A fitting script writes candidate coefficients to a directory, and the released simulator scores them with no rebuild.</li>
 <li><b>The embedded copy.</b> When no path is given, the run uses the data compiled into the simulator with <code>go:embed</code>. A release therefore carries the exact data it was tested with, and a user of a released binary needs no checkout. <code>inference-sim</code> cannot be installed with <code>go install …@version</code>, because Go refuses that for a module whose <code>go.mod</code> has a <code>replace</code> directive, and <code>inference-sim</code> carries one for the router fork (<span class="inv">X11</span>). So each release ships signed binaries for the supported platforms, with the provenance and bill of materials of <span class="inv">X21</span>. A source build needs a checkout at the tag.</li>
 <li><b>What stays fixed.</b> A model runs only if it is in the catalog in use, and it is resolved from its <code>graph.yaml</code>. A missing model is refused with the catalog&rsquo;s source (the embedded release, or a path) and the relative path its entry belongs at. No run creates or changes catalog or coefficient registry files, no run fetches anything from the network, and the deployment always comes from a required scenario.</li>
 </ul>
-<p>The two flags are independent. A run may, for example, use the embedded catalog with a candidate coefficient registry.</p>
+<p>The two flags are independent.</p>
 <p><b>Private additions.</b> To run a private model against a pinned catalog and coefficient registry, <code>--catalog-overlay &lt;dir&gt;</code> and <code>--registry-overlay &lt;dir&gt;</code> add entries to the data in use. An entry is identified as follows:</p>
 <ul>
 <li>In the catalog, a whole model directory (<code>models/&lt;name&gt;/</code>), or a whole hardware, device, network or workload file.</li>
@@ -67,7 +67,7 @@
 <li>two paths that differ only in letter case.</li>
 </ul>
 <p>The data directories are exactly those the patterns in <code>data.go</code> name. Files outside them, such as scripts and documents, are ignored. Two things inside them are ignored by name: a model directory&rsquo;s <code>config.json</code>, and everything under <code>catalog/ledger/</code> except <code>published/</code>. The check that <code>graph.yaml</code>&rsquo;s recorded <code>derived_from</code> hash matches <code>config.json</code> runs in the validators, in CI, not in the loader. So a path load and an embedded load validate the same files in the same way (<span class="inv">SUB-9</span>).</p>
-<p>Vendor <code>config.json</code> files are not data in this sense. They stay in the repository for provenance and for the graph deriver, but the runtime never reads them. Every model value the runtime needs is a field of the graph, written by the deriver from <code>config.json</code> and the safetensors headers. No runtime code reads <code>config.json</code>, no model value is hard-coded in the cost model or an engine, and no user is asked to copy a value from a checkpoint into a setting (<span class="inv">SUB-3</span>).</p>
+<p>Vendor <code>config.json</code> files are not data in this sense. They stay for provenance and for the graph deriver. The runtime reads only the graph&rsquo;s fields, which the deriver writes from <code>config.json</code> and the safetensors headers (<span class="inv">SUB-3</span>).</p>
 
 <h4>Recording what was used</h4>
 <p>Every run computes a content hash for each of the catalog and the coefficient registry. It lists every data file as <code>&lt;sha256 of the file's bytes&gt;  &lt;path relative to the catalog or coefficient registry directory, with forward slashes&gt;</code>, sorts the lines by path in byte order, ends every line, including the last, with a line feed, and takes the SHA-256 of the result. The loader refuses carriage returns, so the hash is the same on every machine. The <code>Result</code> document records, for each of the catalog and the coefficient registry:</p>
@@ -79,14 +79,14 @@
 <p>It also records the build the simulator came from: the <code>inference-sim</code> release tag, or the commit it was built from.</p>
 <p>A run is exactly pinned when all of these hold:</p>
 <ul>
-<li>the simulator is an <code>inference-sim</code> release tag or a full commit of it, and its <code>stack.json</code> names the router fork commit and the upstream commit each engine module models (<span class="inv">X11</span>); a tag is one way to name a commit, a pseudo-version another, and a branch names none;</li>
+<li>the simulator is an <code>inference-sim</code> release tag or a full commit of it, and its <code>stack.json</code> names the router fork commit and the upstream commit each engine module models (<span class="inv">X11</span>);</li>
 <li>the catalog and coefficient registry hashes equal the embedded hashes of that commit;</li>
 <li>no overlay is used, and the simulator was built from a committed tree with no uncommitted change.</li>
 </ul>
-<p>Every other run is experimental, including every run with an overlay and every run from a tree with uncommitted changes. Only exactly pinned results are published (<span class="inv">X8</span>). A tag names a release, which the dashboard scores once (<span class="inv">COV-9</span>); a commit pin is not a release, and a published number records its commit.</p>
+<p>Every other run is experimental. Only exactly pinned results are published (<span class="inv">X8</span>). A tag names a release, which the dashboard scores once (<span class="inv">COV-9</span>); a commit pin is not a release, and a published number records its commit.</p>
 
 <h4>Checking data at load</h4>
-<p>Whatever its source, the data is validated when it is loaded, by the same validators CI runs. That includes the checks <em>between</em> the catalog and the coefficient registry, for example that every chip a coefficient names exists in the catalog in use. A candidate coefficient registry that does not fit the catalog it runs with is refused.</p>
+<p>Whatever its source, the data is validated when it is loaded, by the same validators CI runs. That includes the checks <em>between</em> the catalog and the coefficient registry, for example that every chip a coefficient names exists in the catalog in use.</p>
 <p>Each run also reports which coefficient registry entries were selected (a lookup returned them), and which coefficient files were never loaded. The report covers every reader behind the <code>Environment</code>, including acceptance and routing profiles. Without it, a candidate that adds a coefficient family no released code reads would be silently ignored and would look like a no-op. The landing gate uses this report (<span class="inv">VAL-6</span>).</p>
 
 <h4>The ledger in a candidate</h4>
@@ -98,5 +98,5 @@
 <p>Roles are never read from a file (<span class="inv">D4</span>), so a candidate cannot change which units are held out.</p>
 
 <h3 id="s3-4">3.4 Checks by directory</h3>
-<p>CI is filtered by path: a change to one directory runs that directory&rsquo;s checks, so a catalog-only change does not run the cost model&rsquo;s slow race suite. Any change also runs the cross-directory checks, because catching mismatches between directories is the reason the parts live together: the validators run against the data, and the cost model against the data it embeds. The checks per directory are the last column of Table 1.</p>
+<p>CI is filtered by path: a change to one directory runs that directory&rsquo;s checks, so a catalog-only change does not run the cost model&rsquo;s slow race suite. Any change also runs the cross-directory checks (the validators against the data, the cost model against the embedded data), which are the reason the parts live together. The checks per directory are the last column of Table 1.</p>
 <p>Python tooling keeps its own lock files under <code>catalog/scripts/</code> and <code>registry/scripts/</code>.</p>
