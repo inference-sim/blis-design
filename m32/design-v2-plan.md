@@ -34,7 +34,7 @@ from `m32/requirements.md` there: the Terms, DC1 to DC5, §1.4, §1.6, §2, §3.
     described generically.
 - **Rule IDs:**
   - Prefixes survive the consolidation (SUB-, VLM-, SGL-, RTR-, and the rest).
-  - The candidate retirements are X10 (bottom-up merge), the KVS family (blis-kvstore is out), and any rule whose
+  - The candidate retirements are X10 (bottom-up merge), the KVS family (external KV-cache providers are out), and any rule whose
     only subject is the cross-repository pin sequence or per-engine release branches.
   - Any other change is "changed" or "merged", never "retired".
 - **Simplicity gate:** v2.0.0's full design has no more defined rule IDs, top-level sections or kilobytes than
@@ -73,8 +73,8 @@ from `m32/requirements.md` there: the Terms, DC1 to DC5, §1.4, §1.6, §2, §3.
 - The bar for implementations the design drives: maximise coverage, accuracy, fidelity to upstream, correctness and
   closeness grades. Check correctness with behavioural tests (conformance, differential, mutation, metamorphic,
   property), never structural ones.
-- Rule IDs stay wherever a rule survives. Only rules made moot by DC1 to DC3 or by the blis-kvstore decision are
-  retired. External KV stores (blis-kvstore, LMCache, Mooncake) are out of v2.0.0.
+- Rule IDs stay wherever a rule survives. Only rules made moot by DC1 to DC3 or by the decision on external KV-cache providers are
+  retired. External KV-cache providers are out of v2.0.0.
 - British spelling (behaviour, modelled, licence).
 - Commits are signed, with one `Assisted-by:` line and `Signed-off-by:`, and no `Co-Authored-By`. No private names:
   the M3.1 privacy-pattern scan stays clean.

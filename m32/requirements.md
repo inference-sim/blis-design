@@ -31,8 +31,6 @@ Figures are as of 2026-11-18, except the M3.1 status in §0, which is as of 2026
   (`catalog/`), the coefficient registry (`registry/`) and the ledger (`catalog/ledger/`).
 - **blis-vllm** and **blis-sglang**: Go models of the vLLM and SGLang engines, each ported from one upstream
   version. Each is an **engine module**.
-- **blis-kvstore**: reserved for models of external KV-cache stores such as Mooncake and LMCache. It is empty, and
-  stays outside M3.2 and design v2.0.0 (maintainer, 2026-11-19); a later MINOR design version can add it.
 - **The router fork**: inference-sim's fork of llm-d's router (`llm-d-router`, branch `llm-d-r`).
 - **accuracy-dashboard**: scores simulated runs against measured runs and publishes accuracy.
 - **blis-config-search**: searches deployment configurations with the simulator.
@@ -251,8 +249,7 @@ each engine lowers it with the lowering it already has. A new kind of layer stil
 
 **Proposal.** Move the three repositories into inference-sim as top-level directories. Keep their history with a
 subtree merge, and transfer their open issues.
-- Every moved directory becomes a package of inference-sim's one Go module, the engines included. blis-kvstore,
-  which is empty, stays a separate repository and is not part of DC3 (maintainer, 2026-11-19).
+- Every moved directory becomes a package of inference-sim's one Go module, the engines included.
   An engine module is then a directory, not a repository.
 - One part of `contracts/` moves to the router fork instead: the hosting contract, below.
 - These stay separate repositories:
@@ -379,7 +376,7 @@ The standing design and the release plan both change. Each row of Table DC5 is o
 | Design area | Change | For |
 |---|---|---|
 | design §2 Shape, §2.2 ownership table, the repository tree | the three repositories become directories of inference-sim; the hosting contract moves to the router fork | DC3 |
-| design §5 repository cards | merge the blis-substrate, blis-vllm and blis-sglang cards into inference-sim's; the blis-kvstore card and the KVS rules leave the design until a MINOR version adds external KV stores; the router card gains the hosting contract; restate each check's "Runs in" by directory; move the lowering statements of the engine cards (DC2) | DC2, DC3 |
+| design §5 repository cards | merge the blis-substrate, blis-vllm and blis-sglang cards into inference-sim's; the KVS rules retire; the router card gains the hosting contract; restate each check's "Runs in" by directory; move the lowering statements of the engine cards (DC2) | DC2, DC3 |
 | design §6 engine boundary (design §6.1 the rule), X2 | lowering stays engine-only; the same import rules, checked by an import-graph lint over directories | DC2, DC3 |
 | X7 and the router card | the router fork depends on no BLIS module, and owns the hosting contract and its conformance suite | DC3 |
 | SUB-1 and RTR-3 (contracts change only compatibly; the router's API diff) | the hosting contract's compatibility check and API diff run in the router fork, against its own history | DC3 |
@@ -450,9 +447,9 @@ at 21:32 UTC. The status below is as of 2026-11-19 04:10 UTC.
 - blis-vllm#158: BLIS's KV pool for Muse Spark is 1.25 to 1.30 times the size vLLM logs at TP8, and 1.88 to 2.04
   times with DSpark, against a target within 5% of vLLM's.
 - blis-substrate#369: the pre-registration and held-out verdict for the Blackwell launch fit.
-- Smaller items: the `moe_backend` and `mm_encoder_tp` settings, rows whose record returns 404, the mooncake-atom
-  rows, the DeepSeek-V4 environment-variable bundle, and the "same kernels" wording in blis-substrate#294 and
-  blis-vllm#298 (a wording fix, separate from what those pull requests closed).
+- Smaller items: the `moe_backend` and `mm_encoder_tp` settings, rows whose record returns 404, the rows from
+  frameworks BLIS does not model, the DeepSeek-V4 environment-variable bundle, and the "same kernels" wording in
+  blis-substrate#294 and blis-vllm#298 (a wording fix, separate from what those pull requests closed).
 - On the dashboard: the chip-split card, and SGLang rows on the public cards.
 - Closed at the M3.1 merge, but worth a check: blis-substrate#125 (no engine pads a drafter's DP batch yet) and
   blis-substrate#116 (its GB200 value is still transferred; §0.6).

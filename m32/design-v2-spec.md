@@ -99,7 +99,7 @@ maintainer's correction in the pull request.
    rules, plus the new procedures, the component table and the rule-ID appendix. DC1 to DC3 in the `m32`
    requirements supply the substance. The independent audits run on the whole of v2.0.0, once it is written.
 2. **Rule-ID fates.**
-   - A rule is retired only when DC1 to DC3 or the blis-kvstore decision make it moot.
+   - A rule is retired only when DC1 to DC3 or the decision on external KV-cache providers make it moot.
    - Every other rule is kept, or reworded where its meaning must change.
    - The appendix records each one's fate, and the maintainer reviews it in the pull request.
 3. **Checks and layout.**
@@ -130,7 +130,7 @@ maintainer's correction in the pull request.
 
 ## Non-goals
 
-- No design for external KV-cache stores (blis-kvstore, LMCache, Mooncake): it stays out of v2.0.0, and a later
+- No design for external KV-cache providers: they stay out of v2.0.0, and a later
   MINOR version can add it (maintainer, 2026-11-19).
 
 - No release planning in the design: no dates, milestones, counts or issue lists.

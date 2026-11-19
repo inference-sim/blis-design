@@ -19,7 +19,7 @@ v2.0.0 is v1.0.0 edited, not a new document.
   - The router fork stays a separate repository. It owns the hosting contract (`contracts/embed` and its
     conformance suite) and depends on no BLIS module.
   - accuracy-dashboard and blis-config-search stay separate, and pin inference-sim releases.
-  - blis-kvstore and external KV stores (LMCache, Mooncake) are out of v2.0.0. A later MINOR version may add them.
+  - External KV-cache providers and extensions are out of v2.0.0. A later MINOR version may add them.
     Do not write a transition note about this; write as if they were never in scope. The one exception is
     Appendix C, which records each retired rule.
 - **Engines model an upstream commit (DC1).**
@@ -84,7 +84,7 @@ inference-sim, so that paths inside it do not change:
 - `substrate/`, formerly blis-substrate, keeps its tree:
   - `substrate/contracts/`: the shared types and interfaces, importing only the standard library and the YAML
     parser (SUB-1). Two of its packages leave. `contracts/embed` and `contracts/conformance/embedtest` move to the
-    router fork. `contracts/kvstore` and `contracts/conformance/kvstoretest` retire with blis-kvstore.
+    router fork. `contracts/kvstore` and `contracts/conformance/kvstoretest` retire.
   - `substrate/catalog/`: checkpoint and vendor facts, and the graph deriver.
   - `substrate/catalog/ledger/`: the units and roles of every data source.
   - `substrate/registry/`: coefficients, written only by their family's writer scripts.
