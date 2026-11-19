@@ -191,6 +191,10 @@ other groups are easier in one repository.**
 | Gate as the path | Every M3.2 change that moves accuracy goes through the whole-run gate: each refit, each coefficient change and each engine upgrade. The calibration of the new sources (row 18) lands only through it | VAL-6, T-A1, T-A2 |
 | Operator-level evidence | Remove the operator-level held-out gate from the ledger workflow. The error job keeps reporting each method's error on validate units nightly, as method error, never as accuracy; it informs review and never decides a landing | VAL-5, VAL-11, design §13.5 |
 | Partition version | Write a new partition version that changes AISimulate's cut-points to training roles (fit 0 to 69, select 70 to 84, validate 85 to 99) and configiq's cut-points to anchor 0 to 99, and keeps the partition secret. Before switching, the D2 join must confirm that no consumer read a configiq unit under a training role; any unit read that way is left out, not made an anchor. No InferenceX unit changes role, and no secret is published | D2, D4, D7, D9 |
+| **Cluster matrix (§5)** | Table W row 28 | |
+| Fabrics | Add RoCE 400G and 800G network entries to the catalog from vendor specifications | design §9.2, SUB-3 |
+| Matrix test | Generate one small scenario per model, engine, chip, fabric and serving mode, and assert that each simulates or is refused with the upstream's reason, and that every price names its method. Run it nightly and on pull requests that change the catalog, the coefficient registry or an engine's lowering | design X1, X9, VAL-2 |
+| Support matrix | Publish, with each release, whether each cell runs and the share of predicted time by method | design VAL-3, §9.2 |
 | **Simplifications (design v2.1.0 to v2.4.0, and v4.1.0)** | Table W rows 8 and 22 | |
 | Simulator commands | Remove the `ledger`, `invariants` and `compose` commands from inference-sim, with their tests and docs pages, and the `blis invariants` mention in the README. Nothing calls them: the dashboard reads the ledger from the release checkout, and the substrate's own tool renders the invariant blocks | COV-2, X29, DEV-7 |
 | Ledger embedding | Stop embedding `catalog/ledger/published/` in the simulator's data; the loader ignores everything under `catalog/ledger/` | design §3.3, design §10.2 |
@@ -614,3 +618,41 @@ state, and no CI check reads that text (design process rule). Workflows trigger 
 4.2 **Decided (2026-11-19).** CI checks product correctness only. The process checks that design v2 made maintainer
 practice are retired, and no check reads an issue (design v2.3.0, X28 and VLM-3; Table DC "Process checks" and
 "Stale citations", Table W row 22).
+
+## 5. Every supported model on every cluster the team uses
+
+5.1 **Decided (2026-11-19).** The team tries many combinations of chip and fabric. Every model BLIS supports
+simulates on every cell of Table 5.1, for each engine that supports the model, in aggregated and P/D serving.
+
+**Table 5.1. The cluster matrix: six chips, each with the fabrics it is deployed on.**
+
+| Chip | Inside a node or rack | Between nodes or racks | Catalog |
+|---|---|---|---|
+| H100 | 8 GPUs per node, NVLink | RoCE or InfiniBand | `hardware/h100` |
+| H200 | 8 GPUs per node, NVLink | RoCE or InfiniBand | `hardware/h200` |
+| B200 | 8 GPUs per node, NVLink | RoCE or InfiniBand | `hardware/b200` |
+| B300 | 8 GPUs per node, NVLink | RoCE or InfiniBand | `hardware/b300` |
+| GB200 | one 72-GPU NVLink domain per rack (NVL72) | InfiniBand or RoCE between racks | `hardware/gb200-nvl72` |
+| GB300 | one 72-GPU NVLink domain per rack (NVL72) | InfiniBand or RoCE between racks | `hardware/gb300` |
+
+The catalog's fabrics are InfiniBand 400G and 800G, RoCE 200G and 100GbE. RoCE at 400G and 800G, the Ethernet
+fabrics deployed beside B200, B300 and the NVL72 racks, are added from vendor specifications (`vendor_spec`, design
+§9.2). No experiment is run for them (§1.6).
+
+5.2 **Decided. What may be refused.** A cell is refused only where the modelled vLLM or SGLang commit cannot run
+that model on that hardware, for example a precision or kernel the chip lacks, or where the model does not fit in
+the cluster's memory. The refusal names the upstream's own reason (design X1, X9). Any other refusal is a defect.
+
+5.3 **Decided. Every cell is priced.** A value no data measures is priced by the most trusted fallback for the chip
+(design VAL-2, §9.2), and every point names the method of each price. A cell is never refused for lack of a
+measurement.
+
+5.4 **Decided. How it is checked and published.**
+- A generated matrix test runs one small scenario for each model, engine, chip, fabric and serving mode. It asserts
+  that the scenario simulates or is refused with the upstream's reason (§5.2), and that every price names its
+  method. It runs nightly, and on a pull request that changes the catalog, the coefficient registry or an engine's
+  lowering.
+- Each release publishes the support matrix: for each cell, whether it runs, and the share of predicted time priced
+  by each method (measured, calibrated, transferred, literature, vendor_spec, roofline, assumed). The team can then
+  see how far to trust each combination.
+- blis-config-search sweeps chip and fabric as axes, like any other capability ([CFG-6](https://inference-sim.github.io/blis-design/v4.1.0/blis-target-design.html#s5-5)).

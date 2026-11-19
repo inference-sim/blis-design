@@ -6,7 +6,7 @@ the workstreams in dependency order; pull-request numbers are assigned when the 
 expiring sources) starts now. Row 6 has no issue or pull request yet and gates the engine-path costs of rows 9, 15 and
 18, so it is filed first.
 
-**Table W. Twenty-seven workstreams in dependency order. Every group of Table DC has a row (rows 1 to 8), a
+**Table W. Twenty-eight workstreams in dependency order. Every group of Table DC has a row (rows 1 to 8), a
 dependency cell holds row numbers only, and once row 2 lands, a row that names blis-substrate, blis-vllm or blis-sglang
 is done in inference-sim.**
 
@@ -39,6 +39,7 @@ is done in inference-sim.**
 | 25 | The whole-run held-out gate in accuracy-dashboard, and the rule that every accuracy change lands through it (Table DC "Whole-run gate", "Gate as the path") | accuracy-dashboard | 2 | a pre-registered change receives one held evaluation as aggregates on its pull request, the budget count is recorded, and the nightly and pre-release runs pass on main |
 | 26 | AISimulate's held units become training roles, configiq's units become anchor 0 to 99 after the D2 join confirms no consumer read one under a training role, and the operator-level held-out gate becomes validate-unit reporting (Table DC "Partition version", "Operator-level evidence") | blis-substrate | 25 | only InferenceX has a held cut-point, only InferenceX and configiq have an anchor cut-point, every configiq unit is an anchor unit, and no InferenceX unit changed role |
 | 27 | blis-vllm's compatibility code removed: what the current engine uses from `compat/` moves into `core/` as v0.33.0 code, then `compat/` and blis-vllm's `rules/` are deleted (Table DC "Compatibility code") | blis-vllm | 1 | `go list -deps ./...` lists no `compat/` or `rules/` package, and every oracle tier passes at v0.33.0 |
+| 28 | The cluster matrix: every supported model on H100, H200, B200 and B300 over RoCE or InfiniBand, and on GB200 and GB300 NVL72 racks over InfiniBand or RoCE, in aggregated and P/D serving; RoCE 400G and 800G added to the catalog; the matrix test and the published support matrix (§5, Table DC "Cluster matrix") | blis-substrate, blis-vllm, blis-sglang, inference-sim, blis-config-search | 6, 7, 9 | every cell simulates or is refused with the upstream's reason, every price names its method, and the release publishes the support matrix |
 
 Row 18's gates must be written and merged before any fitting reads the new sources (VAL-6: the split and success
 criteria are committed first).
