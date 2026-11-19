@@ -13,7 +13,7 @@ the source of truth, and a check fails whenever this page is out of date.
 M1 and M2 each ended with a milestone release. M3.0 (v0.18.0) and M3.1 (v0.18.1) are releases within M3. From
 M3.1 on, only inference-sim is tagged, and the other repositories are pinned by commit (blis-design#22).
 
-**Table P1. Each milestone so far, and each release within M3, ended in an inference-sim release.**
+**Table M. Each milestone so far, and each release within M3, ended in an inference-sim release.**
 
 | Milestone | Release | What it delivered |
 |---|---|---|

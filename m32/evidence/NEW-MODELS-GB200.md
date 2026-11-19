@@ -1,6 +1,6 @@
 # Mistral-Large-4 and Inkling-2-Small: kinds of layer, and kernels with no GB200 measurement
 
-Checked 2026-11-18. It backs requirements §DC4. Sources:
+Checked 2026-11-18. It backs requirements DC4. Sources:
 - the Hugging Face configs: Inkling-2-Small's is public; Mistral-Large-4's is gated and returned HTTP 401 without
   an access token;
 - vLLM's model code on main and at v0.34.0 (`vllm/models/inkling2/`, `vllm/models/mistral/`);

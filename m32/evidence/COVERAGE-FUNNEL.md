@@ -66,8 +66,9 @@ would make; 728 of the rows are single-node and not disaggregated. None is a led
 - The ledger holds 1,702 configiq units from dataset revision `21cc6eb`: 1,031 on H200, 226 on B200, 417 on MI355X
   and 28 on MI300X. AMD parts are out of scope, leaving 1,257.
 - 328 role keys cover the 1,702 units, so a share drawn per role key applies only approximately to units.
-- Every unit's `chunked_prefill_enabled` is blank, 1,644 have a blank `max_num_seqs`, 1,247 a blank
-  `kv_quantization` and 779 a blank `prefix_caching`. The run's frame (stop rule, warm-up, measurement duration,
+- In the pinned revision, every unit's `chunked_prefill_enabled` is blank, 1,644 have a blank `max_num_seqs`,
+  1,247 a blank `kv_quantization` and 779 a blank `prefix_caching`. (That 779 equals family A's unit count in the
+  current revision only by coincidence: family A is recognised by prefix caching on.) The run's frame (stop rule, warm-up, measurement duration,
   client version) is never recorded.
 - Today a blank counts as "not recorded" unless the row matches a forge preset. In M3.1, 213 of configiq's training
   and validation units could be simulated on that basis.

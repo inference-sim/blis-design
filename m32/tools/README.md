@@ -3,9 +3,9 @@
 `plan.html` is **generated**, not hand-edited, so it cannot drift from the requirements.
 
 ```
-plan.html  =  plan.preamble.md            (delivered M1–M3.1 summary + abstract; plan-authored)
+plan.html  =  plan.preamble.md            (the M1 to M3.1 summary and an introduction; written for the plan)
             +  requirements.md             (THE SOURCE OF TRUTH for every M3.2 number and rule)
-            +  plan.appendix.md            (plan-authored decisions, prerequisites, execution table)
+            +  plan.appendix.md            (pointers to the decisions, the prerequisites and the workstream table)
 ```
 
 rendered to the release-plan gist's HTML style (`tools/plan.css`).
@@ -26,7 +26,8 @@ A plan review (blis-design PR #34) found that the hand-kept `plan.html` had drif
 `requirements.md`: a stale coverage ceiling, an un-chosen date rule, stale counts. Generating the
 M3.2 body straight from `requirements.md` makes those impossible: the numbers and rules are rendered
 from the one source every time. Only the delivered-milestone summary (which is history, not M3.2) and
-the plan-level decisions/execution (which state no number the requirements do not also state) live in the two plan-authored files.
+the prerequisites and the workstream order (which state no number the requirements do not also state) live in the
+two files written for the plan.
 
 `build_plan.py` is pure standard library (no third-party markdown dependency, per X21) and supports
 only the markdown subset the three sources use: ATX headings, paragraphs, `-`/`*` lists (one nesting

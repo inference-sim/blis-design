@@ -11,7 +11,7 @@ For a one-page overview of the data sources and the calibration process, downloa
 [`data-and-calibration.html`](data-and-calibration.html) and open it in a browser; GitHub shows HTML files as
 source only.
 
-**Table R1. Each evidence note backs one section of the requirements.**
+**Table R. Each evidence note backs one section of the requirements.**
 
 | File | What it backs |
 |---|---|

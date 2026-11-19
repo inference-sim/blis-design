@@ -17,15 +17,15 @@ plan holds no decision the requirements do not.
 ## Execution: ownership and order
 
 These are still requirements, not yet an executable plan. The carried M3.1 issues are listed in
-[`m31-carried.tsv`](m31-carried.tsv), but the M3.2 work needs an ordered sequence of pull requests. Table A1 gives
+[`m31-carried.tsv`](m31-carried.tsv), but the M3.2 work needs an ordered sequence of pull requests. Table W gives
 the workstreams in dependency order; pull-request numbers are assigned when the plan is made.
 
-**Table A1. Seventeen workstreams in dependency order; rows 1 to 4 belong to section DC and stay conditional until
+**Table W. Seventeen workstreams in dependency order; rows 1 to 4 belong to section DC and stay conditional until
 its review closes, and row 1 changes the owner of most other rows if adopted.**
 
 | # | Workstream | Owner repositories | Depends on rows |
 |---|---|---|---|
-| 1 | *If DC3 is adopted:* consolidate blis-substrate, blis-vllm, blis-sglang and blis-kvstore into inference-sim (DC3) | blis-design, the four repositories, inference-sim | a sizing first |
+| 1 | *If DC3 is adopted:* consolidate blis-substrate, blis-vllm, blis-sglang and blis-kvstore into inference-sim (DC3) | blis-design, the four repositories, inference-sim, the router fork | a sizing first |
 | 2 | *If DC1 is adopted:* engines model an upstream commit; model backports; the upgrade report (DC1) | blis-design, blis-vllm, blis-sglang | 1, if adopted |
 | 3 | *If DC2 is adopted:* lowering out of the graph deriver; the `contracts/rules/` removal if Q3 brings it in (DC2) | blis-design, blis-substrate, blis-vllm, blis-sglang | 1, if adopted |
 | 4 | Mistral-Large-4 and Inkling-2-Small on GB200: engine upgrade, catalog entries, model support, coefficients (DC4) | blis-vllm, blis-substrate | 2, or the v0.34.0 and v0.35 upgrades |
@@ -43,6 +43,6 @@ its review closes, and row 1 changes the owner of most other rows if adopted.**
 | 16 | CI: editing a pull request's text must not change its merge state (§5) | blis-design and each repository's `ci.yml` | none |
 | 17 | The 150 open M3.1 issues (§0.4), each taken into the row its plan item matches | as listed in `m31-carried.tsv` | per row |
 
-Row 13's gates must be written and merged before any fitting reads the new sources (X8: thresholds are fixed before
-held-out data is read). Row 5 has no design issue or pull request yet and blocks every per-engine cost, so it is
+Row 13's gates must be written and merged before any fitting reads the new sources (VAL-6: the split and success
+criteria are committed first). Row 5 has no design issue or pull request yet and blocks every per-engine cost, so it is
 filed first.

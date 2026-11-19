@@ -42,11 +42,16 @@ Figures are as of 2026-11-18, except the M3.1 status in §0, which is as of 2026
 - **configiq**: Red Hat's public dataset of GuideLLM results for upstream vLLM releases. GuideLLM is a load
   generator for LLM servers.
 - **AISimulate**: NVIDIA's operator sweeps (one kernel at a time over many shapes) and forward-pass measurements.
+- **forge**: Red Hat's open-source benchmark launcher (`openshift-psap/forge`), which wrote most of configiq's
+  recent rows (§3C).
+- **AgentX**: an agentic workload of recorded coding-agent sessions that InferenceX and the internal experiments
+  replay.
 - **The internal experiments**: the team's own measured runs of its target scenarios. Their data is private; it is
   never published, and no public text says which runs it holds.
 - **The dashboard nightly**: accuracy-dashboard's nightly job, which scores the ledger's anchor units on the latest
   simulator release. (SGLang's own nightly CI is a different thing, and is always named as SGLang's.)
-- **The dump** is InferenceX's database dump `db-dump/2026-09-28`, which the ledger pins. **Supplements** are
+- **The dump** is InferenceX's database dump `db-dump/2026-09-28`, which the ledger pins; its date is the
+  **cutoff** between dump rows and supplements. **Supplements** are
   InferenceX rows published after the dump and added to the ledger one by one, each pinned by its row id and the
   SHA-256 of its content.
 
@@ -57,6 +62,8 @@ here says what the rule requires where that matters. A standing-design section i
 § number is this file's own section (§0 to §5, §3A to §3C); the design changes are DC1 to DC5, without a §.
 
 **The ledger and roles.**
+- **Ledger**: blis-substrate's list of every measured unit from every data source, with each unit's role
+  (`catalog/ledger/`).
 - **Run**: one execution of a benchmark against a deployment, as a data source records it. One InferenceX run can
   measure several concurrencies; each becomes its own unit.
 - **Row** and **records**: a row is one line a source publishes (an InferenceX API row, a configiq CSV row); a
@@ -72,16 +79,16 @@ here says what the rule requires where that matters. A standing-design section i
 - For new InferenceX and configiq units the draw is 30% fit, 10% select, 10% validate, 30% held and 20% anchor.
   Units from older ledger revisions were first split into a fit group and a held group. They stay in that group, and
   the ledger's rules split each group into roles (fit and select; held and anchor).
-- **Training data**: every unit whose role is fit, select or validate, and every source with no held-out roles. Its shares are fit (used to fit coefficients), select (used
-  to choose between fits) and validate (used to check a fit).
+- **Training data**: every unit whose role is fit, select or validate, and all data from sources with no held-out
+  roles. Fit units fit coefficients, select units choose between fits, and validate units check a fit.
 - **Held-out shares**: held and anchor. **Anchor** units make the published **headline**, the dashboard's
   accuracy figure. **Held** units judge a pre-registered change, with one evaluation per pre-registration
   (design §10.2). Pre-registering a change means committing its hypothesis and gates before any held-out data is
   read (design §12.3).
 
-**Grades.** How closely a point's simulated setup matches its run. Table T1 gives the five grades.
+**Grades.** How closely a point's simulated setup matches its run. The grade table below gives the five grades.
 
-**Table T1. G1 to G4 are scored grades; G1 needs the run's own engine release, every setting it sets modelled or
+**Grade table. G1 to G4 are scored grades; G1 needs the run's own engine release, every setting it sets modelled or
 proven inert, and every coefficient measured or calibrated.**
 
 | Grade | Meaning (design §11.3) |
@@ -106,6 +113,8 @@ proven inert, and every coefficient measured or calibrated.**
   (computed from catalog facts with a default efficiency from the same family) and **assumed** (a stated assumption
   with its reason). For each lookup the cost model uses the most trusted entry the registry has for that chip, and
   records its method.
+- **Primitive family**: the coefficients that price one kind of operation, such as dense GEMM, decode attention or
+  all-reduce.
 - **Lane**: the kernel implementation a coefficient is fitted on, such as NCCL's all-reduce or a custom all-reduce.
   The dashboard's per-engine groups are called groups here, not lanes.
 - **Lowering**: turning a model's graph (what its checkpoint states) into the operations one engine runs on one
@@ -114,6 +123,9 @@ proven inert, and every coefficient measured or calibrated.**
 - **Oracle**: an engine module's harness that runs the real upstream code with only the transport and the clock
   replaced, to check the Go model against it. **Goldens** are the oracle's recorded outputs. The **byte gate**
   checks that a refactor leaves simulator output unchanged, byte for byte.
+- **TRT-LLM**: NVIDIA's TensorRT-LLM serving engine, which BLIS does not model. **vLLM-family**, **SGLang-family** and
+  **TRT-LLM-family** group InferenceX's frameworks by the engine underneath, as `evidence/COVERAGE-FUNNEL.md` Table F2
+  lists them (for example, the vLLM family includes Dynamo and llm-d deployments of vLLM).
 - **P/D**: prefill/decode disaggregation, where separate GPU pools run the prefill and decode phases.
 - **Abbreviations**: TP, DP and EP are tensor, data and expert parallelism. TTFT is time to first token, TPOT time
   per output token, ITL inter-token latency. ISL and OSL are input and output lengths in tokens. MTP is multi-token
@@ -124,7 +136,8 @@ proven inert, and every coefficient measured or calibrated.**
 - **Funnel**: the count of units at each stage from the source to scored (§3A.6). **Slice**: the subset of points
   that share an attribute value, such as one chip (§3B).
 - **Speculative decoding** uses a small **drafter** model to propose tokens. **DSpark** is one drafting method.
-  **Acceptance** is the share of drafted tokens the target model keeps.
+  **Acceptance** is the share of drafted tokens the target model keeps. An **acceptance profile** is the substrate's
+  measured acceptance curve for one drafter and model.
 - **Muse Spark**: a model in the catalog (its open checkpoint is Muse-Spark-Open). **TEP8** and **DEP8** are two of
   the 8-GPU layouts its scenario files use: TEP8 shards attention with 8-way tensor parallelism and the experts with
   expert parallelism; DEP8 runs 8 data-parallel ranks, with expert parallelism for the experts.
@@ -139,12 +152,12 @@ proven inert, and every coefficient measured or calibrated.**
     architecture is new. A new kind of layer also needs new graph vocabulary. The engine must then learn to lower
     the new kind, and that lowering depends on the catalog entry.
   - *Model support*, when needed.
-  - *Coefficients*. By design every kernel can be priced: when the registry has no exact entry, the cost model
-    uses the most trusted one it has for that chip, at worst a roofline or an assumed entry, and the substrate must
-    carry an assumed entry for every catalog chip in each family that has no roofline (design §9.2, VAL-2). So new
-    entries are required only for a brand-new primitive family, and the cost model fails without them
-    (blis-substrate `kernel/new.go`: "A missing coefficient … is an error rather than a default"). Elsewhere a
-    fitted entry, written by its family's writer script (SUB-4), raises accuracy above the fallback.
+  - *Coefficients*, needed only for a new primitive family. By design every kernel can be priced: when the registry
+    has no exact entry, the cost model uses the most trusted entry it has for that chip, down to a roofline or an
+    assumed entry, and names the method on the point (design §9.2). The substrate must carry an assumed entry for
+    every catalog chip in each family without a roofline formula, and in every new family (VAL-2). A model that
+    brings a new primitive family therefore needs those entries before it can run. For any other model, fitted
+    entries, written by their family's writer script (SUB-4), are optional and raise accuracy.
 - **Commit distance**: how far a run's engine commit is from the modelled one, counted from their merge base:
   commits apart, and releases apart where the two commits are in different releases.
 
@@ -196,20 +209,20 @@ and graded G3 or G4 (COV-6, design §11.3 and §11.5).
   - its own kernels, or a backend choice the engine module does not lower, as Muse Spark's fused kernels were
     (blis-vllm#272);
   - a new drafting method or scheduler hook.
-  A model that brings none of these needs no model support. Onboarding it is the catalog entry, plus any
-  coefficients its kernels lack.
+  A model that brings none of these needs no model support. Onboarding it is the catalog entry; fitted
+  coefficients for its kernels raise accuracy but are not required.
 - **Upgrade report.** Each engine upgrade generates a report of the models the new commit supports. For each model
   it gives:
   - whether the catalog has it;
   - whether it needs model support, and for what. This comes from the regenerated lists, which must give every
     new entry a status (X9: every upstream feature is modelled, refused by name, or out of scope), and from the
     model's own code;
-  - for each catalog chip, the coefficients it lacks: any brand-new primitive family it needs entries for, and the
-    kernels it would price below measured or calibrated (transferred, roofline or assumed).
+  - for each catalog chip, the coefficients it lacks: any new primitive family that needs entries before the model
+    can run, and the kernels it would price below measured or calibrated.
 - **Answering a model request.** The upgrade report answers in advance. For one model, simulating the requested
   scenario answers too: a missing catalog entry is refused by name (`not_in_catalog`), an engine refuses what it
-  cannot lower, a brand-new primitive family with no entries is refused, and the Result (the simulator's output document)
-  records each coefficient's method. No separate preflight command is needed (DC2).
+  cannot lower, a model whose new primitive family has no entries yet fails until the substrate adds them, and the
+  Result (the simulator's output document) records each coefficient's method. No separate preflight command is needed (DC2).
 
 **Effect.** A new model on upstream main can be supported (DC4). The vLLM CI perf and SGLang nightly runs can be
 fitted against the exact engine code that produced them (§1). A release difference becomes a commit distance,
@@ -221,8 +234,8 @@ which is more precise.
 lowering. On 2026-11-17 the plan moved two things from M3 to M4: removing that lowering, and the review set that
 removes `contracts/rules/` and moves model values into graph fields. The design says a graph holds only what the
 checkpoint states (SUB-15). It also says onboarding a model is one blis-substrate pull request with no engine
-code (design §12.1, T-M1). Neither holds yet. The second can hold only for a model that needs no model support and no
-new coefficients.
+code (design §12.1, T-M1). Neither holds yet. The second can hold only for a model that needs no model support and brings
+no new primitive family.
 
 **Proposal.** Three changes:
 - move all lowering into the engine modules;
@@ -247,16 +260,21 @@ subtree merge, and transfer their open issues.
   - blis-design.
 
 **The hosting contract moves to the router fork, so the fork depends on no BLIS module.** inference-sim imports the
-router fork. Today the fork, in turn, imports two BLIS packages, and only these two:
-- `contracts/embed`, the hosting contract: the interface between the simulator's `sim/llmd/` (its clock, runtime,
-  sessions and KV events) and the fork's `pkg/embed`;
+router fork. Today the fork, in turn, imports two BLIS packages:
+- `contracts/embed`, the hosting contract: the interface between the simulator (its `sim/llmd/` clock, runtime,
+  sessions and KV events, and `cmd/result_inputs.go`) and the fork's `pkg/embed`;
 - `contracts/conformance/embedtest`, its conformance suite.
 
-The fork's test `TestImportsOnlySubstrateContracts` (`pkg/embed/imports_test.go`) enforces that limit over every
-dependency, tests included (X7: dependencies point one way; the router card). The two packages import no other BLIS
+The fork's test `TestImportsOnlySubstrateContracts` (`pkg/embed/imports_test.go`) checks every dependency, tests
+included, and allows only packages under blis-substrate's `contracts/` (X7: dependencies point one way; the router
+card). These two are the only ones it uses. No other repository uses them. The two packages import no other BLIS
 package. Together they are about 2,300 lines of Go (682 in `embed`, 1,661 in `embedtest`, tests excluded). In
-blis-substrate's history, 12 commits touched them, against 346 for the rest of `contracts/`. Those 12 changes,
-such as session headers and the engine that published a KV-event batch, came with changes to the fork.
+blis-substrate's history, 12 commits touched them, including the repository's first commit and one merge, against
+346 for the rest of `contracts/`. Their changes, such as session headers and the engine that published a KV-event
+batch, came with changes to the fork.
+
+The cycle to avoid is this: if the fork imported a package from inference-sim, while inference-sim builds against
+the fork through its `replace`, each would depend on the other.
 
 So under DC3:
 - The hosting contract and its conformance suite move into the router fork as new files, in a directory of their
@@ -264,7 +282,11 @@ So under DC3:
   upstream llm-d, and new files are free (`hack/hosting-lint/budget.txt`), so the move costs none of it.
 - The fork then imports no BLIS module, and inference-sim imports the hosting contract from the fork, through the
   one `replace` it already has (X11). Every dependency points from inference-sim to the fork, so there is no cycle.
-- The fork's import test changes to forbid every `github.com/inference-sim/` package.
+- The fork's import test changes to forbid every `github.com/inference-sim/` package. The checks that name
+  blis-substrate as the contract's home change with it: the fork's `hack/embed-apidiff.sh` and its test,
+  `hack/fork-policy/main.go`, and `.github/workflows/hosting-lint.yml`; and in blis-substrate,
+  `contracts/architecture_test.go` and the SUB-1 API-diff check. The move also edits the fork's `go.mod` and
+  `go.sum`, which are shared with upstream and count against its patch budget.
 - The contract keeps its rules: it changes only compatibly (SUB-1), and its conformance suite runs in the fork's
   CI, as it runs against the fork today.
 - A change to the hosting contract lands in the fork first, and inference-sim then moves its pin. That is how a
@@ -282,7 +304,8 @@ cost-model and scenario contract change through the fork, which rebuilds the seq
 BLIS's core interfaces in a repository whose job is to track upstream llm-d. A third way, keeping every repository
 and removing the sequence with tooling, is open question Q4.
 
-**Table DC3. Each separation rule survives consolidation, kept by a check, a file or a rule that does not change.**
+**Table DC3. Each rule and practice the repository boundaries supported survives consolidation, kept by a check, a
+file or a rule that does not change.**
 
 | Rule | Kept by |
 |---|---|
@@ -293,8 +316,9 @@ and removing the sequence with tooling, is open question Q4.
 | One upstream commit of each engine per build (LIF-6) | unchanged: each engine directory names one commit |
 
 **What changes.** One pull request can span the contracts, an engine and the simulator. The bottom-up merge order
-(X10) and the sequence of pins between BLIS repositories (X11) go away; the one remaining pin is inference-sim's
-pin of the router fork. Per-engine release branches (design §14.4) become release branches of inference-sim, which
+(X10) and the sequence of pins between BLIS repositories (X11) go away. Among the repositories that build together,
+the one remaining pin is inference-sim's pin of the router fork; accuracy-dashboard and blis-config-search still
+pin inference-sim releases. Per-engine release branches (design §14.4) become release branches of inference-sim, which
 already cuts `release-v0.18`. The rule that blis-substrate is one Go module (SUB-13) becomes the same rule for
 inference-sim. A model's catalog entry, model support and coefficients become one pull request.
 
@@ -334,7 +358,7 @@ kernels priced below measured until fitted. Mistral-Large-4's `config.json` is n
 | Drafter acceptance | borrowed from another profile | borrowed from another profile, unless a measured Mistral-Large-4 profile exists |
 
 If neither model brings a new kind of layer, as expected, the catalog entry and the engine pieces do not depend on
-each other. AISimulate's GB200 collection is the likeliest fit data for the missing coefficients. Whether it
+each other. AISimulate's GB200 collection is the likeliest fit data for these kernels. Whether it
 covers these two kernel families is not yet checked. If no source covers them, they stay at a lower rank, named
 on each point (§1.6).
 
@@ -356,6 +380,8 @@ The standing design and the release plan both change. Each row of Table DC5 is o
 | design §5 repository cards | merge the blis-substrate, blis-vllm, blis-sglang and blis-kvstore cards into inference-sim's; the router card gains the hosting contract; restate each check's "Runs in" by directory; move the lowering statements of the engine cards (DC2) | DC2, DC3 |
 | design §6 engine boundary (design §6.1 the rule), X2, KVS-2 | lowering stays engine-only; the same import rules, checked by an import-graph lint over directories | DC2, DC3 |
 | X7 and the router card | the router fork depends on no BLIS module, and owns the hosting contract and its conformance suite | DC3 |
+| SUB-1 and RTR-3 (contracts change only compatibly; the router's API diff) | the hosting contract's compatibility check and API diff run in the router fork, against its own history | DC3 |
+| X11 (pins are exact commits; engines use only the router contract in `contracts/embed`) | the router contract's new home in the fork; the one pin among the repositories that build together | DC3 |
 | design §7.1 what an engine port contains; design §7.5 surface list (X9); design §7.6 porting a framework before its features | an engine module models an upstream commit; the model backport; the upgrade report from the regenerated lists | DC1 |
 | SUB-15 | the deriver writes checkpoint facts only | DC2 |
 | design §11.3 grade table, design §11.5, COV-6 | a run on the modelled commit counts as the same build (G1 or G2 possible); any other run names its commit distance | DC1 |
@@ -363,7 +389,7 @@ The standing design and the release plan both change. Each row of Table DC5 is o
 | design §12.4 a vLLM or SGLang release; T-E1 to T-E6 | the release watcher also takes an on-demand commit; the preflight reports gain the upgrade report; the release-branch and refusal steps follow commits | DC1 |
 | design §12.8 contract-change review set; the upstream patch-release trigger (T-P1) | one pull request in inference-sim, plus the router fork when the hosting contract changes; a patch release is one more upstream commit | DC1, DC3 |
 | design §13 automation | the release bot without the pin sequence; path-filtered CI; the upgrade report | DC1, DC3 |
-| design §14 versions: LIF-2, LIF-4, LIF-5, LIF-6, design §14.4; X10, X11; SUB-13 | an engine module models one commit; one repository's release branches; one pin, of the router fork | DC1, DC3 |
+| design §14 versions: LIF-2, LIF-4, LIF-5, LIF-6, design §14.4; X10; SUB-13 | an engine module models one commit; one repository's release branches | DC1, DC3 |
 | The invariant registry (`contracts/invariants`) and its generated appendix | each record's "Runs in" and check names follow the new layout | DC3 |
 | The coefficient registry's scope rules | engine-path costs keyed by the identity of the code that does the work (§3.2; not part of DC, but also a design change) | §3.2 |
 | The release plan | move the M4 lowering item into M3.2; add DC1 to DC4 to the M3.2 section; map the moved issues | DC1 to DC4 |
@@ -375,7 +401,9 @@ The standing design and the release plan both change. Each row of Table DC5 is o
   upstream commit.
 - The §3A introduction, §3A.5, §3A.9 and §3B speak of the release difference. Under DC1 each reads as a commit
   distance. They stay as written until DC1 is decided.
-- §0: the carried M3.1 issues do not change. Under DC3, the pin sequences behind several of them go away.
+- §0: the carried M3.1 issues keep their content. Under DC3 the issues of the moved repositories are transferred,
+  so their numbers change; §0 and `m31-carried.tsv` are re-mapped when DC3 lands. The pin sequences behind several
+  of them also go away.
 
 ### Open questions for the review
 
@@ -392,7 +420,7 @@ The standing design and the release plan both change. Each row of Table DC5 is o
 **Maintainer.** Whatever was planned for M3.1 and did not make the M3.1 release is handled in M3.2. Nothing planned
 for M3.1 is dropped without a record: each issue was either closed by the M3.1 pull requests or is listed here.
 
-M3.1's plan is the release plan's §3.1 (`plan/m31_scope.tsv`, 189 issues). Its seven pull requests merged on
+M3.1's plan is section 3.1 of the release plan, with its issues in the plan's `m31_scope.tsv` (189 issues). Its seven pull requests merged on
 2026-11-18 between 20:19 and 21:23 UTC: blis-substrate#361, blis-vllm#275, blis-sglang#126, llm-d-router#21,
 inference-sim#2237, accuracy-dashboard#133 and blis-config-search#150. M3.1 was released as inference-sim v0.18.1
 at 21:32 UTC. The status below is as of 2026-11-19 04:10 UTC.
@@ -432,14 +460,14 @@ review. Under §1.4 the internal experiments are training data, so they get no a
 reproduces them is reported as a labelled training diagnostic (§4.3).
 
 **0.4 The M3.1 plan issues still open.** Of the 189 issues, 39 are closed and 150 are open. All 150 carry into
-M3.2. [`m31-carried.tsv`](m31-carried.tsv) lists them, with each one's plan item and any note from the review. A
+M3.2, for closing or for work. [`m31-carried.tsv`](m31-carried.tsv) lists them, with each one's plan item and any note from the review. A
 few are done in code and only need closing, such as inference-sim#2079 (fixed by inference-sim#2250) and
 inference-sim#2214 (fixed by inference-sim#2251).
 
 **Table 0.4. The 150 M3.1 plan issues still open, by plan item; SGLang end to end (C2) and data-parallel serving
 (T1) are the largest groups.**
 
-| Plan item | Open issues, carried into M3.2 | Count |
+| M3.1 plan item | Open issues, carried into M3.2 | Count |
 |---|---|---|
 | P1 Release by commit | blis-substrate #193, #204, #340, #343, #345; inference-sim #2145, #2149, #2215 | 8 |
 | P2 M3.0 review debt | blis-substrate #331, #332, #335, #337, #338 | 5 |
@@ -521,14 +549,16 @@ training data for M3.2, used however serves accuracy best.
   come only from those.
 - *Everything else is training data*: InferenceX's and configiq's training shares, the internal experiments, any
   source added under §1.3, and AISimulate's forward-pass set and the training shares of its sweeps. The sweeps also
-  have a held share (20%), used only for operator-level checks of pre-registered changes; it never yields an
+  have a held share (20%; the ledger's rule draws fit 60, select 10, validate 10 and held 20), used only for
+  operator-level checks of pre-registered changes; it never yields an
   accuracy figure.
-- *No double use.* A coefficient is never selected or graded on the units that fit it. Selection uses the select
+- *No double use* (X8: no data point both fits and judges). A coefficient is never selected or graded on the units
+  that fit it. Selection uses the select
   and validate shares, never the held-out shares. Roles are drawn per role key, so repeated measurements of one
   configuration never sit on both sides of that line.
 
-1.5 **Proposal. Calibration acceptance gates, fixed before any fit (X8: thresholds are fixed before held-out data
-is read).** Before any fitting reads these sources, fix:
+1.5 **Proposal. Calibration acceptance gates, fixed before any fit** (VAL-6: the split and the success criteria
+are committed first; design §12.3: a pre-registration is committed before any held-out data is read). Before any fitting reads these sources, fix:
 - the baseline each fit must beat;
 - the error metric, and the slices it must be reported on (at least engine, chip and workload);
 - the minimum number of points per slice for a verdict (at least `min_points`, defined in §3B);
@@ -539,9 +569,9 @@ The maintainer still has to set the thresholds. Fitting waits until they are set
 
 1.6 **Maintainer (2026-11-18). No new GPU or cluster experiments, with no exceptions.** M3.2 fits, selects,
 validates and evaluates only on data that already exists: the sources this section names. Where no source
-measures a coefficient, it is transferred or assumed, written by its family's writer script, and named on every
-point it prices. It is replaced when data appears. A test that compares against measured runs uses runs already
-recorded (for example blis-vllm#305). This includes DC4's missing GB200 coefficients.
+measures a coefficient, the cost model uses the most trusted fallback entry (transferred, literature, vendor_spec,
+roofline or assumed), written by its family's writer script, and names its method on every point it prices. It is replaced when data appears. A test that compares against measured runs uses runs already
+recorded (for example blis-vllm#305). This includes DC4's GB200 kernels that no source measures.
 
 ## 2. Identifying each run's settings
 
@@ -568,7 +598,7 @@ traces' job logs have expired.**
 | Parallelism | the recipe's `serve_args` (the row's `tp` is TP × DP) | the log's `server_args` dump | the test definition at the commit; `distributedInfo` |
 | Engine settings | the recipe's `serve_args` plus vLLM's defaults at the commit (the server log is private) | the log's `server_args` (resolved) | the test definition at the commit (the logs have expired) |
 | Workload | the recipe's `vllm_bench` block and `run_vllm_bench.sh` | `one_batch_server.py`'s arguments at the commit (one static batch, seed 42) | `bs` (batch size) and `il` (input length) in the file name, and the profiler's step settings |
-| Metric definition | `vllm bench serve` means, medians and p99, in seconds, aggregated over 3 repetitions | `latency`, and `last_ttft` (the last request's, not a mean) | per-step spans, rank 0 only |
+| Metric definition | `vllm bench serve` means, medians and p99, in seconds, aggregated over 3 repetitions (the statistic is to confirm, §2.4) | `latency`, and `last_ttft` (the last request's, not a mean) | per-step spans, rank 0 only |
 | Host and cluster | `lib/gpu_profiles.yaml` (environment, Docker or Kubernetes) | the runner definition | the runner definition |
 
 2.4 **Proposal (accepted).** Confirm these before any fit: the statistic `aggregate_perf.py` takes over
@@ -654,14 +684,25 @@ repositories are read to recover each setting (§3C).
 does not change (Terms). The held-out units grow because the same shares apply to many more scorable points.
 Table 3A.8 gives upper bounds from the dashboard nightly of 2026-11-18 and the ledger.
 
-**Table 3A.8. Scored InferenceX anchor units could grow from 238 to about 2,800, and configiq's held-out units
-(held and anchor) from none to about 630.**
+**Table 3A.8. Scored InferenceX anchor units could grow from 238 to about 2,800, or up to about 4,700; configiq's
+held-out units could grow from none to between about 187 and about 630.**
 
 | | Today | M3.2 ceiling | What opens it |
 |---|---|---|---|
-| InferenceX anchor units scored | 238 | about 2,800; up to about 4,700 | the 238; 329 unscored anchor units inside the age limit that are not TRT-LLM; anchor units from 2026-02 on that are older than the age limit or superseded (1,143 vLLM-family, 863 SGLang-family); about 220 anchor units among the post-dump rows (20% of about 1,090 vLLM- and SGLang-family units); and up to 1,913 more SGLang-family anchor units from before 2026-02, if their recipes at the run's commit still resolve. TRT-LLM's 4,938 stay refused |
-| InferenceX held units | not on the dashboard | about 1.5 times the anchor units | the same sources; held is 30% of new units and anchor 20% |
-| configiq held-out units (held and anchor) | none, until they are published (below) | about 630 of the 1,257 units on H200 and B200 in the ledger's pinned revision; about 187 of the 373 forge-written H200 and B200 units in the current revision (§3C.1) | §3C's rule for each writer. The draw is per role key (328 keys), so the share is approximate |
+| InferenceX anchor units scored | 238 | about 2,800; up to about 4,700 | the list below |
+| InferenceX held units | not on the dashboard | about 1.5 times the anchor units | the same sources; held units are 1.5 times anchor units both for new units (30% and 20%) and within the older held group (60% and 40%) |
+| configiq held-out units (held and anchor) | none, until they are published (below) | about 187 if only forge-written H200 and B200 units are scored (half of 373, current revision, §3C.1); about 630 if all 1,257 H200 and B200 units are (pinned revision) | §3C's rule for each writer. The draw is per role key (328 keys), so the share is approximate |
+
+The InferenceX anchor ceiling adds up as follows:
+- the 238 scored today;
+- 329 unscored anchor units inside the age limit that are not TRT-LLM;
+- 1,143 vLLM-family and 863 SGLang-family anchor units from 2026-02 on that are older than the age limit or
+  superseded;
+- about 220 anchor units among the post-dump rows (20% of about 1,090 vLLM- and SGLang-family units);
+- that gives about 2,800. Up to 1,913 more SGLang-family anchor units from before 2026-02 count if their recipes at
+  the run's commit still resolve, for about 4,700.
+
+TRT-LLM's 4,938 in-scope anchor units stay refused.
 
 The ceilings assume every listed unit's inputs are recovered. The InferenceX API serves only the latest
 measurement of each configuration. In M3.1, 213 of the 573 vLLM points in AISimulate's matched set had lost their
@@ -690,7 +731,7 @@ state that the dump is final. To apply:
 - *Give each benchmark run one `measured_date`, across the cutoff.* A benchmark run's date is the earliest date
   over all its records. Ingest already reads the dump and the API supplements together, so a run with early
   records in the dump and later ones on the API keeps one date, and its units keep one identity (blis-substrate
-  `ledger/cmd/ledger/main.go` appends supplement rows before `inferencex.Ingest`; the dashboard's pull takes the
+  `ledger/cmd/ledger/main.go` passes both to `inferencex.IngestWithSupplements`; the dashboard's pull takes the
   date from the ledger). §3A.1's automation must keep that: it must never ingest new API rows apart from the
   dump. A test should pin it, with a run whose records straddle the cutoff and whose units keep one date.
 - *Grade old runs by their release difference.* Dump runs on old releases carry §3A.5's release difference. Under
