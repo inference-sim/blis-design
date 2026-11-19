@@ -6,7 +6,7 @@ the workstreams in dependency order; pull-request numbers are assigned when the 
 expiring sources) starts now. Row 6 has no issue or pull request yet and gates the engine-path costs of rows 9, 15 and
 18, so it is filed first.
 
-**Table W. Twenty-four workstreams in dependency order. Every group of Table DC has a row (rows 1 to 8), a
+**Table W. Twenty-six workstreams in dependency order. Every group of Table DC has a row (rows 1 to 8), a
 dependency cell holds row numbers only, and once row 2 lands, a row that names blis-substrate, blis-vllm or blis-sglang
 is done in inference-sim.**
 
@@ -29,13 +29,15 @@ is done in inference-sim.**
 | 15 | Engine and table coverage: SGLang field list, router table, the settings no engine module models (§3A.4) | blis-sglang, blis-vllm, inference-sim, blis-substrate | 6 | each listed blocker is modelled, proven inert, given an estimation rule or refused by name |
 | 16 | Scoring: no age limit, commit distances, funnels for InferenceX and configiq (§3A.2, §3A.5, §3A.6) | accuracy-dashboard | 3, 10, 12 | the funnels publish, and an old anchor unit with recoverable inputs is scored |
 | 17 | configiq as a ledger source: the rule for each writer, and a pinned revision (§3C). The pin can be done first | blis-substrate, accuracy-dashboard | 10 | each writer's family has a rule and the revision is pinned |
-| 18 | Calibration acceptance gates fixed in advance, with the maintainer's thresholds (§1.5, Open), and roles drawn per role key (§1.4). Merged before any fit | blis-substrate | 6, 13, 14 | the gates and thresholds are merged before any fit reads the new sources |
+| 18 | Calibration acceptance gates fixed in advance, with the maintainer's thresholds (§1.5, Open), and roles drawn per role key (§1.4). Merged before any fit | blis-substrate | 6, 13, 14, 25 | the gates and thresholds are merged before any fit reads the new sources |
 | 19 | Dashboard: slicing by any attribute, and the rule for small slices (§3B) | accuracy-dashboard | 16 | COV-13's tests pass: ten points from two role keys render no aggregate |
 | 20 | blis-config-search#110, first workstream: nested native speculative settings with recursive provenance (§0.5) | blis-config-search | 15 | provenance round-trips |
 | 21 | blis-config-search#110, other three workstreams: bounded sharding, per-attempt journal, server-series diagnostics (§0.5) | blis-config-search | none | each workstream's test of §0.5 passes |
 | 22 | CI checks product correctness only: an `edited` event triggers nothing, the process checks are retired, and stale citations are updated (§4, Table DC "Process checks" and "Stale citations"); inference-sim's workflows once row 2 lands | each repository's workflows; the substrate's shared checks | none | an `edited` event triggers nothing; no check reads pull-request text or an issue; the scheduled `blis` workflow is gone and main is green in every repository |
 | 23 | The items moved to M3.2 by decision: GB200 decode cost (blis-vllm#272, blis-substrate#140), KV pool size (blis-vllm#158), blis-substrate#369, blis-sglang#141, and the smaller items of §0.2 and §0.6 | as listed | none | each item is merged or closed with a record |
 | 24 | The 150 open M3.1 issues (§0.4), each taken into the row its plan item matches; the issue numbers are re-mapped after the transfer | as listed in `m31-carried.tsv` | 2 | each issue is closed or named in a row above |
+| 25 | The whole-run held-out gate in accuracy-dashboard, and the rule that every accuracy change lands through it (Table DC "Whole-run gate", "Gate as the path") | accuracy-dashboard | 2 | a pre-registered change receives one held evaluation as aggregates on its pull request, the budget count is recorded, and the nightly and pre-release runs pass on main |
+| 26 | AISimulate's held units become training roles, and the operator-level held-out gate becomes validate-unit reporting (Table DC "AISimulate roles", "Operator-level evidence") | blis-substrate | 25 | no source other than InferenceX and configiq has a held or anchor cut-point, and no InferenceX or configiq unit changed role |
 
 Row 18's gates must be written and merged before any fitting reads the new sources (VAL-6: the split and success
 criteria are committed first).

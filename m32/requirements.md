@@ -2,14 +2,14 @@
 
 These are the working requirements for M3.2, the release after M3.1, captured with the maintainer from
 2026-11-18. They are not yet a plan, and more will be added. The design they build on is
-[design v2.4.0](https://inference-sim.github.io/blis-design/v2.4.0/blis-target-design.html).
+[design v3.0.0](https://inference-sim.github.io/blis-design/v3.0.0/blis-target-design.html).
 
 **Labels.** Each item carries one label:
 - **Decided**: stated, decided or accepted by the maintainer.
 - **Proposal**: open to correction.
 - **Open**: not yet decided. An Open item names its owner and what decides it.
 
-Section DC lists what M3.2 builds for design v2.4.0. It comes first because the maintainer asked that design
+Section DC lists what M3.2 builds for design v3.0.0. It comes first because the maintainer asked that design
 changes be the first requirement. It cites later sections.
 
 **Evidence.** The notes in `evidence/`, next to this file, back the figures:
@@ -24,7 +24,7 @@ named here is under `github.com/inference-sim/` unless another owner is shown.
 
 ## Terms
 
-**Repositories.** Design v2.4.0 has one simulator repository and the router fork. M3.2 builds that layout (DC3).
+**Repositories.** Design v3.0.0 has one simulator repository and the router fork. M3.2 builds that layout (DC3).
 Until the migration lands, the three repositories below still exist, and the issue numbers in this file name them.
 - **inference-sim**: the simulator. Its tagged release is the only one a milestone requires (v0.18.0 is M3.0,
   v0.18.1 is M3.1). Since M3.1 the other repositories are pinned by commit, and their tags are optional.
@@ -57,11 +57,11 @@ Until the migration lands, the three repositories below still exist, and the iss
   InferenceX rows published after the dump and added to the ledger one by one, each pinned by its row id and the
   SHA-256 of its content.
 
-**Design rules, sections and terms.** IDs such as X7, SUB-15, LIF-5, COV-6, T-M1 or D6 name rules of design v2.4.0.
+**Design rules, sections and terms.** IDs such as X7, SUB-15, LIF-5, COV-6, T-M1 or D6 name rules of design v3.0.0.
 The letters group them: X across components, SUB substrate, LIF versions and releases, COV accuracy coverage, VAL
 coefficients, D the ledger, T a trigger's test. A design section is written "design §n.m" and links to the design.
 A bare § number is this file's own section (§0 to §4, §3A to §3C); the design changes are DC1 to DC3 and the team
-request is DC4, without a §. The design's glossary, [Appendix B](https://inference-sim.github.io/blis-design/v2.4.0/blis-target-design.html#appB),
+request is DC4, without a §. The design's glossary, [Appendix B](https://inference-sim.github.io/blis-design/v3.0.0/blis-target-design.html#appB),
 defines these terms, which keep its sense here: anchor, commit distance, drafter, engine module, engine upgrade,
 funnel, graph handler, graph vocabulary, headline, held-out unit, lowering, model backport (written "backport"),
 model support, named substitution (an **estimated substitution** is one whose value comes from a stated rule rather
@@ -89,7 +89,7 @@ are called groups here.
   group into roles (fit and select; held and anchor).
 
 **Grades.** G1 (exact) to G5 (not scored), as design
-[§11.3](https://inference-sim.github.io/blis-design/v2.4.0/blis-target-design.html#s11-3) defines them. G1 and G2
+[§11.3](https://inference-sim.github.io/blis-design/v3.0.0/blis-target-design.html#s11-3) defines them. G1 and G2
 need the run's own engine commit; G3 and G4 are other commits, by commit distance.
 
 **Coefficients.**
@@ -109,9 +109,9 @@ need the run's own engine commit; G3 and G4 are other commits, by commit distanc
 
 ## DC. Design changes (DC1 to DC3) and a team request (DC4)
 
-**Status.** M3.2 implements [design v2.4.0](https://inference-sim.github.io/blis-design/v2.4.0/blis-target-design.html).
+**Status.** M3.2 implements [design v3.0.0](https://inference-sim.github.io/blis-design/v3.0.0/blis-target-design.html).
 The design states the rules. DC1 to DC3 are **Decided**: the design adopts them, and this section states each once.
-Table DC lists what M3.2 builds. Rule IDs and sections are those of v2.4.0. The lowering work of DC2, planned
+Table DC lists what M3.2 builds. Rule IDs and sections are those of v3.0.0. The lowering work of DC2, planned
 for M4, is part of M3.2.
 
 **Why.** Changes crossed repositories in sequence: the per-pool offload fix took blis-substrate#402, blis-vllm#302
@@ -182,6 +182,11 @@ other groups are easier in one repository.**
 | Kernel lists | Generate each engine's `kernel_impls.json` as an engine-neutral copy under `substrate/registry/inputs/` with a freshness check, and move the VAL-8 cross-check into a simulator-package test. Connector and backend names of the vLLM and SGLang KV trees live only in each engine's surface list, with the NIXL storage plugins (GDS, POSIX and object) | X7, VAL-8, design §7.5 |
 | Cross-generation transfer | Validate the GB200 (Blackwell) to Hopper transfer rules (leave one generation out) before use. Until then a cross-generation transfer ranks as roofline | VAL-5, design §9.2 |
 | Ledger multiples | Record InferenceX's client multiples (10 measured, 2 warm-up, 12 in all) for `measurement_contaminated` in the ledger's source record | design §10.2 |
+| **Held-out gate (design v3.0.0)** | Table W rows 25 and 26 | |
+| Whole-run gate | Build the whole-run landing gate in accuracy-dashboard. A candidate job with no secret builds the candidate and runs the pinned harness on every unit not on the published fit or anchor lists. The secret-holding gate job computes roles, scores held units only and returns aggregates over at least `min_points` role keys, with VAL-6's statistics: a non-inferiority margin, a one-sided 95% BCa interval from 10,000 resamples by role key, Holm over lanes and criteria, and the merging of small lanes. It gives one evaluation per pre-registration and counts each against the partition version's budget. It reports on the pull request, runs nightly, and runs before each release against the previous release and the best published release | [VAL-6](https://inference-sim.github.io/blis-design/v3.0.0/blis-target-design.html#s9-4), D7, design §12.3, design §13.5 |
+| Gate as the path | Every M3.2 change that moves accuracy goes through the whole-run gate: each refit, each coefficient change and each engine upgrade. The calibration of the new sources (row 18) lands only through it | VAL-6, T-A1, T-A2 |
+| Operator-level evidence | Replace the operator-level held-out gate in the ledger workflow with the error job's report of a candidate's operator-level error on validate units, shown beside the gate | VAL-5, VAL-11, design §13.5 |
+| AISimulate roles | Write a new partition version that changes only AISimulate's cut-points to training roles (fit 0 to 69, select 70 to 84, validate 85 to 99) and keeps the partition secret. No InferenceX or configiq unit changes role, and no secret is published | D4, D7, D9 |
 | **Simplifications (design v2.1.0 to v2.4.0)** | Table W rows 8 and 22 | |
 | Simulator commands | Remove the `ledger`, `invariants` and `compose` commands from inference-sim, with their tests and docs pages, and the `blis invariants` mention in the README. Nothing calls them: the dashboard reads the ledger from the release checkout, and the substrate's own tool renders the invariant blocks | COV-2, X29, DEV-7 |
 | Ledger embedding | Stop embedding `catalog/ledger/published/` in the simulator's data; the loader ignores everything under `catalog/ledger/` | design §3.3, design §10.2 |
@@ -348,10 +353,11 @@ training data for M3.2, used however serves accuracy best. Applied as follows:
   how well the fitted model reproduces it, as a training diagnostic labelled as such.
 - *What stays held out.* InferenceX and configiq keep their held and anchor shares unchanged. Accuracy figures
   come only from those.
-- *Everything else is training data*: the training shares of InferenceX and configiq, the internal experiments, any
-  source added under §1.3, and AISimulate's forward-pass set and the training shares of its sweeps. The sweeps also
-  have a held share (20% of files; the ledger's rule draws fit 60, select 10, validate 10 and held 20), used only for
-  operator-level checks of pre-registered changes; it never yields an accuracy figure.
+- *Everything else is training data* (design D9): the training shares of InferenceX and configiq, the internal
+  experiments, any source added under §1.3, and all of AISimulate, its sweeps and its forward-pass set. AISimulate's
+  sweeps lose their held share (20% of files today) to training roles (Table DC "AISimulate roles").
+- *The landing gate is whole-run.* Changes land on held InferenceX and configiq units only, through the whole-run gate
+  (design VAL-6, §13.5). Operator-level error on validate units is reported beside it and does not land a change.
 - *No double use* (X8). A coefficient is never selected or graded on the units that fit it, and selection uses the
   select and validate shares only.
 
