@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The BLIS design in seven pages</title>
+<style>
+@page { size: Letter; margin: 0.9in; }
+:root { color-scheme: light; }
+html { background: #fff; }
+body { font-family: Charter, "Iowan Old Style", Georgia, "Times New Roman", serif; font-size: 10.5pt; line-height: 1.36; color: #1b1f24; max-width: 6.7in; margin: 0 auto; padding: 0.4in 0.2in; }
+h1 { font-size: 18pt; line-height: 1.15; margin: 0 0 0.35em; }
+h2 { font-size: 12.5pt; line-height: 1.2; margin: 1.05em 0 0.3em; break-after: avoid; border-bottom: 1px solid #c9d1d9; padding-bottom: 2px; }
+h3 { font-size: 10.5pt; margin: 0.8em 0 0.15em; break-after: avoid; }
+p { margin: 0 0 0.5em; orphans: 3; widows: 3; }
+.lead { font-size: 10.5pt; color: #3a424a; margin-bottom: 0.7em; }
+ul, ol { margin: 0 0 0.5em; padding-left: 1.3em; }
+ol { padding-left: 1.9em; }
+li { margin: 0 0 0.2em; }
+code { font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace; font-size: 9pt; background: #f2f4f6; padding: 0 2px; border-radius: 2px; }
+a { color: #1d4f91; text-decoration: none; }
+.c { font-size: 8.5pt; color: #5b6570; white-space: nowrap; }
+.c a { color: #5b6570; }
+table { border-collapse: collapse; width: 100%; font-size: 9pt; line-height: 1.28; margin: 0.25em 0 0.6em; break-inside: avoid; }
+th, td { border: 1px solid #c9d1d9; padding: 2px 5px; vertical-align: top; text-align: left; }
+th { background: #eef1f4; font-weight: 600; }
+figure { margin: 0.4em 0 0.6em; break-inside: avoid; }
+figure svg { width: 100%; height: auto; display: block; color: #1b1f24; }
+figcaption { font-size: 8.8pt; color: #3a424a; margin-top: 2px; line-height: 1.3; }
+.tight li { margin-bottom: 0.1em; }
+@media print { body { padding: 0; max-width: none; } a { color: inherit; } }
+</style>
+</head>
+<body><!--topbar-->
+<meta name="blis-design-version" content="2.4.0">
+<style>
+.blis-topbar{--tb-bg:#f2f0ea;--tb-fg:#1d1d1f;--tb-muted:#5b5b63;--tb-rule:#d9d6cf;--tb-field:#ffffff;--tb-accent:#1f5fbf;
+  display:flex;flex-wrap:wrap;align-items:center;gap:.25rem .75rem;box-sizing:border-box;margin:0 0 .75rem;padding:.4rem 16px;
+  background:var(--tb-bg);color:var(--tb-fg);border-bottom:1px solid var(--tb-rule);
+  font:14px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;text-align:left}
+@media (prefers-color-scheme: dark){.blis-topbar{--tb-bg:#23232a;--tb-fg:#ececf0;--tb-muted:#a3a3ad;--tb-rule:#3a3a44;--tb-field:#15151a;--tb-accent:#7fb0ff}}
+.blis-topbar label{color:var(--tb-muted);font-weight:600}
+.blis-topbar select{max-width:100%;font:inherit;color:var(--tb-fg);background:var(--tb-field);border:1px solid var(--tb-rule);border-radius:4px;padding:.15rem .4rem}
+.blis-topbar select:focus-visible{outline:2px solid var(--tb-accent);outline-offset:1px}
+@media print{.blis-topbar{display:none}}
+</style>
+<div class="blis-topbar"><label for="blis-version">Design version</label><select id="blis-version"><option value="2.4.0" selected>2.4.0</option></select></div>
+<script>
+(function () {
+  var meta = document.querySelector('meta[name="blis-design-version"]');
+  var sel = document.getElementById('blis-version');
+  if (!meta || !sel) return;
+  var current = meta.content;
+  var versions = [{ version: current, path: null }];
+  var SAFE = /^[A-Za-z0-9._-]+\/$/;
+
+  function render() {
+    sel.innerHTML = '';
+    versions.forEach(function (v) {
+      var o = document.createElement('option');
+      o.value = v.version;
+      o.textContent = v.version;
+      sel.appendChild(o);
+    });
+    sel.value = current;
+  }
+
+  function usable(v) {
+    return v && typeof v.version === 'string' && v.version !== '' &&
+      (v.path === undefined || v.path === null || SAFE.test(v.path));
+  }
+
+  render();
+
+  sel.addEventListener('change', function () {
+    var chosen = sel.value;
+    if (chosen === current) return;
+    var entry = versions.filter(function (v) { return v.version === chosen; })[0];
+    if (!entry || !entry.path || !SAFE.test(entry.path)) { sel.value = current; return; }
+    var name = location.pathname.split('/').pop() || 'index.html';
+    location.assign('../' + entry.path + name + location.hash);
+  });
+
+  try {
+    fetch('../versions.json', { cache: 'no-cache' })
+      .then(function (r) { if (!r.ok) throw new Error('versions.json ' + r.status); return r.json(); })
+      .then(function (data) {
+        if (!data || !Array.isArray(data.versions)) return;
+        var list = data.versions.filter(usable);
+        if (!list.length) return;
+        if (!list.some(function (v) { return v.version === current; })) list.unshift({ version: current, path: null });
+        versions = list;
+        render();
+      })
+      .catch(function () { /* the page keeps its own version only */ });
+  } catch (e) { /* fetch is unavailable, for example on file:// */ }
+})();
+</script>
+<!--/topbar-->
+<h1>The BLIS design in seven pages</h1>
+<p class="lead">This summarises the BLIS target design for engineers who know llm-d and vLLM and are about to change code. The design is the authority, and each claim below links to the section that states it. Terms are defined in the glossary (<a href="blis-target-design.html#appB">Appendix B</a>), and <a href="blis-target-design.html#appC">Appendix C</a> maps v1.0.0 rule identifiers to this version.</p>
+
+<h2>What BLIS is, and the ideas behind it</h2>
+<p>BLIS simulates an LLM serving cluster. It runs the router of llm-d, hosted in simulated time with no change to any routing decision, and Go ports of the vLLM and SGLang engines <span class="c">(<a href="blis-target-design.html#s5-2">§5.2</a>)</span>. A cost model built from published hardware facts and fitted coefficients prices every step <span class="c">(<a href="blis-target-design.html#s6-1">§6.1</a>)</span>. The design rests on these ideas:</p>
+<ul class="tight">
+<li>One repository, inference-sim, holds everything built into the simulator. Every fact and every kind of work has one owner, and import-graph checks keep the boundaries <span class="c">(<a href="blis-target-design.html#s2-2">§2.2</a>)</span>.</li>
+<li>Engines hand the cost model a fully resolved description of what runs. Lowering lives only in engine modules <span class="c">(<a href="blis-target-design.html#s6-1">§6.1</a>)</span>.</li>
+<li>An engine module models an upstream commit, and every feature of that commit has a status <span class="c">(<a href="blis-target-design.html#s7-5">§7.5</a>)</span>.</li>
+<li>Every coefficient lookup has a value labelled by its method, and falls back to the most trusted entry the coefficient registry has <span class="c">(<a href="blis-target-design.html#s9-2">§9.2</a>)</span>.</li>
+<li>Accuracy is reported only on held-out units; settings come from each run’s records <span class="c">(<a href="blis-target-design.html#s10-4">§10.4</a>)</span>.</li>
+</ul>
+
+<h2>The components</h2>
+<figure>
+<svg viewBox="0 0 700 290" role="img" aria-label="The components. The applications depend on inference-sim, one Go module whose simulator depends on the engine modules, the whole substrate and, through the hosting contract, the router fork, a separate repository. Engine modules depend only on the contracts of the substrate.">
+<defs><marker id="ar7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+<g font-family="Helvetica, Arial, sans-serif" font-size="11" fill="currentColor" stroke="none">
+<g stroke="currentColor" stroke-width="1.2" fill="#f4f6f8">
+<rect x="100" y="6" width="200" height="40" rx="3"/>
+<rect x="320" y="6" width="200" height="40" rx="3"/>
+<rect x="20" y="72" width="520" height="210" rx="4" fill="#fafbfc"/>
+<rect x="150" y="98" width="260" height="42" rx="3"/>
+<rect x="40" y="168" width="170" height="40" rx="3"/>
+<rect x="225" y="168" width="170" height="40" rx="3"/>
+<rect x="40" y="236" width="480" height="36" rx="3" fill="#e8eef6"/>
+<rect x="565" y="88" width="125" height="76" rx="3"/>
+</g>
+<g text-anchor="middle">
+<text x="200" y="24" font-weight="bold">blis-config-search</text><text x="200" y="39" font-size="10">searches configurations</text>
+<text x="420" y="24" font-weight="bold">accuracy-dashboard</text><text x="420" y="39" font-size="10">scores accuracy</text>
+<text x="280" y="117" font-weight="bold">simulator: sim/, cmd/</text><text x="280" y="132" font-size="10">event loop, cluster, workload, replay</text>
+<text x="125" y="186" font-weight="bold">engines/vllm</text><text x="125" y="200" font-size="10">vLLM, one upstream commit</text>
+<text x="310" y="186" font-weight="bold">engines/sglang</text><text x="310" y="200" font-size="10">SGLang, one upstream commit</text>
+<text x="280" y="252" font-weight="bold">substrate/: contracts · catalog · registry · cost model</text>
+<text x="627" y="106" font-weight="bold">router fork</text><text x="627" y="121" font-size="10">llm-d’s router;</text><text x="627" y="134" font-size="10">owns the hosting</text><text x="627" y="147" font-size="10">contract</text>
+</g>
+<text x="30" y="88" font-weight="bold">inference-sim (one Go module)</text>
+<text x="430" y="106" font-size="10">hosting contract</text>
+<text x="420" y="153" font-size="10">whole substrate</text>
+<text x="133" y="226" font-size="10">contracts only</text>
+<text x="318" y="226" font-size="10">contracts only</text>
+</g>
+<g stroke="currentColor" stroke-width="1.2" fill="none" marker-end="url(#ar7)">
+<path d="M200,46 L240,98"/><path d="M420,46 L320,98"/>
+<path d="M210,140 L125,168"/><path d="M250,140 L310,168"/>
+<path d="M125,208 V236"/><path d="M310,208 V236"/>
+<path d="M410,112 H565"/>
+<path d="M410,130 H490 V236"/>
+</g>
+</svg>
+<figcaption>The components. An arrow means “depends on”. Engine modules use only the substrate’s contracts, so a coefficient or pricing change touches no engine module. The router fork owns the hosting contract and imports no BLIS code <span class="c">(<a href="blis-target-design.html#s2-1">§2.1</a>)</span>.</figcaption>
+</figure>
+<figure>
+<table>
+<tr><th>Component</th><th>Owns</th><th>May import</th><th>Never contains</th></tr>
+<tr><td>contracts (<code>substrate/contracts/</code>)</td><td>Shared types, interfaces, validators, conformance suites, invariant registry</td><td>Go standard library, YAML parser</td><td>Behaviour, data, any engine’s name or policy</td></tr>
+<tr><td>catalog, ledger, coefficient registry</td><td>Published facts; every data unit and its role; coefficients, written only by their family’s writer scripts</td><td>contracts</td><td>Engine names, lowering, hand-edited values, third-party raw data</td></tr>
+<tr><td>cost model (<code>substrate/kernel/</code>)</td><td>Pricing a fully lowered step</td><td>contracts; catalog and coefficient registry through the loader</td><td>Any default, backend choice or lowering</td></tr>
+<tr><td>engine module (<code>engines/vllm/</code>, <code>engines/sglang/</code>)</td><td>One upstream engine at one commit: scheduler, KV cache, connectors, defaults, lowering, oracle, field list, surface list</td><td>contracts, its own tree</td><td>Another engine module, pricing, a clock read or goroutine</td></tr>
+<tr><td>simulator (<code>sim/</code>, <code>cmd/</code>)</td><td>Event loop, cluster, workload, replay, engine selection, the <code>Environment</code>, link sharing, the Result</td><td>Whole substrate, engine modules through the engine contract, the router fork through the hosting contract</td><td>Engine behaviour, routing policy, pricing, a scorer</td></tr>
+<tr><td>router fork (own repository)</td><td>llm-d’s router, runnable in simulated time; the hosting contract and its conformance suite</td><td>llm-d, standard library; no BLIS module</td><td>Any change to a routing decision</td></tr>
+<tr><td>accuracy-dashboard, blis-config-search (own repositories)</td><td>The one scorer, grades and coverage; configuration search</td><td>A pinned inference-sim release</td><td>Their own list of modelled settings</td></tr>
+</table>
+<figcaption>Table 1 of the design, abridged. Each component owns one kind of fact and imports only what its row allows; the design adds the enforcing check <span class="c">(<a href="blis-target-design.html#s2-2">§2.2</a>)</span>.</figcaption>
+</figure>
+<p>To place a fact, ask what it depends on. An engine’s upstream commit, such as vLLM’s default <code>gpu_memory_utilization</code>: the engine module. An llm-d release: the router fork. The simulator’s own design: the simulator. Otherwise it is true of the hardware, the model, the physics or the data, and the substrate owns it. H200 memory bandwidth is catalog data; the speed of one attention kernel on H200 is a coefficient in the registry; a user’s scorer weights stay in the scenario, copied verbatim. A change to the substrate passes one test: would a second engine need the same edit? If not, it belongs in an engine module <span class="c">(<a href="blis-target-design.html#s2-2">§2.2</a>)</span>.</p>
+<p>The parts of the substrate change together, so a model’s data, coefficients and cost-model change is one pull request and one release <span class="c">(<a href="blis-target-design.html#s3-1">§3.1</a>)</span>. Contracts change only compatibly <span class="c">(<a href="blis-target-design.html#s5-1">§5.1</a>)</span>.  Data reaches a run by a path (<code>--catalog</code>, <code>--registry</code>), which replaces the embedded copy, or from the copy compiled into the release. A path lets a recalibration candidate be scored with no rebuild. Each run records which it used, and a path load and an embedded load of the same commit give the same data and content hash <span class="c">(<a href="blis-target-design.html#s3-3">§3.3</a>)</span>.</p>
+
+<h2>The boundary between engines and the cost model</h2>
+<p>Only an engine module knows its upstream, so only it works out defaults, backend choices, sharding, fusion, padding and graph-capture sizes. That work is lowering. The catalog’s deriver writes checkpoint facts only, and no rule set outside an engine module maps settings to lowering <span class="c">(<a href="blis-target-design.html#s6-1">§6.1</a>)</span>. The engine hands the cost model three objects in physical units <span class="c">(<a href="blis-target-design.html#s6-2">§6.2</a>)</span>:</p>
+<ul class="tight">
+<li><code>PoolPlan</code>, fixed for the life of one pool: hardware, parallel layout, the lowered layers with the kernel implementation of each, the KV groups and budget, lower tiers, graph and draft policies, host work, resident weights, buffers, and steps in flight.</li>
+<li><code>StepShape</code>, one step across the data-parallel ranks in lockstep, already padded as the upstream pads it, with a mode (mixed, extend-only, decode-only, verify, prebuilt or idle).</li>
+<li><code>engine.Transfer</code>, one KV move, which the cost model turns into bytes per link.</li>
+</ul>
+<figure>
+<svg viewBox="0 0 700 214" role="img" aria-label="One simulated step. Numbered flow: 1 the engine hands the cost model a PoolPlan once per pool; 2 the scheduler forms a StepShape; 3 the cost model returns a step time; 4 the engine reports the step done with its metrics and KV events and inference-sim advances simulated time; 5 the simulator delivers metrics and KV events to the router.">
+<defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+<g font-family="Helvetica, Arial, sans-serif" font-size="11" fill="currentColor">
+<g stroke="currentColor" stroke-width="1.2" fill="#f4f6f8">
+<rect x="6" y="14" width="184" height="104" rx="3"/>
+<rect x="300" y="14" width="180" height="104" rx="3" fill="#e8eef6"/>
+<rect x="530" y="14" width="164" height="46" rx="3"/>
+<rect x="530" y="72" width="164" height="46" rx="3"/>
+<rect x="150" y="160" width="400" height="40" rx="3"/>
+</g>
+<g text-anchor="middle">
+<text x="98" y="32" font-weight="bold">engine module</text>
+<text x="98" y="54" font-size="10">resolves defaults as upstream does</text>
+<text x="98" y="69" font-size="10">lowers the model to kernels</text>
+<text x="98" y="84" font-size="10">sizes the KV budget</text>
+<text x="98" y="99" font-size="10">scheduler forms the step</text>
+<text x="390" y="32" font-weight="bold">cost model</text>
+<text x="390" y="54" font-size="10">prices primitives; knows no engine</text>
+<text x="390" y="72" font-size="10">reads the catalog and the</text>
+<text x="390" y="87" font-size="10">coefficient registry</text>
+<text x="612" y="32" font-weight="bold">catalog, coefficient registry</text><text x="612" y="49" font-size="10">facts and coefficients</text>
+<text x="612" y="90" font-weight="bold">router fork</text><text x="612" y="107" font-size="10">routes the next request</text>
+<text x="350" y="178" font-weight="bold">simulator</text><text x="350" y="193" font-size="10">supplies the Environment, advances simulated time, delivers events</text>
+</g>
+<text x="245" y="26" font-size="10" text-anchor="middle">1 PoolPlan</text>
+<text x="245" y="66" font-size="10" text-anchor="middle">2 StepShape</text>
+<text x="245" y="106" font-size="10" text-anchor="middle">3 step time</text>
+<text x="108" y="144" font-size="10">4 step done: metrics, KV events</text>
+<text x="536" y="150" font-size="10" text-anchor="end">5 metrics, KV events to the router</text>
+</g>
+<g stroke="currentColor" stroke-width="1.2" fill="none" marker-end="url(#a2)">
+<path d="M190,34 H300"/><path d="M190,74 H300"/><path d="M300,98 H190"/>
+<path d="M98,118 V160"/><path d="M480,37 H530"/><path d="M545,160 L595,118"/>
+</g>
+</svg>
+
+<figcaption>One simulated step. Once per pool the engine module hands the cost model a <code>PoolPlan</code> (1). At each step the scheduler forms a <code>StepShape</code> (2) and the cost model returns a time (3). The engine reports the step done with its metrics and KV events and the simulator advances simulated time (4), then delivers the metrics and events to the router (5) <span class="c">(<a href="blis-target-design.html#s2-3">§2.3</a>)</span>.</figcaption>
+</figure>
+<p>An engine cannot size its KV cache without the cost model’s memory arithmetic, and the cost model cannot price a step without the engine’s plan. An <code>Environment</code>, supplied by the simulator, breaks the loop. In the plan phase the engine resolves its configuration, lowers the model into a partial plan, asks the Environment for the memory that weights, activations and buffers take, and applies its upstream’s budget rule. In the run phase it forms a step and asks for its price <span class="c">(<a href="blis-target-design.html#s6-3">§6.3</a>)</span>.</p>
+<p>The engine pads, and the cost model prices the padded shape. A kernel coefficient is keyed by the kernel implementation that runs, identified by a hash of its source, so a library version bump that leaves a kernel unchanged needs no substrate change. An engine-path cost (host, launch, graph replay) is keyed by the identity of the code that does the work, supplied by the engine module and stored as an opaque key, so no engine name appears in the substrate <span class="c">(<a href="blis-target-design.html#s9-2">§9.2</a>)</span>. The engine decides which KV blocks move between tiers, and the substrate prices each move over paths the catalog states. The simulator shares each link among overlapping moves, the one resource arithmetic it owns <span class="c">(<a href="blis-target-design.html#s6-2">§6.2</a>)</span>. Engine differences, such as step modes and page size, each have a place in the contract <span class="c">(<a href="blis-target-design.html#s6-4">§6.4</a>)</span>.</p>
+
+<h2>Engines model an upstream commit</h2>
+<p>An engine module models one upstream commit: a release tag, or any commit on the upstream’s main or a release branch. Its Upstream record names the commit and the release it descends from. A build runs one commit of each engine, and a scenario naming another is refused <span class="c">(<a href="blis-target-design.html#s7-1">§7.1</a>)</span>. Three kinds of work are distinct.</p>
+<ul class="tight">
+<li>An engine upgrade moves a module from one commit to another by porting the diff of the code it models. It regenerates the field, surface and kernel lists at the new commit, locks the oracle to it, and runs every tier again <span class="c">(<a href="blis-target-design.html#s12-4">§12.4</a>)</span>.</li>
+<li>Model support is work in one module for one model, needed only when the model brings engine-facing code that an upgrade does not port: a new KV-cache layout, its own kernels, or a new drafting method or scheduler hook <span class="c">(<a href="blis-target-design.html#s12-5">§12.5</a>)</span>.</li>
+<li>A model backport applies the upstream commits that add a model onto the modelled commit, and lists them in the Upstream record. It carries model code only, never scheduler, KV-cache or connector changes. It is dropped when the modelled commit contains it, and has no grade of its own: a run is graded by its commit distance <span class="c">(<a href="blis-target-design.html#s7-1">§7.1</a>)</span>.</li>
+</ul>
+<p>Each upgrade generates a report: the surface diff, the field demand, the source diff and, for each model the new commit supports, whether the catalog has the model, whether it needs model support and for what, and, for each catalog chip, the coefficients it lacks and the kernels it would price below measured or calibrated <span class="c">(<a href="blis-target-design.html#s7-1">§7.1</a>)</span>. Simulating the requested scenario, and the upgrade report, show what a new model lacks <span class="c">(<a href="blis-target-design.html#s12-1">§12.1</a>)</span>. Maintainer practice: a module is upgraded at each upstream release; a maintainer with write access decides an on-demand upgrade and records it in an issue <span class="c">(<a href="blis-target-design.html#s7-1">§7.1</a>)</span>. A new engine, such as TRT-LLM, meets the same bar as vLLM and SGLang: a new directory under <code>engines/</code> that ports the upstream’s scheduling and KV-cache code, checked by an oracle that runs the upstream code, through its bindings for C++ <span class="c">(<a href="blis-target-design.html#s12-6">§12.6</a>)</span>.</p>
+
+<h2>Fidelity to upstream code</h2>
+<p>An engine module ports four parts of its upstream: scheduling; KV-cache management; KV transfer and tiering; resolution and lowering <span class="c">(<a href="blis-target-design.html#s7-1">§7.1</a>)</span>. A port is faithful when the upstream’s own scheduler and the Go port, given the same inputs, make the same decisions at every step. To run the upstream without GPUs, a harness replaces only its environment (GPU, clock, transport, environment settings, hardware platform, outside services), and a manifest lists every replacement. A recorded trace changes only after a maintainer has reviewed it <span class="c">(<a href="blis-target-design.html#s7-2">§7.2</a>, <a href="blis-target-design.html#s7-7">§7.7</a>)</span>. Every engine module runs the same tiers <span class="c">(<a href="blis-target-design.html#s7-4">§7.4</a>)</span>:</p>
+<figure>
+<table>
+<tr><th>Tier</th><th>What is compared</th></tr>
+<tr><td>T0, T1</td><td>Resident weights against what the upstream allocates; configuration fields accepted and rejected, defaults resolved, inertness proofs</td></tr>
+<tr><td>T2, T3</td><td>Scheduler and KV-cache decisions; the engine loop, parallelism and launched-shape padding</td></tr>
+<tr><td>T4, T5</td><td>KV connectors and P/D protocols; tiering, eviction and promotion</td></tr>
+<tr><td>T6</td><td>Metrics and KV events byte for byte with what llm-d reads</td></tr>
+<tr><td>T7, T8</td><td>A mutation sweep, which checks that every deliberate break of a ported function is caught; differential fuzzing of generated scenarios against the oracle</td></tr>
+</table>
+<figcaption>Every engine module runs the same test tiers, and each tier compares behaviour with the upstream’s own or checks a property of it <span class="c">(<a href="blis-target-design.html#s7-4">§7.4</a>)</span>.</figcaption>
+</figure>
+<p>Tests are behavioural: conformance, differential, mutation, metamorphic and property tests. A test of source text, declaration order, hashes or recorded outputs used in place of behaviour counts towards no tier <span class="c">(X13, <a href="blis-target-design.html#s7-4">§7.4</a>)</span>. The surface list shows what the tiers do not test. Its generator reads the upstream’s own registration tables, so a new feature appears unprompted. Each item has one status. Modelled is the goal. Refused means the engine refuses it by name, with an issue, and the backlog counts what it blocks. Out of scope is allowed for three reasons only: the item needs hardware BLIS does not simulate, it does no work the simulator prices, or it is deprecated upstream <span class="c">(<a href="blis-target-design.html#s7-5">§7.5</a>)</span>. A configuration field is modelled, proven inert with a passing proof, or not modelled with an issue <span class="c">(<a href="blis-target-design.html#s5-2">§5.2</a>)</span>. A point whose run loaded code the upstream does not ship is not scored <span class="c">(<a href="blis-target-design.html#s11-4">§11.4</a>)</span>. Shared frameworks are ported before the features built on them <span class="c">(<a href="blis-target-design.html#s7-6">§7.6</a>)</span>. The router fork changes upstream files only in a fixed list of kinds, none of which alters a routing decision <span class="c">(<a href="blis-target-design.html#s5-3">§5.3</a>)</span>.</p>
+
+<h2>Simulation method</h2>
+<p>BLIS takes its terms from Parallel DEVS, the Discrete Event System Specification. Model components (an engine instance, the router, a link, a client) interact only through timestamped messages, and none reads another’s state <span class="c">(<a href="blis-target-design.html#s8-1">§8.1</a>)</span>. A time advance is the time of an engine’s next scheduled wake-up; a step ending is an internal transition, a request arriving an external one, and both at one instant a confluent one. A link’s state changes at a constant rate between events; each start or end of a transfer recomputes the rate of the others <span class="c">(<a href="blis-target-design.html#s8-1">§8.1</a>)</span>. An instant is processed in three phases. Output functions run; each model component receives all the messages addressed to it at that instant, sorted by (time, round, class, sender, the sender’s own send count), with no global counter; each makes exactly one transition <span class="c">(<a href="blis-target-design.html#s8-2">§8.2</a>)</span>. Each engine declares the step boundary at which each external input takes effect <span class="c">(<a href="blis-target-design.html#s8-2">§8.2</a>)</span>.</p>
+<p>Time is an integer number of microseconds. Only finitely many events may happen in finite time, so every zero-delay cycle contains a model component with a positive time advance or a declared bound <span class="c">(<a href="blis-target-design.html#s8-3">§8.3</a>)</span>. Every random draw comes from a substream named by model component, purpose and entity, seeded from the scenario seed. Runs that differ only in configuration give the same requests the same inputs, but some draws depend on the system’s response, so comparisons need replications <span class="c">(<a href="blis-target-design.html#s8-4">§8.4</a>)</span>.</p>
+<p>The experimental frame is one document recorded in every Result: the generator and seeds, the initial state, the phases, the stop rule, the acceptance conditions and the metric definitions. Run, export and replay under the same configuration give an identical Result <span class="c">(<a href="blis-target-design.html#s8-6">§8.6</a>)</span>. Every metric has one definition in the metric registry. A request’s fate (completed, dropped, timed out, in flight at the horizon, queued at the horizon, or not started) is written once, and every latency sample derives from it <span class="c">(<a href="blis-target-design.html#s8-7">§8.7</a>)</span>.</p>
+<p>Outputs are estimates. A terminating run is estimated from the mean of replications, starting at five, with a confidence interval. A steady-state run discards a warm-up found by a stated method, and a growing backlog means overload, so no latency value is reported. A comparison of two configurations is better, worse or not distinguished <span class="c">(<a href="blis-target-design.html#s8-8">§8.8</a>)</span>. The interval covers workload randomness, and a reported value says whether it also covers the coefficients’ uncertainty. Every Result states whether its scenario lies inside the held-out data’s validity domain <span class="c">(<a href="blis-target-design.html#s8-9">§8.9</a>)</span>. Verification asks whether the code does what the model says; validation asks whether the model matches the real system. A change that is both is split <span class="c">(<a href="blis-target-design.html#s8-9">§8.9</a>)</span>.</p>
+
+<h2>Coefficients, the ledger and accuracy</h2>
+<figure>
+<table>
+<tr><th>Rank</th><th>Method</th><th>Where the value comes from</th></tr>
+<tr><td>1</td><td>measured</td><td>fitted to microbenchmarks of this exact kernel implementation on this chip</td></tr>
+<tr><td>2</td><td>calibrated</td><td>a physical formula whose efficiency factors are fitted to composite data</td></tr>
+<tr><td>3</td><td>transferred</td><td>measured on a related implementation or chip, moved by a stated rule</td></tr>
+<tr><td>4, 5</td><td>literature, vendor_spec</td><td>a cited published figure; a datasheet figure used directly</td></tr>
+<tr><td>6, 7</td><td>roofline, assumed</td><td>computed from catalog facts alone; a stated assumption with a reason</td></tr>
+</table>
+<figcaption>For each lookup the cost model uses the smallest rank the coefficient registry holds for the chip, and the point names the method <span class="c">(<a href="blis-target-design.html#s9-2">§9.2</a>)</span>.</figcaption>
+</figure>
+<p>When the coefficient registry has no exact entry, the lookup falls back down the ranks to the most trusted entry for that chip. Some rank has a value for every primitive family and chip, so a missing measurement never causes a refusal. New entries are required only for a new primitive family <span class="c">(<a href="blis-target-design.html#s9-2">§9.2</a>)</span>. Each price records the least trusted method it used, and a lookup outside the range a fit covered ranks with transferred <span class="c">(<a href="blis-target-design.html#s9-3">§9.3</a>, <a href="blis-target-design.html#s9-4">§9.4</a>)</span>. A change to a measured value passes a landing gate: criteria committed first, then held-out error not worse on any lane (a group of held-out points judged together) and better on the target lane <span class="c">(<a href="blis-target-design.html#s9-4">§9.4</a>)</span>. No rule requires a new GPU or cluster experiment. A measurement no source holds is priced by the fallback, down to a roofline or an assumed entry, and the entry is replaced when data appears <span class="c">(<a href="blis-target-design.html#s10-4">§10.4</a>)</span>.</p>
+<p>The ledger assigns each unit one role: fit, select, validate, held or anchor. The role is computed from the partition secret per group of near-copies, so near-copies cannot fit and judge. Only the fit and anchor lists are published. Results on select, validate and held units are aggregates, from jobs that hold the partition secret and never run a pull request’s code <span class="c">(<a href="blis-target-design.html#s10-2">§10.2</a>)</span>. Accuracy is reported only on held-out units, those with the role held or anchor. Every source that is not held out is training data. A new source draws training roles only, split among fit, select and validate, and gains held-out roles only through a new partition version. Each run’s settings come from its own records: workload, cluster, GPU type, model and engine settings. A value no record holds is a named substitution on the point, and it lowers the grade <span class="c">(<a href="blis-target-design.html#s10-4">§10.4</a>)</span>.</p>
+<p>Scoring a point has four steps. State: copy the run’s recorded configuration verbatim. Estimate: apply the engine’s own rule for a value the run did not record. Decide: read each field’s status from the engine’s field list. Price: use the most trusted entry <span class="c">(<a href="blis-target-design.html#s11-2">§11.2</a>)</span>.  Grades follow commit distance, the distance between the run’s engine commit and the commit the scoring release models. G1: the same commit, and every condition for exactness holds. G2: as G1, with named substitutions. G3 and G4: another commit, with the ported code unchanged or changed. G5: not scored, for a listed reason. A condition the data cannot decide is never assumed to hold <span class="c">(<a href="blis-target-design.html#s11-3">§11.3</a>)</span>. One simulator release scores every point <span class="c">(<a href="blis-target-design.html#s11-5">§11.5</a>)</span>. Coverage is a funnel for each scored source, with no age limit on scoring, and a backlog ranks what lowers coverage or grade <span class="c">(<a href="blis-target-design.html#s11-6">§11.6</a>)</span>. Accuracy is sliceable by any recorded attribute, and below a minimum number of role keys no aggregate is shown <span class="c">(<a href="blis-target-design.html#s11-9">§11.9</a>)</span>. Anyone may run the scoring harness on any branch, but a reported value computed on a branch is labelled with its build and data and is never published as BLIS’s accuracy <span class="c">(<a href="blis-target-design.html#s11-7">§11.7</a>)</span>.</p>
+
+<h2>Procedures</h2>
+<p>Each recurring trigger has one procedure with its components, steps and a list of what done means <span class="c">(<a href="blis-target-design.html#s12">§12</a>)</span>.</p>
+<figure>
+<table>
+<tr><th>Trigger</th><th>Components touched</th><th>Core of the procedure</th></tr>
+<tr><td>A new model <span class="c">(<a href="blis-target-design.html#s12-1">§12.1</a>)</span></td><td>catalog; an engine module only for model support</td><td>Add a catalog entry; simulate the scenario to find what is missing.</td></tr>
+<tr><td>A new data source <span class="c">(<a href="blis-target-design.html#s12-2">§12.2</a>)</span></td><td>ledger, loader</td><td>Identify settings from the run’s records. Pin and ingest. Draw training roles only.</td></tr>
+<tr><td>An accuracy idea <span class="c">(<a href="blis-target-design.html#s12-3">§12.3</a>)</span></td><td>the layer the idea changes</td><td>Pre-register before reading held-out data. Evaluate once on held units.</td></tr>
+<tr><td>An engine upgrade <span class="c">(<a href="blis-target-design.html#s12-4">§12.4</a>)</span></td><td>one engine module</td><td>Generate the upgrade report. Re-port changed functions; classify new items.</td></tr>
+<tr><td>Model support <span class="c">(<a href="blis-target-design.html#s12-5">§12.5</a>)</span></td><td>one engine module</td><td>Port the model’s engine-facing code; backport if needed.</td></tr>
+<tr><td>A new engine <span class="c">(<a href="blis-target-design.html#s12-6">§12.6</a>)</span></td><td>a new <code>engines/</code> directory</td><td>Generate the surface list first. Port; build the oracle.</td></tr>
+
+</table>
+<figcaption>Every recurring trigger maps to one procedure that names the components it touches. A capability (<a href="blis-target-design.html#s12-7">§12.7</a>), smaller changes (<a href="blis-target-design.html#s12-8">§12.8</a>), a fidelity fix (<a href="blis-target-design.html#s12-9">§12.9</a>) and an llm-d release (<a href="blis-target-design.html#s12-10">§12.10</a>) follow the same pattern.</figcaption>
+</figure>
+
+<h2>How rules are kept, and how releases work</h2>
+<p>A rule is one of three kinds <span class="c">(<a href="blis-target-design.html#s4-kinds">§4.2</a>)</span>. An automated rule is a deterministic check that protects the product’s correctness or accuracy: an import-graph lint, a conformance, differential, mutation, metamorphic or property test, a data validator, or a build-staleness check. A maintainer practice is a rule about process: review, approval, merge, issue handling, pull-request text and release notes. A maintainer with write access keeps it with standard git and GitHub mechanisms (branch protection, required reviews, signed commits). No program audits it. Agent guidance is followed by an agent that writes or reviews a change. A review finding ends fixed, filed as an issue, or rejected with a reason <span class="c">(<a href="blis-target-design.html#s4-proc">§4.1</a>)</span>. The checks that run on pull requests, releases and nightly are in <a href="blis-target-design.html#s13">§13</a>.</p>
+<p>Versions are written in one place <span class="c">(<a href="blis-target-design.html#s4-proc">§4.1</a>)</span>. inference-sim is the only tagged release; every other repository is pinned by commit <span class="c">(<a href="blis-target-design.html#s14-1">§14.1</a>)</span>. Each release records in <code>stack.json</code> the upstream commit each engine models and the router fork commit, and the applications pin a release by tag and commit <span class="c">(<a href="blis-target-design.html#s3-3">§3.3</a>)</span>. Lifecycle rules are in <a href="blis-target-design.html#s14-1">§14.1</a> and <a href="blis-target-design.html#s14-2">§14.2</a>.</p>
+
+<h2>Working in a component</h2>
+<p>Each component’s rules are in <a href="blis-target-design.html#s5-1">§5.1</a> to <a href="blis-target-design.html#s5-6">§5.6</a>. A contributor meets these first:</p>
+<ul class="tight">
+<li><strong>Engine modules.</strong> Each registers as an engine kind with the upstream commit it models, and publishes a field list and a surface list. Every Go file states its provenance. The port has no clock reads and no goroutines; waiting is reported to the simulator as a time value <span class="c">(<a href="blis-target-design.html#s5-2">§5.2</a>)</span>.</li>
+<li><strong>The router fork.</strong> It is merged from each llm-d release, never rebased, owns the hosting contract and imports no BLIS code <span class="c">(<a href="blis-target-design.html#s5-3">§5.3</a>)</span>.</li>
+<li><strong>The simulator.</strong> The engine is chosen by the scenario’s <code>engine: {kind, version}</code>. Unsupported or ambiguous input is refused, naming the field and the value. A fixed set of scenarios, the byte gate, must stay byte-identical across a refactor <span class="c">(<a href="blis-target-design.html#s5-4">§5.4</a>)</span>.</li>
+<li><strong>The applications.</strong> Settings come from the simulator’s field list, never a hand-kept copy <span class="c">(<a href="blis-target-design.html#s5-5">§5.5</a>)</span>. The dashboard is the only scorer <span class="c">(<a href="blis-target-design.html#s5-6">§5.6</a>)</span>.</li>
+</ul>
+
+<h2>Rules a contributor must keep in mind</h2>
+<ul class="tight">
+<li><strong>X1</strong> Users configure BLIS with the upstream’s own configuration; an unknown or unsupported field is refused by its upstream name <span class="c">(<a href="blis-target-design.html#s4">§4</a>)</span>.</li>
+<li><strong>X7, X2</strong> One owner for each fact; dependencies point one way; the substrate contains no engine name <span class="c">(<a href="blis-target-design.html#s4">§4</a>, <a href="blis-target-design.html#s2-2">§2.2</a>)</span>.</li>
+<li><strong>X3, SUB-6, SUB-15</strong> Engine behaviour and lowering live only in engine modules; the cost model resolves nothing; the deriver writes checkpoint facts only <span class="c">(<a href="blis-target-design.html#s6-1">§6.1</a>)</span>.</li>
+<li><strong>X5, VLM-1</strong> Fidelity is shown against the upstream’s own code <span class="c">(<a href="blis-target-design.html#s4">§4</a>, <a href="blis-target-design.html#s5-2">§5.2</a>)</span>.</li>
+<li><strong>X9</strong> Every upstream feature has exactly one status <span class="c">(<a href="blis-target-design.html#s7-5">§7.5</a>)</span>.</li>
+<li><strong>X13</strong> Every behaviour change has a test that fails without it; tests assert behaviour <span class="c">(<a href="blis-target-design.html#s4">§4</a>)</span>.</li>
+<li><strong>X8, D9</strong> Every number is reproducible, and accuracy is reported only on held-out units <span class="c">(<a href="blis-target-design.html#s4">§4</a>, <a href="blis-target-design.html#s10-4">§10.4</a>)</span>.</li>
+<li><strong>D10, D11, VAL-2</strong> Settings come from the run’s own records; no new GPU or cluster experiment is needed, because every lookup has a value and every price names its method <span class="c">(<a href="blis-target-design.html#s10-4">§10.4</a>)</span>.</li>
+
+</ul>
+<p>The rule index (<a href="blis-target-design.html#appA">Appendix A</a>) gives the section that defines each rule; <a href="blis-target-design.html#appC">Appendix C</a> maps each v1.0.0 identifier to its place in this version; the glossary (<a href="blis-target-design.html#appB">Appendix B</a>) defines terms.</p>
+</body>
+</html>
