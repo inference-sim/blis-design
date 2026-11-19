@@ -35,6 +35,8 @@ def slug(text: str) -> str:
 
 
 DESIGN_URL = "https://inference-sim.github.io/blis-design/v2.3.0/blis-target-design.html"
+# Design subsections whose anchor is not s<n>-<m>.
+_DESIGN_ANCHORS = {"s4-1": "s4-proc", "s4-2": "s4-kinds"}
 _DESIGN_REF = re.compile(r"design (§\d+(?:\.\d+)?(?:(?:, | and |, and )§\d+(?:\.\d+)?)*)")
 
 
@@ -46,7 +48,7 @@ def link_design_sections(text: str) -> str:
     def one(m):
         return re.sub(
             r"§(\d+)(?:\.(\d+))?",
-            lambda s: (f'<a href="{DESIGN_URL}#s{s.group(1)}-{s.group(2)}">{s.group(0)}</a>' if s.group(2)
+            lambda s: (f'<a href="{DESIGN_URL}#{_DESIGN_ANCHORS.get(f"s{s.group(1)}-{s.group(2)}", f"s{s.group(1)}-{s.group(2)}")}">{s.group(0)}</a>' if s.group(2)
                        else f'<a href="{DESIGN_URL}#s{s.group(1)}">{s.group(0)}</a>'),
             m.group(0))
     parts = re.split(r"(<a .*?</a>)", text)
