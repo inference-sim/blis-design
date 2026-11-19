@@ -20,7 +20,7 @@ DEFINED = re.compile(
 INDEXED = re.compile(
     r'<span class="inv">([A-Z]+(?:-[A-Z]+)?-?)(\d+)</span>(?:–(?:<span class="inv">)?(\d+)(?:</span>)?)?')
 
-FATES = {"kept", "changed", "merged", "retired"}
+FATES = {"changed", "merged", "retired"}
 # Retirement is allowed for X10 (no bottom-up merge), the KVS family (the KV-store
 # repository is out of scope) and any rule named here after the maintainer agrees.
 RETIRE_PREFIXES = ("KVS-",)
@@ -67,27 +67,62 @@ def appendix_c_rows(page):
     return rows
 
 
+def row_ids(v1):
+    """The identifiers a row stands for: `KVS-1 to KVS-7` is seven."""
+    m = re.fullmatch(r"([A-Z]+(?:-[A-Z]+)?-?)(\d+) to \1(\d+)", v1)
+    if m:
+        return [f"{m.group(1)}{n}" for n in range(int(m.group(2)), int(m.group(3)) + 1)]
+    return [v1]
+
+
 def appendix_c_problems(v1_ids, v2_ids, rows):
+    """Each v1.0.0 ID has one row with its fate, or has no row and is defined again (kept)."""
     problems = []
     seen = {}
     for v1, fate, v2, reason in rows:
-        seen[v1] = seen.get(v1, 0) + 1
+        ids = row_ids(v1)
+        for one in ids:
+            seen[one] = seen.get(one, 0) + 1
         if fate not in FATES:
             problems.append(f"{v1}: fate {fate!r} is not one of {sorted(FATES)}")
         if fate == "merged" and v2 not in v2_ids:
             problems.append(f"{v1}: merged into {v2!r}, which {LATEST_DIR} does not define")
-        if fate in ("kept", "changed") and v2 not in v2_ids:
-            problems.append(f"{v1}: {fate} as {v2!r}, which {LATEST_DIR} does not define")
-        if fate == "retired" and not (v1 in RETIRE_CANDIDATES or v1.startswith(RETIRE_PREFIXES)):
+        if fate == "changed" and v2 not in v2_ids:
+            problems.append(f"{v1}: changed as {v2!r}, which {LATEST_DIR} does not define")
+        if fate == "retired" and not all(i in RETIRE_CANDIDATES or i.startswith(RETIRE_PREFIXES) for i in ids):
             problems.append(f"{v1}: retired, but it is not a retirement candidate")
         if not reason:
             problems.append(f"{v1}: no reason")
     for v1 in sorted(v1_ids):
-        if seen.get(v1, 0) != 1:
-            problems.append(f"{v1}: {seen.get(v1, 0)} rows, expected 1")
+        n = seen.get(v1, 0)
+        if n > 1:
+            problems.append(f"{v1}: {n} rows, expected at most 1")
+        if n == 0 and v1 not in v2_ids:
+            problems.append(f"{v1}: 0 rows and {LATEST_DIR} does not define it, so it is not kept")
     for v1 in sorted(set(seen) - set(v1_ids)):
         problems.append(f"{v1}: a row for an ID v1.0.0 does not define")
     return problems
+
+
+def idmap_entries():
+    """{v1 id: fate} from the source's id maps, for the fates that need a row."""
+    out = {}
+    for path in sorted((REPO / LATEST_DIR / "src/_idmap").glob("*.tsv")):
+        for line in path.read_text().splitlines()[1:]:
+            cells = line.split("\t")
+            if len(cells) >= 2 and cells[1] in ("changed", "merged", "retired"):
+                out[cells[0]] = cells[1]
+    return out
+
+
+def idmap_problems(entries, rows):
+    """Every ID the id map says changed, merged or retired must have a row with that fate."""
+    fates = {}
+    for v1, fate, _, _ in rows:
+        for one in row_ids(v1):
+            fates[one] = fate
+    return [f"{v1}: the id map says {fate}, the appendix says {fates.get(v1, 'nothing')}"
+            for v1, fate in sorted(entries.items()) if fates.get(v1) != fate]
 
 
 def unindexed(defined, appendix_a_text):
@@ -127,13 +162,36 @@ class TestAppendixC(unittest.TestCase):
         cls.page = V2.read_text()
         cls.v2_ids = defined_ids(cls.page)
         cls.rows = appendix_c_rows(cls.page)
+        cls.entries = idmap_entries()
 
     def test_appendix_c_covers_every_v1_id(self):
         self.assertEqual(appendix_c_problems(self.v1_ids, self.v2_ids, self.rows), [])
 
-    def test_a_missing_row_is_reported(self):
-        problems = appendix_c_problems(self.v1_ids, self.v2_ids, self.rows[1:])
-        self.assertTrue(any("0 rows" in p for p in problems), problems)
+    def test_a_missing_changed_or_retired_row_is_reported(self):
+        for ident in ("X1", "X10"):
+            rows = [r for r in self.rows if r[0] != ident]
+            self.assertTrue(any(p.startswith(ident + ":") for p in
+                                idmap_problems(self.entries, rows)), ident)
+
+    def test_a_missing_retired_row_is_also_an_undefined_kept_id(self):
+        rows = [r for r in self.rows if r[0] != "X10"]
+        problems = appendix_c_problems(self.v1_ids, self.v2_ids, rows)
+        self.assertTrue(any(p.startswith("X10:") for p in problems), problems)
+
+    def test_a_kept_id_that_is_no_longer_defined_is_reported(self):
+        kept = sorted(i for i in self.v1_ids if i not in {x for r in self.rows for x in row_ids(r[0])})
+        self.assertTrue(kept)
+        problems = appendix_c_problems(self.v1_ids, self.v2_ids - {kept[0]}, self.rows)
+        self.assertTrue(any(p.startswith(kept[0] + ":") for p in problems), problems)
+
+    def test_the_id_map_agrees_with_the_appendix(self):
+        self.assertTrue(self.entries)
+        self.assertEqual(idmap_problems(self.entries, self.rows), [])
+
+    def test_a_kept_row_is_not_a_fate(self):
+        v1, _, v2, reason = self.rows[0]
+        problems = appendix_c_problems(self.v1_ids, self.v2_ids, [(v1, "kept", v2, reason)] + self.rows[1:])
+        self.assertTrue(any("not one of" in p for p in problems), problems)
 
     def test_a_duplicate_row_is_reported(self):
         problems = appendix_c_problems(self.v1_ids, self.v2_ids, self.rows + [self.rows[0]])
@@ -156,7 +214,7 @@ class TestAppendixC(unittest.TestCase):
         self.assertTrue(any("not a retirement candidate" in p for p in problems), problems)
 
     def test_the_known_retirements_are_recorded(self):
-        fates = {r[0]: r[1] for r in self.rows}
+        fates = {i: r[1] for r in self.rows for i in row_ids(r[0])}
         for ident in ["X10"] + [f"KVS-{n}" for n in range(1, 8)]:
             self.assertEqual(fates.get(ident), "retired", ident)
         self.assertEqual(fates.get("T-P1"), "merged")
