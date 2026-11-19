@@ -53,3 +53,4 @@ RTR-1	changed	RTR-1	the commit and history checks leave; merge strategy and upst
 SUB-12	changed	SUB-12	the second validation layer is each engine module's refusal; the substrate has no rule layer (contracts/rules/ is removed)
 SIM-1	changed	SIM-1	engine kinds model a commit; version is a commit hash or a listed alias; the legacy engine_version clause leaves
 CFG-2	changed	CFG-2	the bot's pull request leaves; a committed report is the generator's output and never hand-edited (maintainer practice)
+SIM-18	changed	SIM-18	The rule shares one file system for each (model, root_dir) pair; the clause on two models leaves

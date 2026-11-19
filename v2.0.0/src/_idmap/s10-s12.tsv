@@ -36,3 +36,7 @@ T-E7	new	T-E7	Engine upgrade passes the whole-run gate, prices changed kernel an
 T-N1	changed	T-N1	Additions to contracts, catalog and registry that name no engine; every kernel the engine lowers to is priced
 T-N4	new	T-N4	A new engine passes every tier, the conformance suites, memory closure, coupled replay and byte checks, and is registered and scored
 T-B2	changed	T-B2	Each engine models or refuses the capability; its coefficients have methods; COV-15 holds
+D1	changed	D1	The review guidance block leaves
+T-M3	changed	T-M3	The Size line leaves
+T-A4	changed	T-A4	The Size line leaves
+T-R5	changed	T-R5	The Size line leaves
