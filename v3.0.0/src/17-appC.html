@@ -73,12 +73,12 @@
 <tr><td><code>VAL-2</code></td><td>changed</td><td><span class="inv">VAL-2</span></td><td>An assumed entry exists for every chip in a family without a roofline and in every new family; the point names the method.</td></tr>
 <tr><td><code>VAL-3</code></td><td>changed</td><td><span class="inv">VAL-3</span></td><td>Also records the share of predicted time at each rank; a not_charged entry that does not meet VAL-1 counts as assumed.</td></tr>
 <tr><td><code>VAL-4</code></td><td>changed</td><td><span class="inv">VAL-4</span></td><td>Removal approval is maintainer practice; precedence and refusal checks stay.</td></tr>
-<tr><td><code>VAL-5</code></td><td>changed</td><td><span class="inv">VAL-5</span></td><td>Error of fitted methods is held-out error on the same chip; the others by leave-one-chip-out, split by generation; the rank order is revisable by a validation change.</td></tr>
-<tr><td><code>VAL-6</code></td><td>changed</td><td><span class="inv">VAL-6</span></td><td>The landing decision for unjudged entries and regressions is a maintainer decision; lane is defined at first use.</td></tr>
+<tr><td><code>VAL-5</code></td><td>changed</td><td><span class="inv">VAL-5</span></td><td>Error of fitted methods is validation error on the same chip; the others by leave-one-chip-out, split by generation; the rank order is revisable by a validation change.</td></tr>
+<tr><td><code>VAL-6</code></td><td>changed</td><td><span class="inv">VAL-6</span></td><td>The landing decision for unjudged entries and regressions is a maintainer decision; lane is defined at first use; the gate is whole-run only, on held InferenceX and configiq units.</td></tr>
 <tr><td><code>VAL-7</code></td><td>changed</td><td><span class="inv">VAL-7</span></td><td>Ratchet raise approval is maintainer practice; the ratchet test stays.</td></tr>
 <tr><td><code>VAL-8</code></td><td>changed</td><td><span class="inv">VAL-8</span></td><td>Engine-path costs match on code identity; carry-over is per engine commit.</td></tr>
 <tr><td><code>VAL-10</code></td><td>changed</td><td><span class="inv">VAL-10</span></td><td>Bootstrap resamples whole sweeps; unidentified is judged against a stated scale.</td></tr>
-<tr><td><code>VAL-11</code></td><td>changed</td><td><span class="inv">VAL-11</span></td><td>Review guidance block becomes a Maintainer practice sentence; the lint stays.</td></tr>
+<tr><td><code>VAL-11</code></td><td>changed</td><td><span class="inv">VAL-11</span></td><td>Review guidance block becomes a Maintainer practice sentence; the lint stays; the operator-level check is method error on validate units.</td></tr>
 <tr><td><code>D1</code></td><td>changed</td><td><span class="inv">D1</span></td><td>The review guidance block leaves.</td></tr>
 <tr><td><code>D3</code></td><td>changed</td><td><span class="inv">D3</span></td><td>A source with a live feed joins continuously, each row pinned by id and content hash; the archive and the feed split at a cutoff id.</td></tr>
 <tr><td><code>D4</code></td><td>changed</td><td><span class="inv">D4</span></td><td>The rule keeps per-role-key draws, append-only roles and alias tables; legacy-side detail moves to section 10.2.</td></tr>
