@@ -16,6 +16,7 @@ says whether the maintainer stated it or it is a proposal open to correction.
 | [`SETTINGS-PROVENANCE.md`](evidence/SETTINGS-PROVENANCE.md) | Where each new source records its workload, GPU, model and engine settings (§2) |
 | [`COVERAGE-FUNNEL.md`](evidence/COVERAGE-FUNNEL.md) | Why only 199 InferenceX points and about 213 configiq units are scored today (§3A) |
 | [`CONFIGIQ-FINDINGS.md`](evidence/CONFIGIQ-FINDINGS.md) | How Red Hat's configiq rows are produced, and which settings can be recovered (§3C) |
+| [`NEW-MODELS-GB200.md`](evidence/NEW-MODELS-GB200.md) | What Mistral-Large-4 and Inkling-2-Small need: new layers, and kernels with no GB200 measurement (§D4) |
 
 Figures are as of 2026-11-18. Raw downloads behind the notes are not in the repository.
 

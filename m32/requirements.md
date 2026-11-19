@@ -124,6 +124,24 @@ verify.
   prediction with no held-out evidence. GB200 decode is about 1.35 times slow per token until blis-substrate#140
   and blis-vllm#272 land (§0.2).
 
+**What each model needs** (checked 2026-11-18; `evidence/NEW-MODELS-GB200.md`).
+- *No new kind of layer.*
+  - Inkling-2-Small is Inkling (v1), which the catalog already has, plus cheap elementwise additions (block
+    attention residuals, MoE softcaps) and a DSpark drafter. It needs a branch in the existing handler.
+  - Mistral-Large-4 combines patterns the catalog already models: DSA sparse attention (GLM-5), and a layer
+    reading another layer's KV and reusing another layer's indexer (DeepSeek-V4.1). It needs a new handler.
+    This is to be confirmed from its `config.json`, which is gated: an access token is needed.
+  - So for both, the catalog change and the engine change are independent.
+- *Kernels with no GB200 measurement.*
+  - NVFP4 and MXFP8 grouped MoE GEMMs have coefficients on H100 and H200 only, none on any Blackwell part.
+    Inkling-2-Small runs them on its own CUDA kernel.
+  - Sparse-MLA attention has 31 entries, all on H100 and H200.
+  - The MLA decode floor on GB200 is assumed.
+  - Relative-position attention is priced as plain attention.
+  - Drafter acceptance is borrowed.
+  - Until these are fitted, the main costs on GB200 run on transferred or assumed values. AISimulate's GB200
+    collection is the likeliest fit data; whether it covers these two kernel families is not yet checked.
+
 ### D5. Changes blis-design needs
 
 The standing design and the release plan both change. Each item is one blis-design pull request to `main`,
