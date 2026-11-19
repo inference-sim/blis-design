@@ -63,3 +63,18 @@ def git_show(ref, name):
     return subprocess.run(
         ["git", "show", f"{ref}:{name}"], cwd=REPO, capture_output=True, check=True
     ).stdout
+
+
+def copy_site(dest, version="2.0.0"):
+    """Copy the build inputs into `dest` so a test can edit them freely."""
+    dest = pathlib.Path(dest)
+    shutil.copytree(TOOLS, dest / "tools", ignore=shutil.ignore_patterns("tests", "__pycache__"))
+    shutil.copytree(REPO / f"v{version}", dest / f"v{version}")
+    shutil.copy(REPO / "versions.json", dest / "versions.json")
+    return dest
+
+
+def run_tool(root, *args):
+    """Run tools/<script> from a copied site with python -I, as CI does."""
+    return subprocess.run([sys.executable, "-I", *map(str, args)], cwd=root,
+                          capture_output=True, text=True, timeout=120)

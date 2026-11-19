@@ -1,0 +1,23 @@
+<header>
+<h1>BLIS Target Design</h1>
+<p class="subtitle">How the BLIS repositories are divided, what each one owns, the rules that keep them correct, and how we upgrade them when vLLM, SGLang, llm-d or our data change.</p>
+<div class="meta">
+  <span><b>Status</b> Standing design: true for every release</span>
+  <span><b>Scope</b> the llm-d stack, with vLLM or SGLang as the engine</span>
+  <span><b>Companion</b> each release has its own release plan, which schedules the work this design requires</span>
+</div>
+</header>
+
+<div class="abstract">
+<p><b>What BLIS is.</b> BLIS simulates an LLM serving cluster. It runs two kinds of code: the router of llm-d, a Kubernetes-based stack that routes requests to vLLM or SGLang engines, unchanged; and Go ports of the vLLM and SGLang engines. Each port covers the engine's scheduling, its KV-cache management, its KV transfer and tiering, and how it resolves its settings and chooses its kernels (§7.1). Each is tested step by step against the engine's own code. A cost model, built from published hardware facts and fitted coefficients, prices every step. This document describes the shape BLIS has, the rules that keep it correct, and how those rules are checked. It holds for every release. What a particular release does to reach it, and when, is in that release's plan; §1 explains how the two documents relate.</p>
+<p><b>The main ideas.</b></p>
+<ol>
+<li>One repository, <code>blis-substrate</code>, holds everything that is true whatever engine runs: the shared contracts, the published facts, the fitted coefficients and the cost model. Each other repository tracks upstream code or serves one purpose, and every kind of work has exactly one owner (§2.2).</li>
+<li>Engines hand the cost model a fully resolved description of what runs, so the cost model does not depend on which engine produced it.</li>
+<li>Every upstream release gets a list of its features, generated from the upstream's own source. Each feature is modelled, refused by name, or declared out of scope, and CI fails while any feature has no status. Missing features are then counted and ranked, instead of being discovered only when someone needs one.</li>
+<li>Every coefficient the cost model needs has a value, labelled by how it was obtained: measured, derived from a roofline, taken from published work, or borrowed. Coverage can then grow without hiding how good each estimate is.</li>
+<li>The simulator follows explicit rules for a discrete-event simulation and for analysing its output, so its figures are reproducible and carry their uncertainty (§8).</li>
+<li>Every rule in this document has an identifier and a repository that runs its check. Automated checks enforce every rule that can be checked mechanically. Agents do scoped tasks that must pass those checks. People answer the yes/no questions that need judgement (§13).</li>
+</ol>
+</div>
+

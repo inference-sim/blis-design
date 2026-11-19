@@ -1,0 +1,128 @@
+<!-- ============================================================ -->
+<h2 id="s13"><span class="secno">13</span>Automation: how the rules are kept</h2>
+
+<p>Rules are kept by three kinds of worker, used in this order of preference:</p>
+<ol>
+<li><b>Deterministic checks</b> decide everything that can be decided mechanically. Given the same commit, they give the same answer.</li>
+<li><b>Agents</b> do bounded work: porting a changed function, classifying a new field, fitting a coefficient. They work from a preflight, against the checks, inside a budget.</li>
+<li><b>People</b> answer the yes/no questions in §4 and §5, approve releases, and set direction.</li>
+</ol>
+
+<figure class="fig-wide">
+<svg viewBox="0 0 960 260" role="img" aria-label="How a trigger flows through automation. A scheduled detector notices the trigger and runs the preflight, which produces a scoped work list and a budget. An agent works the list in a branch. Deterministic checks run on every push; the agent iterates until they pass or the budget runs out. A person answers the review questions the checks attached and approves. The release bot merges, tags and bumps versions bottom-up. The nightly matrix and dashboard confirm the result.">
+<defs><marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+<rect class="box soft" x="10" y="80" width="120" height="70" rx="6"/><text class="t-title" x="70" y="106" text-anchor="middle">detector</text><text class="t-small" x="70" y="124" text-anchor="middle">scheduled job</text><text class="t-small" x="70" y="138" text-anchor="middle">deterministic</text>
+<rect class="box soft" x="160" y="80" width="120" height="70" rx="6"/><text class="t-title" x="220" y="106" text-anchor="middle">preflight</text><text class="t-small" x="220" y="124" text-anchor="middle">scope, budget</text><text class="t-small" x="220" y="138" text-anchor="middle">deterministic</text>
+<rect class="box" x="310" y="80" width="130" height="70" rx="6"/><text class="t-title" x="375" y="106" text-anchor="middle">agent</text><text class="t-small" x="375" y="124" text-anchor="middle">works the list</text><text class="t-small" x="375" y="138" text-anchor="middle">in a branch</text>
+<rect class="box acc" x="470" y="80" width="140" height="70" rx="6"/><text class="t-title" x="540" y="106" text-anchor="middle">checks</text><text class="t-small" x="540" y="124" text-anchor="middle">every push</text><text class="t-small" x="540" y="138" text-anchor="middle">deterministic</text>
+<rect class="box" x="640" y="80" width="120" height="70" rx="6"/><text class="t-title" x="700" y="106" text-anchor="middle">person</text><text class="t-small" x="700" y="124" text-anchor="middle">reads the review,</text><text class="t-small" x="700" y="138" text-anchor="middle">approval</text>
+<rect class="box soft" x="790" y="80" width="160" height="70" rx="6"/><text class="t-title" x="870" y="106" text-anchor="middle">release bot</text><text class="t-small" x="870" y="124" text-anchor="middle">merge, pin, release</text><text class="t-small" x="870" y="138" text-anchor="middle">deterministic</text>
+<path class="edge" d="M130,115 L160,115" marker-end="url(#a5)"/>
+<path class="edge" d="M280,115 L310,115" marker-end="url(#a5)"/>
+<path class="edge" d="M440,105 L470,105" marker-end="url(#a5)"/>
+<path class="edge" d="M470,128 L440,128" marker-end="url(#a5)"/>
+<text class="t-small" x="455" y="168" text-anchor="middle">fix and retry</text>
+<path class="edge" d="M610,115 L640,115" marker-end="url(#a5)"/>
+<path class="edge" d="M760,115 L790,115" marker-end="url(#a5)"/>
+<rect class="box ok" x="470" y="200" width="480" height="40" rx="6"/><text x="710" y="225" text-anchor="middle">nightly: compatibility build, full-data gates, dashboard, backlog</text>
+<path class="edge dash" d="M870,150 L870,200" marker-end="url(#a5)"/>
+<path class="edge dash" d="M470,220 C300,220 220,190 220,150" marker-end="url(#a5)"/>
+<text class="t-small" x="280" y="210">backlog feeds the next trigger</text>
+</svg>
+<figcaption><b>Figure 6. A trigger, start to finish.</b> Everything except the agent's work and the review agent's answers is deterministic. The checks, not the agent, decide when the work is done.</figcaption>
+</figure>
+
+<h3 id="s13-1">13.1 The invariant registry</h3>
+<p>Every invariant in this document is a record in <code>blis-substrate/contracts/invariants/</code>:</p>
+<pre><code>- id: SUB-6
+  statement: The cost model resolves nothing; every default, backend choice,
+             padding and capture decision arrives in the plan or step shape.
+  scope: [blis-substrate/kernel]
+  checks:
+    - repo: blis-substrate
+      test: TestKernelResolvesNothing
+      runs: pull_request
+  review: null                    # or {question, reviewer, trigger}
+  status: new                     # ci | partial | new | review
+  target: {status: ci, milestone: 4}   # a milestone of a release plan</code></pre>
+<p>The status <code>partial</code> means some of an invariant's checks run in CI and others are still <code>new</code>. The status <code>review</code> means the invariant is enforced only by its review question, with no mechanical check; X1 to X9 keep a review question beside their checks, and no invariant in this document is <code>review</code> alone. Each check has its own status, so the invariant registry shows which parts are enforced.</p>
+<p>An invariant registry check's <code>runs</code> value is <code>pull_request</code>, <code>nightly</code> or <code>release</code> for an automated check, or <code>practice</code> for a maintainer practice (§4.2). A <code>practice</code> record names the repository it concerns and its checklist item, and has no test: no program in another repository reads it. A practice is confirmed by a person ticking its item on the repository&rsquo;s maintainer checklist; it has no check run to pass, so the release bot does not wait on it.</p>
+<p>A generator turns these records into this document's appendix, into a section of every repository's <code>AGENTS.md</code> that carries the agent guidance, into the checklist of every pull-request template, and into a maintainer checklist for each repository that lists its practices. A rendered copy that does not match its record fails CI.</p>
+<p><b>What a repository&rsquo;s <code>AGENTS.md</code> holds.</b> It is the first file an agent reads, so it is short and complete. It holds, in this order: what the repository is and owns, and what it must never hold (§5); the rules that apply to a change here, rendered from the invariant registry; the commands to build, test and run every check, exactly as CI runs them; what a change in this repository must also update (the <code>README.md</code>, the generated copy, the invariant registry record, the plan&rsquo;s issue); and where to look next. It states no version, count or list of supported features, and leaves the concepts to the design, which a person reads. It does not restate a rule that CI enforces and an agent cannot get wrong; it states the rules a check cannot decide. A repository adds to it only through the invariant registry or a pull request that the reviewer with write access approves.</p>
+
+<h3 id="s13-2">13.2 On every pull request</h3>
+<ol class="steps">
+<li>The template lists the invariant identifiers the change claims to keep or introduce. CI fails if any identifier does not exist. The invariant registry lives at <code>contracts/invariants/</code>, and every Go repository pins the substrate, so each reads the invariant registry version it pins; <code>blis-config-search</code> and <code>accuracy-dashboard</code>, which depend only on <code>inference-sim</code>, read it through <code>inference-sim invariants</code> at the release they pin. The shared workflow lives in <code>blis-substrate/.github/workflows</code>, and each repository calls it by commit (<span class="inv">X21</span>).</li>
+<li>For each cited identifier whose status is <code>ci</code>, CI confirms its checks passed. A check in this repository must pass on this pull request. A check in another repository must have passed at the version this pull request pins.</li>
+<li>The review agent reads the changed paths and the diff against every review question&rsquo;s trigger. A few triggers depend on what changed, not where, such as &ldquo;a floating-point reduction is added&rdquo;; the agent applies those by reading the diff.</li>
+<li>For each question that applies, the review agent answers it in a review comment with yes or no, a reason, and the files and lines that support the answer. A question is guidance for that review and never a check: no CI job fails because a question is unanswered or answered in the unwanted direction, and no person has to answer or tick one. An answer in the unwanted direction is a finding like any other (§13.7): the reviewer with write access reads it with the rest of the review, and branch protection blocks the merge until that reviewer approves and every conversation is resolved.</li>
+</ol>
+
+<h3 id="s13-3">13.3 On every release</h3>
+<ol class="steps">
+<li>The release bot refuses to release <code>inference-sim</code>, or to pin a commit of a repository below it, unless every <code>ci</code> invariant that repository owns passed at that commit.</li>
+<li>The release notes are generated, never typed. They list the price-change report (each benchmark scenario's step prices before and after the change), changed coefficient values, changed traces, contract differences, invariants added or changed, review answers, and the exact upstream versions.</li>
+<li>Once the milestone named in an invariant's target is reached, the release bot refuses to release until that invariant has its target status.</li>
+</ol>
+
+<h3 id="s13-4">13.4 Every night</h3>
+<ul>
+<li>The <b>nightly compatibility build</b> builds every repository at the commit the newest <code>inference-sim</code> release pins, and at the commit the newest release of each open <code>inference-sim</code> release branch pins, with the substrate raised to the newest commit of its main branch (skipping a release branch whose contracts the newest substrate no longer fits), on three platforms. It runs each repository's tests and checks the module graph against Figure 1.</li>
+<li><b>Full-data gates</b> rerun coefficient registry writers, the landing gates and fixture-agreement checks on the full data, which CI cannot hold.</li>
+<li><b>Detectors</b> poll upstream releases and data sources, and open trigger pull requests.</li>
+<li>The <b>dashboard</b> scores, publishes coverage and grades, and updates the backlog.</li>
+<li>A <b>status page</b> shows every invariant by repository with its latest result.</li>
+</ul>
+
+<h3 id="s13-5">13.5 Where accuracy gates run</h3>
+<p>An accuracy gate compares a candidate with held-out data (<span class="inv">VAL-6</span>). Where it runs depends on what it needs:</p>
+<ul>
+<li><b>Operator-level gates</b> need only the cost model and the coefficient registry, for example "does this attention coefficient predict the held-out sweep points?" They run in <code>blis-substrate</code>'s gate job, which holds the role seed in that repository's protected environment (<span class="inv">D7</span>).</li>
+<li><b>Whole-run gates</b> need engines and the simulator, for example "does this change improve end-to-end latency on held-out InferenceX deployments?" They run the dashboard's scoring harness (§11.7), the only end-to-end scorer, at the release or commit the repository pins. A <b>candidate job</b> in the pull request's own repository builds the candidate and runs the harness with no secret and a read-only token, on every unit not on the published <code>fit</code>, <code>anchor</code> or <code>report</code> lists, and writes one prediction per unit. <code>accuracy-dashboard</code>'s <b>gate job</b> holds the role seed (<span class="inv">D7</span>), runs only its own <code>main</code>, refuses predictions made by a harness commit other than one released from its <code>main</code>, reads them as untrusted input, reduces them to aggregates and reports the result on the pull request.</li>
+</ul>
+<p>The gate compares two trees: the base, which is the pull request's merge base, and the candidate, which is its head. Comparing against the merge base, rather than against the last release, keeps unrelated changes already on <code>main</code> out of the comparison. Each tree's catalog and coefficient registry are passed with <code>--catalog</code> and <code>--registry</code>.</p>
+<ul>
+<li>If the pull request changes only files under <code>catalog/</code> and <code>registry/</code>, and both trees load under the released simulator's validators, and the code outside those directories at the merge base is identical to the substrate release that simulator embeds, the gate runs the released simulator twice, once per tree. No rebuild is needed. If <code>main</code> carries unreleased code changes, the next case applies, so the data are judged with the code they will ship with.</li>
+<li>Otherwise, for example when the pull request changes the cost model or an engine, or uses a data field an older simulator cannot read, stack CI (§13.6) builds one simulator from the base and one from the candidate, and each runs on its own tree.</li>
+</ul>
+<p>Before an <code>inference-sim</code> release moves its substrate pin, the release bot triggers the whole-run gate job once more, comparing the candidate substrate commit (its code and its data) with the commit the previous release pinned (its code and its data) on held units. A lane that gets worse by the test of <span class="inv">VAL-6</span> blocks the release, unless it is recorded as a defect in another term and approved (<span class="inv">VAL-11</span>). That final check covers changes that were each fine alone but interact. In every case the substrate's CI imports no repository above it (<span class="inv">X7</span>). A substrate pull request's candidate job builds <code>inference-sim</code> through stack CI and runs the pinned harness. Those are the two uses of higher repositories <span class="inv">X7</span> allows, and the candidate job imports neither.</p>
+<p>The gate job runs on pull requests that carry a pre-registration, and again nightly on the full data. Any pull request, draft or not, may also run the harness on published units for review (§11.7); that run holds no seed and decides nothing.</p>
+
+<h3 id="s13-6">13.6 The release bot</h3>
+<p>A review set spanning repositories is described by one file, <code>stack.lock</code>, which lists each repository's branch head. During review, a "stack CI" job builds and tests the heads together, through a <code>go.work</code> file it generates and never commits (<span class="inv">X11</span>), and each pull request in the set pins the head of the pull request below it. When the set is approved, the bot:</p>
+<ol>
+<li>merges each repository bottom-up with a merge commit, so every pinned head stays on its main branch and no pin is written twice;</li>
+<li>checks that each pin is on its repository's main branch or a release branch, and that the repository's checks passed at it;</li>
+<li>tags <code>inference-sim</code>, the only repository whose release is required.</li>
+</ol>
+<p>A new <code>inference-sim</code> release starts the jobs of <code>blis-config-search</code> and <code>accuracy-dashboard</code>: each moves its pin to the release, in a pull request the bot writes, and runs on it, and each also runs nightly on the newest release. Neither cuts a release of its own. A change below <code>inference-sim</code> that no change above it waits for is merged on its own. The next <code>inference-sim</code> release picks it up by moving its pin to the newest commit of that repository's main branch at which the repository's checks passed, with the price-change report (§13.3).</p>
+<p>No person or agent re-pins by hand, and no agent waits on CI.</p>
+<p>The bot's code lives in <code>blis-substrate/tools/release</code>, and its tags are signed. If the bot is unavailable, a documented manual procedure, run by a person with write access, produces the same tags in the same order.</p>
+
+<h3 id="s13-7">13.7 What agents may and may not do</h3>
+<div class="tbl"><table>
+<thead><tr><th>Agents may</th><th>Agents may not</th></tr></thead>
+<tbody>
+<tr><td>Work the items a preflight lists, in a branch</td><td>Start without a preflight, or go beyond its list</td></tr>
+<tr><td>Port changed functions; classify fields and surface items; write tests; fit coefficients from <code>fit</code> units; draft pre-registrations</td><td>Edit a recorded trace without the update flag and a review line; edit a generated file by hand</td></tr>
+<tr><td>Iterate until the checks pass, within the declared budget</td><td>Weaken, skip or delete a check; change a success criterion after reading held-out data; change the ledger's cut-points or partition version</td></tr>
+<tr><td>Act as the review agent: apply each review question to a pull request, answer it with the files and lines that support the answer, and raise findings</td><td>Approve a merge; cut a release; review a change it wrote itself</td></tr>
+<tr><td>Read summaries produced by tools</td><td>Load recorded traces, vendored data, vendor configs or data files into context, instead of the tool summaries</td></tr>
+</tbody></table></div>
+<p>Most of the prohibitions on the right are enforced by CI or by permissions, as listed below. Two depend on the agent's instructions and on review: staying within the preflight's list, and not loading generated files into context.</p>
+<ul>
+<li>Every check declares the paths it consists of: its test files, thresholds, fixtures and workflow file. Those paths, and <code>.github/</code>, are protected. A change to any of them is a trigger for the review agent&rsquo;s guidance.</li>
+<li>A CI step fails on any new test skip, lint suppression or loosened threshold, unless the pull-request description carries a <code>Waiver:</code> line that names the file and the reason. The line is a fact the step reads; the review agent judges whether the reason holds, and the reviewer with write access approves the pull request that carries it.</li>
+<li>A change to a success criterion, or to the ledger&rsquo;s cut-points or partition version, is a trigger for the review agent&rsquo;s guidance. Held-out data is never read before the criterion is committed (§9, §10).</li>
+<li>Trace and generated-file guards are CI checks.</li>
+<li>Agent credentials have no permission to merge or tag.</li>
+</ul>
+
+<h3 id="s13-8">13.8 Keeping agent work cheap</h3>
+<ul>
+<li><b>The preflight sets the scope.</b> An agent works only on the preflight's list, within its budget. Work outside the list is a new trigger.</li>
+<li><b>Tools do mechanical work.</b> Re-pinning, re-vendoring, regenerating traces, diffing releases and updating descriptions are commands.</li>
+<li><b>Agents do not wait.</b> When CI or review is pending, the session ends and resumes on an event.</li>
+<li><b>Reviews by agents are narrow.</b> An audit agent receives one diff and one trigger's done-when list.</li>
+</ul>
+

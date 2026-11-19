@@ -1,0 +1,170 @@
+<!-- ============================================================ -->
+<h2 id="s2"><span class="secno">2</span>The shape of the system</h2>
+
+<h3 id="s2-1">2.1 Eight repositories</h3>
+<p>The target system has eight repositories. Four track upstream code: the two engines, the llm-d router, and the KV stores that engines call. One is the shared foundation, one is the simulator, and two are applications that use the simulator.</p>
+
+<figure class="fig-wide">
+<svg viewBox="0 0 960 470" role="img" aria-label="The eight target repositories in four layers. At the bottom, blis-substrate holds the contracts packages, the catalog, the registry and the cost model. Above it, blis-vllm, blis-sglang, blis-kvstore and the llm-d router fork each track upstream code; they depend only on the substrate's contracts packages. Above them, inference-sim depends on the whole substrate, both engines, the store repository and the router. At the top, blis-config-search and accuracy-dashboard depend only on inference-sim.">
+<defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+<text class="t-small" x="20" y="30">USES THE SIMULATOR</text>
+<rect class="box" x="250" y="40" width="200" height="54" rx="6"/><text class="t-title" x="350" y="63" text-anchor="middle">blis-config-search</text><text class="t-small" x="350" y="81" text-anchor="middle">which configuration is best?</text>
+<rect class="box" x="510" y="40" width="200" height="54" rx="6"/><text class="t-title" x="610" y="63" text-anchor="middle">accuracy-dashboard</text><text class="t-small" x="610" y="81" text-anchor="middle">how accurate is BLIS?</text>
+
+<text class="t-small" x="20" y="134">SIMULATOR</text>
+<rect class="box soft" x="250" y="144" width="460" height="54" rx="6"/><text class="t-title" x="480" y="167" text-anchor="middle">inference-sim</text><text class="t-small" x="480" y="185" text-anchor="middle">event loop, cluster, workload, replay; picks the engine by scenario</text>
+
+<text class="t-small" x="20" y="238">TRACKS UPSTREAM CODE</text>
+<rect class="box" x="60" y="248" width="180" height="54" rx="6"/><text class="t-title" x="150" y="271" text-anchor="middle">blis-vllm</text><text class="t-small" x="150" y="289" text-anchor="middle">vLLM, one release</text>
+<rect class="box" x="275" y="248" width="180" height="54" rx="6"/><text class="t-title" x="365" y="271" text-anchor="middle">blis-sglang</text><text class="t-small" x="365" y="289" text-anchor="middle">SGLang, one release</text>
+<rect class="box" x="490" y="248" width="180" height="54" rx="6"/><text class="t-title" x="580" y="271" text-anchor="middle">blis-kvstore</text><text class="t-small" x="580" y="289" text-anchor="middle">KV stores, one release each</text>
+<rect class="box" x="705" y="248" width="180" height="54" rx="6"/><text class="t-title" x="795" y="271" text-anchor="middle">llm-d-router fork</text><text class="t-small" x="795" y="289" text-anchor="middle">llm-d, hosted unchanged</text>
+
+<text class="t-small" x="20" y="342">FOUNDATION</text>
+<rect class="box acc" x="120" y="352" width="720" height="100" rx="8"/>
+<text class="t-title" x="140" y="374">blis-substrate</text>
+<rect class="box ok" x="140" y="386" width="150" height="54" rx="5"/><text class="t-title" x="215" y="408" text-anchor="middle">contracts</text><text class="t-small" x="215" y="426" text-anchor="middle">what engines use</text>
+<rect class="box" x="310" y="386" width="160" height="54" rx="5"/><text class="t-title" x="390" y="408" text-anchor="middle">catalog</text><text class="t-small" x="390" y="426" text-anchor="middle">facts</text>
+<rect class="box" x="490" y="386" width="160" height="54" rx="5"/><text class="t-title" x="570" y="408" text-anchor="middle">coefficient registry</text><text class="t-small" x="570" y="426" text-anchor="middle">coefficients</text>
+<rect class="box" x="670" y="386" width="155" height="54" rx="5"/><text class="t-title" x="747" y="408" text-anchor="middle">kernel</text><text class="t-small" x="747" y="426" text-anchor="middle">cost model</text>
+
+<path class="edge" d="M350,94 L410,144" marker-end="url(#a1)"/>
+<path class="edge" d="M610,94 L550,144" marker-end="url(#a1)"/>
+<path class="edge" d="M300,198 L170,248" marker-end="url(#a1)"/>
+<path class="edge" d="M420,198 L370,248" marker-end="url(#a1)"/>
+<path class="edge" d="M540,198 L570,248" marker-end="url(#a1)"/>
+<path class="edge" d="M660,198 L770,248" marker-end="url(#a1)"/>
+<path class="edge" d="M710,171 C935,185 935,330 840,352" marker-end="url(#a1)"/>
+<text class="t-small" x="903" y="214">whole</text><text class="t-small" x="903" y="228">sub-</text><text class="t-small" x="903" y="242">strate</text>
+<path class="edge acc" d="M150,302 L190,386" marker-end="url(#a1)"/>
+<path class="edge acc" d="M365,302 L235,386" marker-end="url(#a1)"/>
+<path class="edge acc" d="M580,302 L260,386" marker-end="url(#a1)"/>
+<path class="edge acc" d="M795,302 L285,386" marker-end="url(#a1)"/>
+<text class="t-acc" x="615" y="338" style="font-size:11px">contracts only</text>
+</svg>
+<figcaption><b>Figure 1. The eight target repositories.</b> An arrow means "depends on". The four upstream-tracking repositories use only the substrate's <code>contracts/</code> packages (highlighted arrows), so a coefficient or pricing change does not require a new engine, store or router release (§3.2). Only <code>inference-sim</code> depends on the whole substrate. The two applications depend only on <code>inference-sim</code>.</figcaption>
+</figure>
+
+<div class="tbl"><table>
+<thead><tr><th>Repository</th><th>Owns</th><th>Changes when</th></tr></thead>
+<tbody>
+<tr><td><code>blis-substrate</code></td><td>the shared language (types, contracts, validators), published facts, fitted coefficients, and the cost model</td><td>a new model or chip, a new data drop, an accuracy improvement, a new contract</td></tr>
+<tr><td><code>blis-vllm</code></td><td>vLLM's scheduler, KV-cache manager, connectors, defaults and lowering, in Go, for one vLLM release at a time (<span class="inv">LIF-5</span>)</td><td>vLLM releases; a fidelity fix</td></tr>
+<tr><td><code>blis-sglang</code></td><td>the same for SGLang</td><td>SGLang releases; a fidelity fix</td></tr>
+<tr><td><code>blis-kvstore</code></td><td>the decisions of each KV store package an engine calls, such as the Mooncake store and LMCache, in Go, for one release of each store at a time (<span class="inv">KVS-1</span>)</td><td>a store releases; a fidelity fix</td></tr>
+<tr><td><code>llm-d-router</code> fork</td><td>llm-d's own router code, made runnable in simulated time</td><td>llm-d releases; a newly needed plugin</td></tr>
+<tr><td><code>inference-sim</code></td><td>the simulator itself: event loop, cluster, workload, replay, engine selection</td><td>any pin bump; a simulator feature</td></tr>
+<tr><td><code>blis-config-search</code></td><td>experiments that search configurations, and their reports</td><td>a new experiment; a simulator release</td></tr>
+<tr><td><code>accuracy-dashboard</code></td><td>public accuracy and coverage against ground truth</td><td>a simulator release; a new InferenceX dump</td></tr>
+</tbody></table></div>
+
+<h3 id="s2-2">2.2 Where a fact belongs</h3>
+<p>Every fact, rule and value has exactly one owner. To decide which, ask what the fact depends on:</p>
+<ul>
+<li>If its value changes when an engine releases a new version, it belongs in that engine's repository, on the branch that models that release (<a href="#s14-4">§14.4</a>).</li>
+<li>If it changes when llm-d releases a new version, it belongs in the router fork.</li>
+<li>If it changes when a <b>KV store package</b> releases a new version, it belongs in <code>blis-kvstore</code>. A KV store package is a package outside the engine's tree that an in-tree connector or storage backend calls, that holds KV, and that decides what it holds, where each object lives or what it evicts. It does not matter whether one engine calls it or both. A store that decides nothing, such as a file system or an object store that only holds bytes, is a catalog storage device, priced as <a href="#s6-1">§6.1</a> states.</li>
+<li>If it changes with the simulator's own design, it belongs in <code>inference-sim</code>.</li>
+<li>Otherwise it belongs in <code>blis-substrate</code>: it is true of the hardware, the model, the physics or the data, whatever engine runs.</li>
+</ul>
+<p>To check a change to the substrate, ask whether a second engine would need the same edit. If not, the change belongs in an engine repository.</p>
+<p>The same rule applies to work, not only to facts. Each kind of work has one owning repository, and no other repository holds a second copy of it. Another repository that needs the work calls the owner's command or imports the owner's package.</p>
+<div class="tbl"><table>
+<thead><tr><th>Work</th><th>Owner</th><th>Others reach it through</th></tr></thead>
+<tbody>
+<tr><td>Pricing a step, and the data it reads</td><td><code>blis-substrate</code></td><td>the cost model, through <code>Environment</code> (§6.3)</td></tr>
+<tr><td>Validating catalog and coefficient registry data</td><td><code>blis-substrate</code></td><td>its <code>validate</code> command (<span class="inv">X15</span>)</td></tr>
+<tr><td>Fitting coefficients, and judging a coefficient against operator-level measurements</td><td><code>blis-substrate</code></td><td>its fitting scripts and operator-level gate (§13.5)</td></tr>
+<tr><td>Engine behaviour and its fidelity tests</td><td>the engine repository</td><td><code>engine.Engine</code></td></tr>
+<tr><td>The decisions of a KV store package, and their fidelity tests</td><td><code>blis-kvstore</code></td><td><code>kvstore.Store</code> (<a href="#s6-5">§6.5</a>): a store private to one engine instance is passed to that engine; a shared store runs as its own component, which engines reach by message</td></tr>
+<tr><td>Router behaviour and hosting</td><td>the router fork</td><td><code>pkg/embed.New</code></td></tr>
+<tr><td>The documents BLIS reads and writes: the scenario, the deployment, the <code>Result</code>, and the per-point scoring record</td><td><code>blis-substrate</code> (<code>contracts/spec</code>)</td><td>Go types for Go repositories; for the applications, the JSON Schema each release publishes, printed by <code>inference-sim schema</code></td></tr>
+<tr><td>Running a simulation and writing its <code>Result</code></td><td><code>inference-sim</code></td><td>its <code>run</code> and <code>replay</code> commands</td></tr>
+<tr><td>Turning each data source's records into ledger units, for every source including InferenceX</td><td><code>blis-substrate</code> (<code>catalog/ledger</code>)</td><td><code>inference-sim ledger</code>, or a checkout of the ledger for seed-holding jobs</td></tr>
+<tr><td>Scoring simulations against measured end-to-end benchmarks: turning a unit's recorded run into a scenario, running it, comparing, grading, and every end-to-end accuracy figure</td><td><code>accuracy-dashboard</code></td><td>its scoring harness, run at a pinned release or commit with a simulator build and data paths (§11.7)</td></tr>
+<tr><td>Searching configurations, and ranking them</td><td><code>blis-config-search</code></td><td>its experiment specifications</td></tr>
+</tbody></table></div>
+<p>So <code>inference-sim</code> runs simulations and holds no scorer, and a fitting script that wants an end-to-end figure runs the dashboard's scoring harness rather than writing its own. Two repositories that each compute an accuracy figure would sooner or later disagree about what the figure means.</p>
+<p><b>Why KV store packages have their own repository.</b> The engine repository of the first engine that calls a store cannot hold it. The store's behaviour changes when the store releases, not when that engine does, and an engine repository holds only code ported from its own upstream (<span class="inv">VLM-2</span>), so the second engine would depend on the first engine's release branch for code neither engine wrote. The substrate and <code>inference-sim</code> hold no behaviour (<span class="inv">X2</span>, <span class="inv">X3</span>). Each store is an upstream with its own releases. Its decisions are ported once, in one package of <code>blis-kvstore</code>, which records each store's release separately (<a href="#s14-1">§14.1</a>). Each engine reaches it through <code>kvstore.Store</code> (<a href="#s6-5">§6.5</a>), as the simulator reaches the router through <code>contracts/embed</code>. The connector and its adapter to the store stay in the engine repository, because they are the engine's code.</p>
+
+<div class="tbl"><table>
+<thead><tr><th>Fact</th><th>Depends on</th><th>Lives in</th></tr></thead>
+<tbody>
+<tr><td>H200 memory bandwidth</td><td>the chip</td><td><code>blis-substrate/catalog</code></td></tr>
+<tr><td>GB200 NVL72's four GPUs per tray and 72 GPUs per NVLink domain</td><td>the hardware product</td><td><code>blis-substrate/catalog</code></td></tr>
+<tr><td>How many nodes a cluster has; the chip, fabric and storage devices they hold; which nodes sit under each switch and how oversubscribed each group's uplink is; and the GPUs per node, GPUs per rack and host memory per node where the chip's entry leaves them open</td><td>the user's configuration</td><td>the scenario</td></tr>
+<tr><td>Muse-Spark's layer count and expert count</td><td>the model checkpoint</td><td><code>blis-substrate/catalog</code></td></tr>
+<tr><td>How fast one attention kernel runs on H200</td><td>the chip and the kernel library</td><td><code>blis-substrate/registry</code></td></tr>
+<tr><td>How to turn FLOPs, bytes and an efficiency curve into time</td><td>arithmetic</td><td><code>blis-substrate/kernel</code></td></tr>
+<tr><td>Which attention backend SGLang picks on Hopper</td><td>the SGLang release</td><td><code>blis-sglang</code></td></tr>
+<tr><td>vLLM's default <code>gpu_memory_utilization</code> (0.92)</td><td>the vLLM release</td><td><code>blis-vllm</code></td></tr>
+<tr><td>How the Mooncake store's master evicts objects when its memory is full</td><td>the Mooncake store release</td><td><code>blis-kvstore</code></td></tr>
+<tr><td>How the prefix-cache scorer ranks endpoints</td><td>the llm-d release</td><td>router fork</td></tr>
+<tr><td>The scorer weights a deployment uses</td><td>the user's configuration</td><td>the scenario, copied verbatim</td></tr>
+<tr><td>Which data points exist, and the rule that assigns their roles</td><td>the data sources</td><td><code>blis-substrate/catalog/ledger</code></td></tr>
+</tbody></table></div>
+
+<h3 id="s2-3">2.3 How one simulated step flows</h3>
+<p>Figure 2 follows one engine step through the system. It shows the boundary this design changes most: the engine resolves everything about its own behaviour and hands the cost model a fully resolved description of what runs.</p>
+
+<figure class="fig-wide">
+<svg viewBox="0 0 960 400" role="img" aria-label="One simulated step, in five numbered stages. Once per pool: the scenario's upstream configuration reaches the engine repository verbatim; the engine resolves defaults, lowers the model to named kernel implementations, sizes its KV budget, and hands the cost model a PoolPlan. Each step: the engine's scheduler forms a StepShape and asks the cost model to price it; the cost model reads hardware facts from the catalog and coefficients from the registry, and returns a step time to the engine; the engine reports the step done to inference-sim, which advances simulated time; inference-sim delivers the engine's metrics and KV events to the router, which routes the next request. All calls from engine to cost model go through an Environment that inference-sim supplies.">
+<defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+
+<rect class="box soft" x="10" y="44" width="150" height="56" rx="6"/>
+<text class="t-title" x="85" y="68" text-anchor="middle">scenario</text>
+<text class="t-small" x="85" y="86" text-anchor="middle">upstream config, verbatim</text>
+
+<rect class="box" x="210" y="20" width="260" height="190" rx="6"/>
+<text class="t-title" x="340" y="42" text-anchor="middle">engine repository</text>
+<text class="t-small" x="340" y="58" text-anchor="middle">blis-vllm or blis-sglang</text>
+<rect class="box ok" x="224" y="68" width="232" height="28" rx="4"/><text x="340" y="87" text-anchor="middle">resolve defaults as upstream does</text>
+<rect class="box ok" x="224" y="102" width="232" height="28" rx="4"/><text x="340" y="121" text-anchor="middle">lower the model to kernels</text>
+<rect class="box ok" x="224" y="136" width="232" height="28" rx="4"/><text x="340" y="155" text-anchor="middle">size the KV budget</text>
+<rect class="box ok" x="224" y="170" width="232" height="28" rx="4"/><text x="340" y="189" text-anchor="middle">scheduler forms the step</text>
+
+<rect class="box acc" x="580" y="40" width="170" height="170" rx="6"/>
+<text class="t-title" x="665" y="66" text-anchor="middle">cost model</text>
+<text class="t-small" x="665" y="86" text-anchor="middle">prices primitives</text>
+<text class="t-small" x="665" y="102" text-anchor="middle">knows no engine</text>
+
+<rect class="box" x="800" y="40" width="150" height="56" rx="6"/>
+<text class="t-title" x="875" y="64" text-anchor="middle">catalog</text>
+<text class="t-small" x="875" y="82" text-anchor="middle">hardware and model facts</text>
+<rect class="box" x="800" y="140" width="150" height="56" rx="6"/>
+<text class="t-title" x="875" y="164" text-anchor="middle">coefficient registry</text>
+<text class="t-small" x="875" y="182" text-anchor="middle">by primitive, kernel, chip</text>
+<path class="edge" d="M800,68 L752,90" marker-end="url(#a2)"/>
+<path class="edge" d="M800,168 L752,150" marker-end="url(#a2)"/>
+
+<path class="edge" d="M160,72 L208,72" marker-end="url(#a2)"/>
+
+<path class="edge acc" d="M470,84 L578,84" marker-end="url(#a2)"/>
+<text class="t-acc" x="524" y="77" text-anchor="middle" style="font-size:11px">① PoolPlan</text>
+<text class="t-small" x="524" y="100" text-anchor="middle">once per pool</text>
+
+<path class="edge acc" d="M470,170 L578,170" marker-end="url(#a2)"/>
+<text class="t-acc" x="524" y="163" text-anchor="middle" style="font-size:11px">② StepShape</text>
+<path class="edge" d="M578,196 L470,196" marker-end="url(#a2)"/>
+<text class="t-small" x="524" y="190" text-anchor="middle">③ step time</text>
+
+<text class="t-small" x="580" y="232">Engine calls go through an Environment</text>
+<text class="t-small" x="580" y="248">that inference-sim supplies (§6.3).</text>
+
+<rect class="box soft" x="210" y="290" width="260" height="56" rx="6"/>
+<text class="t-title" x="340" y="314" text-anchor="middle">inference-sim</text>
+<text class="t-small" x="340" y="332" text-anchor="middle">advances simulated time</text>
+<path class="edge" d="M340,210 L340,288" marker-end="url(#a2)"/>
+<text class="t-small" x="350" y="250">④ step done</text>
+<text class="t-small" x="350" y="266">metrics, KV events</text>
+
+<rect class="box" x="10" y="290" width="150" height="56" rx="6"/>
+<text class="t-title" x="85" y="314" text-anchor="middle">router fork</text>
+<text class="t-small" x="85" y="332" text-anchor="middle">routes the next request</text>
+<path class="edge" d="M210,318 L162,318" marker-end="url(#a2)"/>
+<text class="t-small" x="186" y="366" text-anchor="middle">⑤ engine metrics,</text>
+<text class="t-small" x="186" y="382" text-anchor="middle">KV events</text>
+</svg>
+<figcaption><b>Figure 2. One simulated step.</b> ① Once per pool, the engine resolves its configuration, lowers the model, sizes its KV budget (asking the cost model for memory, not drawn) and hands the cost model a <code>PoolPlan</code>. Each step: ② the scheduler forms a <code>StepShape</code>; ③ the cost model prices it from the catalog and the coefficient registry and returns a time to the engine; ④ the engine reports the step done, with its metrics and KV events, and <code>inference-sim</code> advances simulated time; ⑤ <code>inference-sim</code> delivers the engine's metrics and KV events to the router. The engine owns everything about engine behaviour: defaults, which kernels run, how a step is formed, and which KV blocks move. With each step the engine also returns a <code>Transfer</code> for each KV move; <code>inference-sim</code> asks the cost model for the bytes each link must carry, and shares each link among the transfers that overlap in time (not drawn, §6.2). The engine reaches the cost model only through an <code>Environment</code> that <code>inference-sim</code> supplies (<a href="#s6-3">§6.3</a>).</figcaption>
+</figure>
+
