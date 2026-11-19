@@ -52,8 +52,17 @@ v2.0.0 is v1.0.0 edited, not a new document.
   - There is no age limit on scoring.
   - Coverage is reported as a funnel per scored source.
   - Accuracy is sliceable by any recorded attribute. Below `min_points` no aggregate is shown.
-- **Review.** Maintainers with write access decide on pull requests. There is no CODEOWNERS file, and v2.0.0 must
-  not require one.
+- **Process is maintainer practice, not automation (maintainer, 2026-11-19).**
+  - Review, approval and merge decisions, issue hygiene, pull-request text and release notes are maintainer
+    practice. They are carried out with standard git and GitHub mechanisms (branch protection, required reviews,
+    signed commits).
+  - Write them as "Maintainer practice:" statements, not as rules with "Checked by" lines. Describe no bots or CI
+    checks that police process.
+  - Automated checks stay only where they protect the product's correctness or accuracy: import-graph boundaries;
+    conformance, differential, mutation, metamorphic and property tests; data validators; and build staleness.
+  - A v1.0.0 rule that exists only to automate process becomes maintainer practice (fate "changed"), or is retired
+    if it is moot.
+  - There is no CODEOWNERS file.
 - **Testing.** Correctness and invariants are checked by behavioural tests: conformance, differential, mutation,
   metamorphic and property tests. Never structural tests, such as tests of source text, order, hashes or goldens
   used as a shortcut.
