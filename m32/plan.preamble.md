@@ -8,6 +8,36 @@ the source of truth.
 > `plan.html` by hand: edit a source, then run `python3 m32/tools/build_plan.py`. A check fails whenever this page is
 > out of date. Figures are as of 2026-11-18, and the M3.1 status as of 2026-11-19.
 
+## What M3.2 delivers
+
+M3.2 has five objectives. Each is a promise about BLIS that a user or a reviewer can check. The ten deliverables
+in Table V are how M3.2 keeps them; the last column names the workstreams of Table W that build each one.
+
+**Table O. The five objectives of M3.2, most important first.**
+
+| # | Objective | What it means for a user of BLIS | Checked by |
+|---|---|---|---|
+| 1 | **Accuracy you can trust** | Accuracy improves, and every improvement is proven on held runs that nobody could tune against | every accuracy change passes the whole-run landing gate on held InferenceX units |
+| 2 | **More of the real world is scored** | Many more real InferenceX and configiq runs are compared with BLIS, each at the best closeness grade it can reach | the coverage funnel per source and the count of scored anchor units on the dashboard |
+| 3 | **Faithful to the engine a team actually runs** | BLIS models the vLLM or SGLang commit a team uses, including main, without waiting for a release | each engine module's upgrade report and its oracle tiers at the modelled commit |
+| 4 | **One repository, clean boundaries** | A change that touches several parts lands as one pull request, and each part still keeps to its own job | the import-graph and path-reference checks of design Table 1 |
+| 5 | **The teams' scenarios work now** | Mistral-Large-4 and Inkling-2-Small run on GB200, and what M3.1 left open is finished, with no new GPU experiments | the DC4 scenarios simulate with every coefficient's method named; the 150 carried issues are closed or planned |
+
+**Table V. The ten deliverables of M3.2, and the objectives of Table O each serves.**
+
+| # | Deliverable | What changes for users and contributors | Objective | Table W rows |
+|---|---|---|---|---|
+| 1 | **One repository** | blis-substrate, blis-vllm and blis-sglang become directories of inference-sim. A change to contracts, an engine and the simulator is one pull request, with no chain of re-pins. blis-vllm's old compatibility code is removed first | 4 | 1, 2, 27 |
+| 2 | **Any upstream commit** | An engine module models any vLLM or SGLang commit, not only a release. A model that lands upstream between upgrades is added as a backport. A scenario names no version: the build fixes it | 3 | 3, 4 |
+| 3 | **Three new calibration sources** | The vLLM CI perf API, SGLang's nightly metrics and job logs, and SGLang's profiler traces calibrate both engines. Each run's settings come from its own records. These sources are training data only | 1 | 10, 13, 14, 18 |
+| 4 | **Many more scored points** | No age limit on scoring, a coverage funnel per source, and closed engine and table gaps. Scored InferenceX anchor units could grow from 238 to about 2,800, or up to about 4,700; configiq adds about 373 to 1,257 anchor units | 2 | 11, 12, 15, 16, 17 |
+| 5 | **A real held-out gate** | A new whole-run gate judges every accuracy change on held InferenceX runs, once per pre-registered change, and returns only aggregates. Today no such gate runs | 1 | 25, 26 |
+| 6 | **Honest accuracy figures** | Accuracy is published only on held-out units, with one definition of each statistic, a closeness grade per point, and slices by any recorded attribute. configiq is used only for scoring, never for training | 1, 2 | 16, 19, 26 |
+| 7 | **Clean lowering** | Lowering lives only in the engine modules; the catalog holds checkpoint facts only, and the rule layer is gone. A new model or engine touches fewer places | 3, 4 | 5, 27 |
+| 8 | **New models on new chips without new experiments** | Mistral-Large-4 and Inkling-2-Small on GB200. A value no data measures is priced by the most trusted fallback, and every point names the method it used | 5 | 6, 7, 9 |
+| 9 | **CI that fails only when the product is wrong** | Checks cover product correctness only. Nightly process checks and checks that read pull-request text go; review and merge are maintainer practice. Editing a pull request's text never changes its merge state | 4 | 22 |
+| 10 | **Simpler everyday use** | One run by default, with a confidence interval on request; no upstream version in a scenario; fewer commands, roles and nightly jobs | 3, 5 | 8, 20, 21, 23, 24 |
+
 ## Delivered so far (M1 to M3.1)
 
 M1 and M2 each ended with a milestone release. M3.0 (v0.18.0) and M3.1 (v0.18.1) are releases within M3. From
