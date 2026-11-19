@@ -62,7 +62,7 @@
 <p>Table 1 is the one place that states each component&rsquo;s ownership and imports. Other sections cite it and do not restate it. A component may import only what its row allows. Where a component is a directory, an import-graph lint over the directories (<code>go list</code>, required in CI) enforces the row.</p>
 
 <div class="tbl"><table>
-<caption style="caption-side:bottom;text-align:left;color:var(--muted);padding-top:.5rem"><b>Table 1. Components.</b> Each owns one kind of fact or work, imports only what its row allows, and has a check that fails when it holds or imports what it must not.</caption>
+<caption><b>Table 1. Components.</b> Each owns one kind of fact or work, imports only what its row allows, and has a check that fails when it holds or imports what it must not.</caption>
 <thead><tr><th>Component</th><th>Owns</th><th>May import</th><th>Must never contain</th><th>Enforced by</th></tr></thead>
 <tbody>
 <tr><td><b>contracts</b><br><code>substrate/contracts/</code></td><td>Shared types and interfaces, their validators, the conformance suites, the engine harness, the invariant registry, the Go toolchain version.</td><td>The Go standard library and the YAML parser (<span class="inv">SUB-1</span>).</td><td>Behaviour; data; the name or policy of any engine, router or application.</td><td>The import-graph lint; the API-compatibility check against the last release (<span class="inv">SUB-1</span>); the conformance suites.</td></tr>

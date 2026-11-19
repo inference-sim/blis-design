@@ -105,7 +105,7 @@
 <h3 id="s3-4">3.4 Checks by directory</h3>
 <p>CI is filtered by path: a change to one directory runs that directory&rsquo;s checks, so a catalog-only change does not run the cost model&rsquo;s slow race suite. Any change also runs the cross-directory checks, because catching mismatches between directories is the reason the parts live together: the validators run against the data, and the cost model against the data it embeds.</p>
 <div class="tbl"><table>
-<caption style="caption-side:bottom;text-align:left;color:var(--muted);padding-top:.5rem"><b>Checks run when a directory of the substrate changes.</b> Each protects the correctness of its directory&rsquo;s data or code.</caption>
+<caption><b>Checks run when a directory of the substrate changes.</b> Each protects the correctness of its directory&rsquo;s data or code.</caption>
 <thead><tr><th>Directory</th><th>Language</th><th>Checks on change</th></tr></thead>
 <tbody>
 <tr><td><code>contracts/</code></td><td>Go</td><td>build; tests; API-compatibility check of the <code>contracts/</code> packages against the last release; conformance suites</td></tr>
