@@ -38,8 +38,8 @@
 └── go.mod              the one Go module: github.com/inference-sim/inference-sim
 </code></pre>
 <p>The hosting contract (<code>embed</code> and its conformance suite) is not in <code>contracts/</code>. It lives in the router fork (§5), so that the fork imports no BLIS code.</p>
-<p><code>inference-sim</code> is one Go module (<span class="inv">SUB-13</span>). The directory name <code>kernel/</code> does not refer to a GPU kernel: it is named for the <code>Kernel</code> interface in <code>contracts/kernel/</code> that the cost model implements. A refit changes data and no contract, so it needs no change in any engine module.</p>
-<p><b>What one module costs.</b> Anyone who fetches the module downloads all of it, mostly vendor <code>config.json</code> files. Go compiles only the packages a program imports, so an engine build never compiles the cost model or the embedded data. A CI check fails if the module exceeds 100 MB uncompressed (<span class="inv">SUB-13</span>).</p>
+<p><code>inference-sim</code> is one Go module (<span class="inv">SUB-13</span>). The name <code>kernel/</code> comes from the <code>Kernel</code> interface in <code>contracts/kernel/</code>, not from a GPU kernel. A refit changes data and no contract, so it needs no change in any engine module.</p>
+<p><b>What one module costs.</b> Go compiles only the packages a program imports, so an engine build never compiles the cost model or the embedded data. A CI check fails if the module exceeds 100 MB uncompressed (<span class="inv">SUB-13</span>).</p>
 
 <h3 id="s3-3">3.3 Data: a path first, the embedded copy as the default</h3>
 <p>The catalog and the coefficient registry reach a running program in one of two ways. Both are always available, and every run records which one it used.</p>
@@ -48,14 +48,12 @@
 <li><b>The embedded copy.</b> When no path is given, the run uses the data compiled into the simulator with <code>go:embed</code>. A release therefore carries the exact data it was tested with, and a user of a released binary needs no checkout. <code>inference-sim</code> cannot be installed with <code>go install …@version</code>, because Go refuses that for a module whose <code>go.mod</code> has a <code>replace</code> directive, and <code>inference-sim</code> carries one for the router fork (<span class="inv">X11</span>). So each release ships signed binaries for the supported platforms, with the provenance and bill of materials of <span class="inv">X21</span>. A source build needs a checkout at the tag.</li>
 <li><b>What stays fixed.</b> A model runs only if it is in the catalog in use, and it is resolved from its <code>graph.yaml</code>. A missing model is refused with the catalog&rsquo;s source (the embedded release, or a path) and the relative path its entry belongs at. No run creates or changes catalog or coefficient registry files, no run fetches anything from the network, and the deployment always comes from a required scenario.</li>
 </ul>
-<p>The two flags are independent.</p>
 <p><b>Private additions.</b> To run a private model against a pinned catalog and coefficient registry, <code>--catalog-overlay &lt;dir&gt;</code> and <code>--registry-overlay &lt;dir&gt;</code> add entries to the data in use. An entry is identified as follows:</p>
 <ul>
 <li>In the catalog, a whole model directory (<code>models/&lt;name&gt;/</code>), or a whole hardware, device, network or workload file.</li>
 <li>In the coefficient registry, one coefficient, identified by its set, its name, its scope and its method.</li>
 </ul>
 <p>An overlay entry with the same identity as an existing entry replaces it; any other entry is added. The combined data are then validated in full, including the rules that each lookup has at least one entry (<span class="inv">VAL-2</span>) and at most one per rank (<span class="inv">VAL-4</span>). An overlay may not contain ledger files.</p>
-<p>Overlays have their own flags because a recalibration candidate replaces the whole coefficient registry, and one flag that could either replace or add would make an A/B comparison ambiguous.</p>
 
 <h4>Which files count as data</h4>
 <p>The file patterns are defined once, in the top-level package of <code>substrate/</code> (<code>data.go</code>). It must sit there, because Go&rsquo;s <code>go:embed</code> can only embed files at or below the package&rsquo;s own directory. The patterns are: hardware, devices, networks, workloads, measurement sources, each model&rsquo;s <code>model.yaml</code> and <code>graph.yaml</code>, every coefficient set, and acceptance and routing profiles. Most of the ledger is not runtime data: pricing never reads it, and it can be large, because it lists every unit. Secret-holding jobs (the CI jobs that hold the secret used to assign data roles, §10.2) read it from a checkout of <code>inference-sim</code> at the commit they build, including those in <code>accuracy-dashboard</code>. The exception is the three published role lists (<code>catalog/ledger/published/</code>), which are embedded so that <code>inference-sim ledger</code> can print them offline.</p>
