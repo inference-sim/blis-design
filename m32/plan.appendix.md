@@ -1,6 +1,6 @@
 ## Execution: ownership and order
 
-Table W lists the 29 workstreams and is the execution order. Each row names its owner repositories, the rows that
+Each row of Table W names its owner repositories, the rows that
 must be done first and a condition that shows it is done. Rows 6 and 11 need no other row: start both before any other
 row, and file row 6 first, because rows 9, 15 and 18 need it. Pull-request numbers are filed as each row starts.
 
