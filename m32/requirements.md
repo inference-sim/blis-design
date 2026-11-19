@@ -2,14 +2,14 @@
 
 These are the working requirements for M3.2, the release after M3.1, captured with the maintainer from
 2026-11-18. They are not yet a plan, and more will be added. The design they build on is
-[design v3.0.0](https://inference-sim.github.io/blis-design/v3.0.0/blis-target-design.html).
+[design v4.0.0](https://inference-sim.github.io/blis-design/v4.0.0/blis-target-design.html).
 
 **Labels.** Each item carries one label:
 - **Decided**: stated, decided or accepted by the maintainer.
 - **Proposal**: open to correction.
 - **Open**: not yet decided. An Open item names its owner and what decides it.
 
-Section DC lists what M3.2 builds for design v3.0.0. It comes first because the maintainer asked that design
+Section DC lists what M3.2 builds for design v4.0.0. It comes first because the maintainer asked that design
 changes be the first requirement. It cites later sections.
 
 **Evidence.** The notes in `evidence/`, next to this file, back the figures:
@@ -24,7 +24,7 @@ named here is under `github.com/inference-sim/` unless another owner is shown.
 
 ## Terms
 
-**Repositories.** Design v3.0.0 has one simulator repository and the router fork. M3.2 builds that layout (DC3).
+**Repositories.** Design v4.0.0 has one simulator repository and the router fork. M3.2 builds that layout (DC3).
 Until the migration lands, the three repositories below still exist, and the issue numbers in this file name them.
 - **inference-sim**: the simulator. Its tagged release is the only one a milestone requires (v0.18.0 is M3.0,
   v0.18.1 is M3.1). Since M3.1 the other repositories are pinned by commit, and their tags are optional.
@@ -42,7 +42,7 @@ Until the migration lands, the three repositories below still exist, and the iss
 **Data sources.**
 - **InferenceX**: SemiAnalysis's public end-to-end serving benchmarks, with server logs and recipes.
 - **configiq**: Red Hat's public dataset of GuideLLM results for upstream vLLM releases. GuideLLM is a load
-  generator for LLM servers.
+  generator for LLM servers. It is not yet documented well enough to train on, so every unit is an anchor unit.
 - **AISimulate**: NVIDIA's operator sweeps (one kernel at a time over many shapes) and forward-pass measurements.
 - **forge**: Red Hat's open-source benchmark launcher (`openshift-psap/forge`), which wrote most of configiq's
   recent rows (§3C).
@@ -57,11 +57,11 @@ Until the migration lands, the three repositories below still exist, and the iss
   InferenceX rows published after the dump and added to the ledger one by one, each pinned by its row id and the
   SHA-256 of its content.
 
-**Design rules, sections and terms.** IDs such as X7, SUB-15, LIF-5, COV-6, T-M1 or D6 name rules of design v3.0.0.
+**Design rules, sections and terms.** IDs such as X7, SUB-15, LIF-5, COV-6, T-M1 or D6 name rules of design v4.0.0.
 The letters group them: X across components, SUB substrate, LIF versions and releases, COV accuracy coverage, VAL
 coefficients, D the ledger, T a trigger's test. A design section is written "design §n.m" and links to the design.
 A bare § number is this file's own section (§0 to §4, §3A to §3C); the design changes are DC1 to DC3 and the team
-request is DC4, without a §. The design's glossary, [Appendix B](https://inference-sim.github.io/blis-design/v3.0.0/blis-target-design.html#appB),
+request is DC4, without a §. The design's glossary, [Appendix B](https://inference-sim.github.io/blis-design/v4.0.0/blis-target-design.html#appB),
 defines these terms, which keep its sense here: anchor, commit distance, drafter, engine module, engine upgrade,
 funnel, graph handler, graph vocabulary, headline, held-out unit, lowering, model backport (written "backport"),
 model support, named substitution (an **estimated substitution** is one whose value comes from a stated rule rather
@@ -77,19 +77,21 @@ are called groups here.
 - **Row** and **records**: a row is one line a source publishes (an InferenceX API row, a configiq CSV row); a
   run's records are everything its source keeps about it: rows, server log, recipe and launch command.
 - **Scenario**: the simulator's input describing one run to simulate: the deployment, the cluster and the workload.
+  It states no version of an engine or of llm-d. The build fixes those (`stack.json`) and every Result records them.
 - **Unit**: one ledger entry. For InferenceX it is one configuration at one concurrency from one benchmark run,
   with every measurement of it. A **point** is a unit as the dashboard scores it.
 - **Role**: each unit has one of fit, select, validate, held or anchor, drawn once per role key by a
   seeded rule (design §10.2). Fit units fit coefficients, select units choose between fits, validate units check a
-  fit. **Held-out** units are held (one evaluation per pre-registration) and anchor (the **headline**, the
-  dashboard's accuracy figure). **Training data** is every fit, select or validate unit and all
-  data from a source with no held or anchor role.
-- New InferenceX and configiq units draw 30% fit, 10% select, 10% validate, 30% held and 20% anchor. Older units
+  fit. **Held-out** units are held (one evaluation per pre-registration; InferenceX only) and anchor (the
+  **headline**, the dashboard's accuracy figure). **Anchor-only** means every unit of a source is an anchor unit:
+  scored on the dashboard, never training data, never held, and never used to judge a change. **Training data** is
+  every fit, select or validate unit and all data from a source with no held or anchor role.
+- New InferenceX units draw 30% fit, 10% select, 10% validate, 30% held and 20% anchor. Older units
   were first split into a fit group and a held group; each stays in its group, and the ledger's rules split each
-  group into roles (fit and select; held and anchor).
+  group into roles (fit and select; held and anchor). configiq is anchor-only: all of its units are anchor units.
 
 **Grades.** G1 (exact) to G5 (not scored), as design
-[§11.3](https://inference-sim.github.io/blis-design/v3.0.0/blis-target-design.html#s11-3) defines them. G1 and G2
+[§11.3](https://inference-sim.github.io/blis-design/v4.0.0/blis-target-design.html#s11-3) defines them. G1 and G2
 need the run's own engine commit; G3 and G4 are other commits, by commit distance.
 
 **Coefficients.**
@@ -109,9 +111,9 @@ need the run's own engine commit; G3 and G4 are other commits, by commit distanc
 
 ## DC. Design changes (DC1 to DC3) and a team request (DC4)
 
-**Status.** M3.2 implements [design v3.0.0](https://inference-sim.github.io/blis-design/v3.0.0/blis-target-design.html).
+**Status.** M3.2 implements [design v4.0.0](https://inference-sim.github.io/blis-design/v4.0.0/blis-target-design.html).
 The design states the rules. DC1 to DC3 are **Decided**: the design adopts them, and this section states each once.
-Table DC lists what M3.2 builds. Rule IDs and sections are those of v3.0.0. The lowering work of DC2, planned
+Table DC lists what M3.2 builds. Rule IDs and sections are those of v4.0.0. The lowering work of DC2, planned
 for M4, is part of M3.2.
 
 **Why.** Changes crossed repositories in sequence: the per-pool offload fix took blis-substrate#402, blis-vllm#302
@@ -163,7 +165,8 @@ other groups are easier in one repository.**
 | **Any commit (DC1), all engines** | Table W row 3 | |
 | Generators | Make `gen_surface.py`, `gen_kernel_impls.py` and `gen_fields.py` work at any commit. Today `gen_surface.py` refuses a checkout at another commit, `gen_kernel_impls.py` needs one `kernels/<tag>/attention.json` per release, and `gen_fields.py` holds release-specific paths. Lock the oracle environment to the commit | X9, FID-2, T-E3 |
 | Upgrade report | Generate the report of design §12.4 (surface diff, field demand, source diff, and for each model the catalog entry, model support and missing coefficients). Every new surface entry gets a status. The dashboard uses the same diff generator to grade a run. Include the Transformers-backed fallback paths of vLLM and SGLang as surface-list items, and list the models that run only through them | X9, design §12.4, design §11.3 |
-| Commit identity | Name commits in `stack.json` and in the scenario refusal; accept an on-demand commit in the release watcher; grade by commit distance in the dashboard | LIF-6, SIM-3, COV-6 |
+| Commit identity | Name commits in `stack.json` and in each Result only; accept an on-demand commit in the release watcher; grade by commit distance in the dashboard | LIF-6, SIM-3, COV-6 |
+| No version in a scenario | Remove `engine.version` from the scenario schema and the simulator; a version field is refused as an unknown field. A scenario states no version of an engine or of llm-d: the build fixes them (`stack.json`) and every Result records them. A user who needs another upstream commit uses the inference-sim release that runs it. `inference-sim version` prints the commits a build runs. The dashboard's scenario writer stops writing an engine version and records the run's commit on the point, for commit distance | LIF-6, SIM-1, design §11.2 |
 | Backports | List backported commits in the Upstream record and check that every catalog model that does not use one has identical plans and traces with and without it | FID-14, T-M5 |
 | **vLLM (`engines/vllm`)** | Table W row 4 | |
 | Tuned MoE configuration | Lowering selects the per-device fused-MoE configuration file that vLLM selects, and hashes it into the kernel's `CodeHash`. A run is G1 only when its tuned configuration is the one BLIS selected | design §9.2, G1 |
@@ -182,11 +185,11 @@ other groups are easier in one repository.**
 | Kernel lists | Generate each engine's `kernel_impls.json` as an engine-neutral copy under `substrate/registry/inputs/` with a freshness check, and move the VAL-8 cross-check into a simulator-package test. Connector and backend names of the vLLM and SGLang KV trees live only in each engine's surface list, with the NIXL storage plugins (GDS, POSIX and object) | X7, VAL-8, design §7.5 |
 | Cross-generation transfer | Validate the GB200 (Blackwell) to Hopper transfer rules (leave one generation out) before use. Until then a cross-generation transfer ranks as roofline | VAL-5, design §9.2 |
 | Ledger multiples | Record InferenceX's client multiples (10 measured, 2 warm-up, 12 in all) for `measurement_contaminated` in the ledger's source record | design §10.2 |
-| **Held-out gate (design v3.0.0)** | Table W rows 25 and 26 | |
-| Whole-run gate | Build the whole-run landing gate in accuracy-dashboard. A candidate job with no secret builds the candidate and runs the pinned harness on every unit not on the published fit or anchor lists. The secret-holding gate job computes roles, scores held units only and returns aggregates over at least `min_points` role keys, with VAL-6's statistics: a non-inferiority margin, a one-sided 95% BCa interval from 10,000 resamples by role key, Holm over lanes and criteria, and the merging of small lanes. It gives one evaluation per pre-registration and counts each against the partition version's budget. It reports on the pull request, runs nightly, and runs before each release against the previous release and the best published release | [VAL-6](https://inference-sim.github.io/blis-design/v3.0.0/blis-target-design.html#s9-4), D7, design §12.3, design §13.5 |
+| **Held-out gate (design v4.0.0)** | Table W rows 25 and 26 | |
+| Whole-run gate | Build the whole-run landing gate in accuracy-dashboard. A candidate job with no secret builds the candidate and runs the pinned harness on every unit not on the published fit or anchor lists. The secret-holding gate job computes roles, scores held units only and returns aggregates over at least `min_points` role keys, with VAL-6's statistics: a non-inferiority margin, a one-sided 95% BCa interval from 10,000 resamples by role key, Holm over lanes and criteria, and the merging of small lanes. It gives one evaluation per pre-registration and counts each against the partition version's budget. It reports on the pull request, runs nightly, and runs before each release against the previous release and the best published release | [VAL-6](https://inference-sim.github.io/blis-design/v4.0.0/blis-target-design.html#s9-4), D7, design §12.3, design §13.5 |
 | Gate as the path | Every M3.2 change that moves accuracy goes through the whole-run gate: each refit, each coefficient change and each engine upgrade. The calibration of the new sources (row 18) lands only through it | VAL-6, T-A1, T-A2 |
 | Operator-level evidence | Remove the operator-level held-out gate from the ledger workflow. The error job keeps reporting each method's error on validate units nightly, as method error, never as accuracy; it informs review and never decides a landing | VAL-5, VAL-11, design §13.5 |
-| AISimulate roles | Write a new partition version that changes only AISimulate's cut-points to training roles (fit 0 to 69, select 70 to 84, validate 85 to 99) and keeps the partition secret. No InferenceX or configiq unit changes role, and no secret is published | D4, D7, D9 |
+| Partition version | Write a new partition version that changes AISimulate's cut-points to training roles (fit 0 to 69, select 70 to 84, validate 85 to 99) and configiq's cut-points to anchor 0 to 99, and keeps the partition secret. Before switching, the D2 join must confirm that no consumer read a configiq unit under a training role; any unit read that way is left out, not made an anchor. No InferenceX unit changes role, and no secret is published | D2, D4, D7, D9 |
 | **Simplifications (design v2.1.0 to v2.4.0)** | Table W rows 8 and 22 | |
 | Simulator commands | Remove the `ledger`, `invariants` and `compose` commands from inference-sim, with their tests and docs pages, and the `blis invariants` mention in the README. Nothing calls them: the dashboard reads the ledger from the release checkout, and the substrate's own tool renders the invariant blocks | COV-2, X29, DEV-7 |
 | Ledger embedding | Stop embedding `catalog/ledger/published/` in the simulator's data; the loader ignores everything under `catalog/ledger/` | design §3.3, design §10.2 |
@@ -345,18 +348,20 @@ benchmarks), SGLang's AMD P/D nightly, the llm-d Prism archive, the vLLM blog's 
 AgentX launch configs. Owner: the maintainer, who decides before Table W row 13 ingests the new sources. Default if no
 decision: out of M3.2.
 
-1.4 **Decided (2026-11-18).** The new data sets are used only for fitting and calibration. Accuracy on
-accuracy-dashboard is reported only on the InferenceX and configiq units held out for it. Everything else is
+1.4 **Decided (2026-11-18; configiq revised 2026-11-19).** The new data sets are used only for fitting and
+calibration. Accuracy on accuracy-dashboard is reported on the InferenceX units held out for it and on configiq's
+anchor units. configiq is anchor-only: it is not yet documented well enough to train on. Everything else is
 training data for M3.2, used however serves accuracy best. Applied as follows:
 - *Roles for new sources.* Each new source's ledger rule draws only training shares (design D9); the split among
   fit, select and validate is chosen per source. A new source is never reported as accuracy; the dashboard may show
   how well the fitted model reproduces it, as a training diagnostic labelled as such.
-- *What stays held out.* InferenceX and configiq keep their held and anchor shares unchanged. Accuracy figures
-  come only from those.
-- *Everything else is training data* (design D9): the training shares of InferenceX and configiq, the internal
+- *What stays held out.* InferenceX keeps its held and anchor shares unchanged. Every configiq unit is an anchor
+  unit: scored on the dashboard, never fit, selected, validated or held, and never used to judge a change. Accuracy
+  figures come only from these.
+- *Everything else is training data* (design D9): the training shares of InferenceX, the internal
   experiments, any source added under §1.3, and all of AISimulate, its sweeps and its forward-pass set. AISimulate's
-  sweeps lose their held share (20% of files today) to training roles (Table DC "AISimulate roles").
-- *The landing gate is whole-run.* Changes land on held InferenceX and configiq units only, through the whole-run gate
+  sweeps lose their held share (20% of files today) to training roles (Table DC "Partition version").
+- *The landing gate is whole-run.* Changes land on held InferenceX units only, through the whole-run gate
   (design VAL-6, §13.5). A worse lane fails the change; a maintainer may land it only after recording the regression as a defect in another
   term (VAL-11). Operator-level method error on validate units is reported nightly and never decides a landing.
 - *No double use* (X8). A coefficient is never selected or graded on the units that fit it, and selection uses the
@@ -483,13 +488,13 @@ role draw does not change (Terms). The held-out units grow because the same shar
 points. Table 3A.8 gives upper bounds from the dashboard nightly of 2026-11-18 and the ledger.
 
 **Table 3A.8. Scored InferenceX anchor units could grow from 238 to about 2,800, or up to about 4,700; configiq's
-held-out units could grow from none to between about 187 and about 630.**
+anchor units could grow from none to between about 187 and about 630.**
 
 | | Today | M3.2 ceiling | What opens it |
 |---|---|---|---|
 | InferenceX anchor units scored | 238 | about 2,800; up to about 4,700 | the list below |
 | InferenceX held units | not on the dashboard | about 1.5 times the anchor units | the same sources; held units are 1.5 times anchor units both for new units (30% and 20%) and within the older held group (60% and 40%) |
-| configiq held-out units (held and anchor) | none, until they are published (below) | about 187 if only forge-written H200 and B200 units are scored (half of 373, current revision, §3C.1); about 630 if all 1,257 H200 and B200 units are (pinned revision) | §3C's rule for each writer; the points are provisional (below). The draw is per role key (328 keys), so the share is approximate |
+| configiq anchor units (all configiq units are anchor units) | none, until they are published (below) | about 187 if only forge-written H200 and B200 units are scored (half of 373, current revision, §3C.1; every configiq unit is an anchor unit, so the full 373 is the upper bound); about 630 if all 1,257 H200 and B200 units are (pinned revision) | §3C's rule for each writer; the points are provisional (below). The draw is per role key (328 keys), so the share is approximate |
 
 The InferenceX anchor ceiling adds up as follows:
 - the 238 scored today;
@@ -512,12 +517,12 @@ checked. Older SGLang units count as "up to" until the recipe path is checked.
 
 **Provisional configiq points.** A configiq point whose blanks are filled from forge's records, or by preset match,
 is provisional (design COV-7). Its grade is capped at G3 with the reason, it is shown in its own band and kept out of
-the headline, and it is regraded when the source publishes the missing values. It is still a held-out unit, so the
+the headline, and it is regraded when the source publishes the missing values. It is still an anchor unit, so the
 configiq counts above include it with that cap.
 
 **Proposal.** Measure the count before planning: pull every anchor unit, checking only that its inputs can be
 fetched, without simulating, and report the count (Table W row 12). configiq's units are not yet in the published
-anchor and fit lists on blis-substrate `main`, so its held-out set must be published before it can be scored.
+anchor and fit lists on blis-substrate `main`, so its anchor list must be published before it can be scored.
 
 3A.9 **Decided. The dump is a frozen archive and the API is the live feed.** Design D3 states the rule: the dump
 owns record ids up to the cutoff, the feed owns the ids above it, a row is never pulled again from the other side,
@@ -558,6 +563,8 @@ a forge preset. A blank means the flag was not passed only for rows forge wrote.
 from a free-text `runtime_args` field with a regular expression, which misses space-separated values and bare
 flags. So a blank in a manually imported or earlier-launcher row can hide a value the run set. A blank
 `prefix_caching` never means "on".
+
+configiq is anchor-only (§1.4). Its settings are needed to score its anchor points, never to calibrate.
 
 The rules 3C.1 to 3C.7 are **Proposal**, pending the team's answers. The correction above is a finding from the code, checked by hand.
 

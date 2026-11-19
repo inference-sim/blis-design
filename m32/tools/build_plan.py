@@ -34,7 +34,7 @@ def slug(text: str) -> str:
     return base if n == 0 else f"{base}-{n}"
 
 
-DESIGN_URL = "https://inference-sim.github.io/blis-design/v3.0.0/blis-target-design.html"
+DESIGN_URL = "https://inference-sim.github.io/blis-design/v4.0.0/blis-target-design.html"
 # Design subsections whose anchor is not s<n>-<m>.
 _DESIGN_ANCHORS = {"s4-1": "s4-proc", "s4-2": "s4-kinds"}
 _DESIGN_REF = re.compile(r"design (§\d+(?:\.\d+)?(?:(?:, | and |, and )§\d+(?:\.\d+)?)*)")

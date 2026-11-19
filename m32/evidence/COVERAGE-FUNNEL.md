@@ -70,7 +70,7 @@ would make; 728 of the rows are single-node and not disaggregated. None is a led
   1,247 a blank `kv_quantization` and 779 a blank `prefix_caching`. (That 779 equals family A's unit count in the
   current revision only by coincidence: family A is recognised by prefix caching on.) The run's frame (stop rule, warm-up, measurement duration,
   client version) is never recorded.
-- Today a blank counts as "not recorded" unless the row matches a forge preset. In M3.1, 213 of configiq's training
-  and validation units could be simulated on that basis. This 213 is unrelated to the 213 of the 573 vLLM points in AISimulate's
+- Today a blank counts as "not recorded" unless the row matches a forge preset. In M3.1, 213 of configiq's units (then
+  training and validation units) could be simulated on that basis. This 213 is unrelated to the 213 of the 573 vLLM points in AISimulate's
   matched set that had lost their record (404).
-- configiq's units are not in the published anchor and fit lists on blis-substrate `main`.
+- configiq is anchor-only from the new partition version (every unit is an anchor unit). Its units are not in the published anchor and fit lists on blis-substrate `main`.
