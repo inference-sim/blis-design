@@ -60,6 +60,17 @@ class TestSiteFiles(unittest.TestCase):
         self.assertIn("@media print", frag)
         self.assertRegex(frag, r"flex-wrap\s*:\s*wrap")
 
+    def test_readme_links_exist(self):
+        readme = (REPO / "README.md").read_text()
+        links = re.findall(r"\]\(([^)#\s]+)(?:#[^)]*)?\)", readme)
+        local = [l for l in links if not re.match(r"[a-z]+:", l)]
+        self.assertTrue(local, "README should link to the pages")
+        for link in local:
+            self.assertTrue((REPO / link).exists(), f"README link does not resolve: {link}")
+        # The versioned pages the README names must exist as files.
+        for name in re.findall(r"`(v\d+\.\d+\.\d+/[\w.-]+\.html)`", readme):
+            self.assertTrue((REPO / name).is_file(), name)
+
 
 class TestRootPages(unittest.TestCase):
     def test_root_stubs_have_noscript_link_and_refresh_fallback(self):
