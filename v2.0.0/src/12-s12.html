@@ -1,6 +1,6 @@
 <!-- ============================================================ -->
 <h2 id="s12"><span class="secno">12</span>Triggers</h2>
-<p>A <b>trigger</b> is an event that requires work, and each recurring trigger has one <b>procedure</b>. A procedure gives its trigger, the <b>components</b> it touches (named as in Table 1, <a href="#s2-2">§2.2</a>), its <b>steps</b>, and what <b>done</b> means. Statements marked "Maintainer practice" describe what people decide. They use standard git and GitHub mechanisms and no automation. The checks a procedure names protect correctness and accuracy.</p>
+<p>A <b>trigger</b> is an event that requires work, and each recurring trigger has one <b>procedure</b>. A procedure gives its trigger, the <b>components</b> it touches (named as in Table 1, <a href="#s2-2">§2.2</a>), its <b>steps</b>, and what <b>done</b> means. Statements marked Maintainer practice describe what people decide. They use standard git and GitHub mechanisms and no automation. The checks a procedure names protect correctness and accuracy.</p>
 
 <div class="pb" id="t-model">
 <h3 id="s12-1">12.1 Onboarding a model</h3>
@@ -25,6 +25,7 @@
 <div class="row"><div class="k">Trigger</div><div class="v">The team adds a source; a scheduled job finds new records, a new revision or a new acceptance curve in a source the ledger holds; or a source changes its format, which the ingest code sees as a new contract version.</div></div>
 <div class="row"><div class="k">Components</div><div class="v"><code>substrate/catalog/ledger</code> and <code>substrate/load</code>. <code>substrate/registry</code> when a refit follows. <code>accuracy-dashboard</code> picks the units up at its next nightly run.</div></div>
 <div class="row"><div class="k">Steps</div><div class="v"><ol>
+<li><b>Define the unit.</b> Define the unit, its identifying fields and its role key so that near-copies share a role (<a href="#s10-2">§10.2</a>), and the cut-points, which allot training roles only. Define how a record maps to an engine commit and to the kernel and code identities of <a href="#s9-2">§9.2</a>.</li>
 <li><b>Identify each run's settings</b> from its own records: workload, cluster, GPU, model, engine settings and engine commit, and the metric's definition. Name the record that settles each. Write the scenario writer with a test of every field against its record (<span class="inv">D10</span>). A value no record holds becomes a named substitution.</li>
 <li><b>Pin and ingest.</b> Pin the revision or each row by id and content hash (<span class="inv">D3</span>). A source with a live feed joins continuously, by a scheduled job. A new source gets cut-points for training roles only (<span class="inv">D9</span>). Commit only redistributable data (<span class="inv">D6</span>).</li>
 <li><b>Roles.</b> The seed-holding jobs draw each new unit's role the first time they see it, before any use (<span class="inv">D4</span>). If the source changed its format, ship the alias table first, so every unit keeps its role.</li>
@@ -34,7 +35,7 @@
 </ol></div></div>
 <div class="row"><div class="k">Done when</div><div class="v"><ul>
 <li><span class="inv">T-D1</span> No existing unit changed role.</li>
-<li><span class="inv">T-D2</span> Every new unit has exactly one role, and a new source has no held-out role.</li>
+<li><span class="inv">T-D2</span> Every new unit has exactly one role, a new source has no held-out role, and the role key puts every pair of near-copies in the source's data in one role.</li>
 <li><span class="inv">T-D3</span> Every revision and row is pinned by id or hash.</li>
 <li><span class="inv">T-D4</span> Coverage and grade changes per lane are reported.</li>
 <li><span class="inv">T-D5</span> The scenario writer's test covers every field against its record.</li>
@@ -47,38 +48,38 @@
 <div class="row"><div class="k">Trigger</div><div class="v">A person or an agent proposes it, usually from the top of the backlog (§11.6).</div></div>
 <div class="row"><div class="k">Components</div><div class="v">The component that owns the layer the idea changes: a coefficient or method (<code>substrate/registry</code>), a pricing form (<code>substrate/kernel</code>, and the engines that lower to it), or engine behaviour (<code>engines/&lt;engine&gt;</code>).</div></div>
 <div class="row"><div class="k">Steps</div><div class="v"><ol>
-<li><b>Pre-register.</b> Commit a file before any held-out data is read. It states the hypothesis, the layer it changes, the target lanes, the sources and lanes whose <code>select</code> and <code>held</code> units will be used (the jobs choose the units), the success criteria and the predicted dashboard change.</li>
+<li><b>Pre-register.</b> Commit a file before any held-out data is read. It states the hypothesis, the layer it changes, the target lanes, the sources and lanes whose <code>select</code> and <code>held</code> units will be used (the jobs choose the units), the success criteria with the non-inferiority margin of <span class="inv">VAL-6</span> for each criterion, and the predicted dashboard change.</li>
 <li>Make one change per pull request. Maintainer practice: a bundle of ideas is refused in review.</li>
 <li>Evaluate candidates by path. A writer script puts each candidate registry in its own directory, and the select job scores each with <code>--registry &lt;dir&gt;</code> (§13.5). A data-only candidate needs no rebuild.</li>
 <li>Choose among candidates on <code>select</code> units only.</li>
-<li>Evaluate once on <code>held</code> units, in the gate job (§13.5).</li>
+<li>Evaluate once on <code>held</code> units, in the gate job (§13.5). The evaluation counts against the partition version's budget (<span class="inv">D7</span>).</li>
 <li>Land the change if the criteria pass. Otherwise commit the negative result as a note.</li>
 </ol></div></div>
 <div class="row"><div class="k">Done when</div><div class="v"><ul>
 <li><span class="inv">T-A1</span> Results on held units exist only as outputs of the gate job, run after the pre-registration commit (<span class="inv">D7</span>).</li>
-<li><span class="inv">T-A2</span> Held-out error and distribution distance did not get worse on any lane, judged by the paired interval of <span class="inv">VAL-6</span>, and improved on the target lane.</li>
-<li><span class="inv">T-A3</span> After release, the dashboard change is within the predicted range, or the miss is recorded.</li>
+<li><span class="inv">T-A2</span> Held-out error and distribution distance (<a href="#s11-8">§11.8</a>) did not get worse on any lane beyond the margin, judged by the paired interval of <span class="inv">VAL-6</span>, and improved on the target lane.</li>
+<li><span class="inv">T-A3</span> After release, the change in the dashboard's prospective figure (<span class="inv">D9</span>) is within the predicted range, or the miss is recorded.</li>
 <li><span class="inv">T-A4</span> A failed idea leaves a committed note with its evidence, so it is not tried again blindly.</li>
 </ul></div></div>
 </div>
 
 <div class="pb" id="t-engine">
 <h3 id="s12-4">12.4 An engine upgrade</h3>
-<div class="row"><div class="k">Trigger</div><div class="v">A new final upstream release of vLLM or SGLang (release candidates are ignored), or a later upstream commit that a team scenario needs. Maintainer practice: a maintainer with write access decides an on-demand upgrade and records the decision in an issue. An upstream patch release is one more commit and follows this procedure, usually with an empty source diff.</div></div>
-<div class="row"><div class="k">Components</div><div class="v"><code>engines/&lt;engine&gt;</code> (port, generated lists, oracle, goldens). The simulator, for the <code>stack.json</code> commit and the engine version in its byte-gate and example scenarios. <code>substrate/registry</code> only for a kernel implementation that has no coefficient yet.</div></div>
+<div class="row"><div class="k">Trigger</div><div class="v">A new final upstream release of vLLM or SGLang (release candidates are ignored), or a later upstream commit that a team scenario needs, on which the upstream's required checks passed and from which the oracle environment builds. Maintainer practice: a maintainer with write access decides an on-demand upgrade and records the decision in an issue. An upstream patch release is one more commit and follows this procedure, usually with an empty source diff.</div></div>
+<div class="row"><div class="k">Components</div><div class="v"><code>engines/&lt;engine&gt;</code> (port, generated lists, oracle, recorded traces). The simulator, for the <code>stack.json</code> commit and the engine version in its byte-gate and example scenarios. <code>substrate/registry</code> only for a kernel implementation that has no coefficient yet.</div></div>
 <div class="row"><div class="k">Steps</div><div class="v"><ol>
 <li><b>Generate the upgrade report,</b> so that nobody reads the whole upstream. It holds:
 <ul>
 <li>the surface diff: new, removed and changed connectors, tiers, KV-cache managers, speculative methods, policies, configuration fields, defaults, metrics and event types (§7.5);</li>
 <li>the field demand: for each new or changed field, how many dashboard points set it and to which values, so that the fields the data use most are modelled first;</li>
-<li>the source diff: each ported function, by its <code>Derived from</code> header, as unchanged, changed (with the upstream diff) or removed, and the kernel implementations whose selection changed;</li>
-<li>for each model the new commit supports: whether the catalog has it; whether it needs model support and for what; and, for each catalog chip, the coefficients it lacks, meaning any new primitive family that needs entries before the model can run and the kernels it would price below <code>measured</code> or <code>calibrated</code>.</li>
+<li>the source diff: each ported function, by its <code>Derived from</code> header, as unchanged, changed (with the upstream diff) or removed, and the kernel implementations whose selection changed and the engine-path code identities that changed (<a href="#s9-2">§9.2</a>). The diff generator behind it compares any two commits, so the dashboard also uses it to grade a run (<a href="#s11-3">§11.3</a>);</li>
+<li>for each model architecture the new commit registers: whether the catalog has it; whether it needs model support and for what; and, for each catalog chip, the coefficients it lacks, meaning any new primitive family that needs entries before the model can run and the kernels it would price below <code>measured</code> or <code>calibrated</code>.</li>
 </ul></li>
 <li><b>Move the port.</b> Update the <code>Upstream</code> record to the new commit and the release it descends from. Regenerate <code>fields.json</code>, <code>surface.json</code> and <code>kernel_impls.json</code> at the new commit, and lock the oracle environment to it. Run all tiers.</li>
 <li><b>Re-port</b> only the changed functions. Delete code for anything the new commit removed, including a model backport (§12.5) it now contains.</li>
 <li><b>Classify</b> every new surface item and configuration field: modelled, refused by name, or out of scope (<span class="inv">X9</span>).</li>
-<li><b>Regenerate</b> the recorded traces that changed. Each gets a <code>golden-reviewed:</code> line with its reason.</li>
-<li><b>Price.</b> Each kernel implementation whose selection changed gets a coefficient by the methods of §9. A <code>transferred</code> value states its rule (§9.2).</li>
+<li><b>Regenerate</b> the recorded traces that changed. Each gets a <code>trace-reviewed:</code> line with its reason.</li>
+<li><b>Price.</b> Each kernel implementation whose selection changed gets a coefficient by the methods of §9. Each engine-path identity that changed gets a <code>transferred</code> entry from the previous identity, whose rule is the per-function diff, so that a coefficient survives the upgrade until a refit. A <code>transferred</code> value states its rule (§9.2).</li>
 <li><b>Merge.</b> The simulator's <code>stack.json</code> then names the new commit, and scenarios naming the old one are refused with the message of <span class="inv">LIF-6</span>. The old commit stays available on <code>inference-sim</code>'s release branches (§14).</li>
 </ol></div></div>
 <div class="row"><div class="k">Done when</div><div class="v"><ul>
@@ -88,41 +89,46 @@
 <li><span class="inv">T-E4</span> Every changed trace carries its review line.</li>
 <li><span class="inv">T-E5</span> The replacement manifest is unchanged, or bumped with a reason.</li>
 <li><span class="inv">T-E6</span> The new release refuses scenarios naming the old commit with the message of <span class="inv">LIF-6</span>. The release that message names pins the old commit in its <code>stack.json</code>, and its tagged build reproduces its own recorded byte-gate output.</li>
+<li><span class="inv">T-E7</span> The whole-run gate (<a href="#s13-5">§13.5</a>) ran for the candidate against the previous release on held units, and no lane worsened beyond the margin of <span class="inv">VAL-6</span>, or each worsening lane is recorded as a defect in another term (<span class="inv">VAL-11</span>). <span class="inv">COV-15</span> holds. Every kernel implementation and engine-path identity that changed has an entry with a stated method, and the report states, per lane, the change in the mix of grades that the new modelled commit causes.</li>
 </ul></div></div>
 </div>
 
 <div class="pb" id="t-support">
 <h3 id="s12-5">12.5 Model support</h3>
-<div class="row"><div class="k">Trigger</div><div class="v">The upgrade report or a requested scenario shows that a model brings engine-facing code the engine upgrade does not port. That code lives mostly in the model's folder upstream. The cases are a KV-cache layout the engine module has not seen, its own kernels or a backend choice the module does not lower, and a new drafting method or scheduler hook. A model that brings none of these needs no model support.</div></div>
+<div class="row"><div class="k">Trigger</div><div class="v">The upgrade report or a requested scenario shows that a model brings engine-facing code the engine upgrade does not port. That code lives mostly in the model's folder upstream. The cases are a KV-cache layout the engine module has not seen, its own kernels or a backend choice the module does not lower, a quantisation or weight-packing scheme the module has not seen, and a new drafting method or scheduler hook. A model that brings none of these needs no model support.</div></div>
 <div class="row"><div class="k">Components</div><div class="v"><code>engines/&lt;engine&gt;</code> only, and <code>substrate/registry</code> when the model's kernels need entries.</div></div>
 <div class="row"><div class="k">Steps</div><div class="v"><ol>
 <li>Port the model's engine-facing code from upstream at the modelled commit.</li>
-<li>If the model landed upstream after the modelled commit, apply the upstream commits that add it onto the modelled commit as a <b>model backport</b>, and list them in the <code>Upstream</code> record. A backport carries model code only, never scheduler, KV-cache or connector changes.</li>
+<li>If the model landed upstream after the modelled commit, apply the upstream commits that add it onto the modelled commit as a <b>model backport</b>, and list them in the <code>Upstream</code> record. A backport changes only files under the upstream's model-definition and model-config directories and its model-registry entry. A commit that touches any other path is not a backport and waits for an engine upgrade.</li>
 <li>Add an oracle scenario and a recorded trace for the new code, and classify its new surface items.</li>
 <li>Lower the model's kernels, and price them by the methods of §9.</li>
 </ol>
 The next engine upgrade drops the backport when the new commit contains it. A run of a backported model is graded by commit distance (§11.3).</div></div>
 <div class="row"><div class="k">Done when</div><div class="v"><ul>
-<li><span class="inv">T-M4</span> The model's engine-facing code is ported at the modelled commit, and its oracle scenario passes.</li>
-<li><span class="inv">T-M5</span> A backport holds model code only, and each backported commit is listed in the <code>Upstream</code> record.</li>
+<li><span class="inv">T-M4</span> The model's engine-facing code is ported at the modelled commit, its oracle scenario passes, the weights check (T0) and the priced-equals-launched check (<span class="inv">FID-11</span>) pass on every catalog chip it is claimed for, and every coefficient it uses has a method, reported as for <span class="inv">T-M3</span>.</li>
+<li><span class="inv">T-M5</span> A backport touches only the paths above, each backported commit is listed in the <code>Upstream</code> record, and for every catalog model that does not use it the plans, step shapes, kernel selections and recorded traces are identical with and without it (<span class="inv">FID-14</span>).</li>
 </ul></div></div>
 </div>
 
 <div class="pb" id="t-sglang-start">
 <h3 id="s12-6">12.6 A new engine</h3>
 <div class="row"><div class="k">Trigger</div><div class="v">A team needs an engine BLIS does not model (the reason <code>engine_unsupported</code>, §11.4), such as TRT-LLM. A new engine meets the bar vLLM and SGLang meet.</div></div>
-<div class="row"><div class="k">Components</div><div class="v">A new directory <code>engines/&lt;engine&gt;</code>. <code>substrate/contracts</code>, by addition only. The simulator, to register the engine kind at its one build site. No other engine.</div></div>
+<div class="row"><div class="k">Components</div><div class="v">A new directory <code>engines/&lt;engine&gt;</code>. <code>substrate/contracts</code>, <code>substrate/catalog</code> and <code>substrate/registry</code>, by addition only and naming no engine (<span class="inv">X2</span>). The simulator, to register the engine kind at its one build site. No other engine.</div></div>
 <div class="row"><div class="k">Steps</div><div class="v"><ol>
 <li>Create the directory from <code>contracts/harness</code>: the provenance check, the no-clock check, the trace and manifest checkers, and the <code>Upstream</code> record naming the upstream commit.</li>
 <li>Generate the surface list first, so the scope is known before porting starts.</li>
 <li>Port the engine's scheduling and KV-cache code from upstream at that commit.</li>
-<li>Build the oracle: it runs the upstream code with only the transport and the clock replaced. For C++ code, the oracle drives it through the engine's bindings.</li>
+<li>Build the oracle: it runs the upstream code with only the replacements of <span class="inv">X5</span> (GPU, clock, transport, environment, platform, outside services), each listed in the manifest (<span class="inv">FID-1</span>). For C++ code the oracle drives the engine through its bindings, and a replacement is a link-time or preload interposer, a build flag or an injected interface, not a Python patch. Every native clock read, thread start, environment read and platform query reachable from ported code is a site and is listed. Coverage for the inertness proof uses an instrumented build, locked as in <span class="inv">FID-2</span>. Where the upstream has both a native and a Python implementation of a decision, the <code>Upstream</code> record names the one the oracle runs, and a differential test compares the two.</li>
 <li>Implement <code>engine.Engine</code> and plan emission, and register the engine kind in the simulator.</li>
+<li>Write the field list and complete the surface list (<span class="inv">VLM-3</span>, <span class="inv">X9</span>).</li>
+<li>Lower to kernel implementations, add a <code>Library</code> value to <code>contracts</code>, and price each implementation by the methods of <a href="#s9">§9</a>.</li>
+<li>Run every tier of <a href="#s7-4">§7.4</a>, including the mutation tier.</li>
 </ol></div></div>
 <div class="row"><div class="k">Done when</div><div class="v"><ul>
-<li><span class="inv">T-N1</span> The substrate changes only by adding to <code>contracts</code>.</li>
-<li><span class="inv">T-N2</span> Every surface item has a status.</li>
-<li><span class="inv">T-N3</span> The oracle runs the upstream code, and the port matches it on every recorded trace.</li>
+<li><span class="inv">T-N1</span> The substrate changes only by additions to <code>contracts</code>, <code>catalog</code> and <code>registry</code> that name no engine (<span class="inv">X2</span>). Every kernel implementation the engine lowers to has a coefficient entry with a stated method.</li>
+<li><span class="inv">T-N2</span> Every surface item and configuration field has a status and an estimation rule or none.</li>
+<li><span class="inv">T-N3</span> The oracle runs the upstream code with only the replacements of <span class="inv">X5</span>, and the port matches it on every recorded trace.</li>
+<li><span class="inv">T-N4</span> Every tier of <a href="#s7-4">§7.4</a> passes, and so do the engine conformance suites, the memory closure (<span class="inv">SUB-14</span>), coupled replay (<span class="inv">FID-9</span>) and the byte checks of the metrics and KV events that llm-d reads. The engine kind is registered at the single build site, its rule prefix is in the invariant registry, and the dashboard scores its points with grades, so that <code>engine_unsupported</code> clears.</li>
 </ul></div></div>
 </div>
 
@@ -137,16 +143,21 @@ The next engine upgrade drops the backport when the new commit contains it. A ru
 <li>Coefficients by the methods of §9.</li>
 <li>Wiring in the simulator.</li>
 </ol></div></div>
-<div class="row"><div class="k">Done when</div><div class="v"><span class="inv">T-B1</span> The capability is engine-independent in the substrate. <span class="inv">T-B2</span> Each engine models it or refuses it by name. <span class="inv">T-B3</span> Maintainer practice: it is one capability per pull request, never bundled with a model.</div></div>
+<div class="row"><div class="k">Done when</div><div class="v"><ul>
+<li><span class="inv">T-B1</span> The capability is engine-independent in the substrate.</li>
+<li><span class="inv">T-B2</span> Each engine models it or refuses it by name, every coefficient it needs has a method, and <span class="inv">COV-15</span> holds.</li>
+<li><span class="inv">T-B3</span> Maintainer practice: it is one capability per pull request, never bundled with a model.</li>
+</ul></div></div>
 </div>
 
 <div class="pb" id="t-other">
 <h3 id="s12-8">12.8 Smaller changes</h3>
 <p>These follow the same pattern with fewer steps.</p>
 <div class="tbl"><table>
+<caption>Five smaller changes, each with its components, steps and a condition for done.</caption>
 <thead><tr><th>Trigger</th><th>Components and steps</th><th>Done when</th></tr></thead>
 <tbody>
-<tr><td>A new chip, from a request or the <code>not_in_catalog</code> count</td><td><code>substrate/catalog</code> gains the chip's datasheet facts. Values come by §9's methods, with roofline as the floor. Each engine's lowering is checked for chip-dependent choices, such as SGLang's attention backend per chip, and gains a test where a choice differs.</td><td><span class="inv">T-C1</span> Every primitive family has a value on the new chip (<span class="inv">VAL-2</span>), and each engine's lowering for it is tested.</td></tr>
+<tr><td>A new chip, from a request or the <code>not_in_catalog</code> count</td><td><code>substrate/catalog</code> gains the chip's datasheet facts. Values come by §9's methods, with roofline as the floor. Each engine's lowering is checked for chip-dependent choices, such as SGLang's attention backend per chip, and gains a test where a choice differs.</td><td><span class="inv">T-C1</span> Every primitive family has a value on the new chip (<span class="inv">VAL-2</span>), and each engine's lowering for it is tested, and the dashboard scores the chip's points.</td></tr>
 <tr><td>A gap found after release: a feature the surface list missed, or one marked out of scope that the stack turns out to use</td><td>Fix the surface generator first if it missed the item, so the next engine upgrade cannot miss it. Mark the item refused, so the backlog counts it, then model it in priority order.</td><td><span class="inv">T-G1</span> The regenerated surface list contains the item, the generator has a test that fails without the fix, and the item is refused or modelled.</td></tr>
 <tr><td>An incompatible contract change, found by the API check of <code>substrate/contracts</code></td><td>One pull request in <code>inference-sim</code> moves every implementer: each engine directory and the simulator. When the hosting contract changes, the router fork changes in its own repository, where its API diff runs (<span class="inv">RTR-3</span>). Open release branches stay as they are.</td><td><span class="inv">T-K1</span> Every implementer passes the new conformance suites.</td></tr>
 <tr><td>llm-d's guides change</td><td>Pin the new guides commit in the simulator's <code>guides.lock</code> and recompute coverage and surface weights (§7.5). For each out-of-scope item whose weight became non-zero, the engine marks it refused, so it joins the backlog.</td><td><span class="inv">T-G2</span> Weights are recomputed from the pinned commit, and no out-of-scope item has a non-zero weight.</td></tr>
@@ -163,7 +174,9 @@ The next engine upgrade drops the backport when the new commit contains it. A ru
 <li>Fix the port. The scenario becomes a recorded trace.</li>
 <li>Merge. The fix ships in the following <code>inference-sim</code> release. Prices are not part of the versioned surface (§14.1), so a fix that changes prices is still a PATCH, and its release notes carry the price-change report. If the previous release needs the fix, it is cherry-picked to that release's branch (§14).</li>
 </ol></div></div>
-<div class="row"><div class="k">Done when</div><div class="v"><span class="inv">T-F1</span> A new trace fails without the fix and passes with it. Maintainer practice: the release notes name the issue.</div></div>
+<div class="row"><div class="k">Done when</div><div class="v"><ul>
+<li><span class="inv">T-F1</span> A new trace fails without the fix and passes with it, and no lane worsens beyond the margin of <span class="inv">VAL-6</span> on held units, or each worsening lane is recorded as a defect in another term (<span class="inv">VAL-11</span>). Maintainer practice: the release notes name the issue.</li>
+</ul></div></div>
 </div>
 
 <div class="pb" id="t-router">

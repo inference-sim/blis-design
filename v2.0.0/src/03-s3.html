@@ -27,9 +27,9 @@
 │   │   └── harness/    shared checks engine modules run in their tests
 │   ├── catalog/        published facts (YAML, vendor config.json); Python graph deriver
 │   │   └── ledger/     data sources, units and the role rule (§10)
-│   ├── registry/       coefficient sets (YAML); Python fitting scripts
-│   ├── kernel/         the cost model (Go); "kernel" here is a historical name
-│   ├── validate/       validators for catalog and registry, and their commands (Go)
+│   ├── registry/       the coefficient registry: coefficient sets (YAML); Python fitting scripts
+│   ├── kernel/         the cost model (Go)
+│   ├── validate/       validators for catalog and coefficient registry, and their commands (Go)
 │   ├── load/           the loader: reads data from a path or from the embedded copy
 │   └── data.go         package substrate: go:embed of catalog/ and registry/
 ├── engines/            one directory per engine (§7)
@@ -38,12 +38,7 @@
 └── go.mod              the one Go module: github.com/inference-sim/inference-sim
 </code></pre>
 <p>The hosting contract (<code>embed</code> and its conformance suite) is not in <code>contracts/</code>. It lives in the router fork (§5), so that the fork imports no BLIS code.</p>
-<p><code>inference-sim</code> is one Go module (<span class="inv">SUB-13</span>). The packages of <code>substrate/</code> are of two kinds:</p>
-<ul>
-<li><b>Packages under <code>contracts/</code></b> hold interfaces, data types, validators of those types, conformance suites, the engine harness and the invariant registry. They import only the Go standard library, the YAML parser and each other (<span class="inv">SUB-1</span>). Engine modules import only these packages.</li>
-<li><b>All other packages</b> hold the cost model, the validators, the data loader and the embedded data. Only the simulator imports them.</li>
-</ul>
-<p>Table 1 states both rules, and the import-graph lint enforces them. A refit changes data and no contract, so it needs no change in any engine module. A contract changes only as <span class="inv">SUB-1</span> allows.</p>
+<p><code>inference-sim</code> is one Go module (<span class="inv">SUB-13</span>). The directory name <code>kernel/</code> does not refer to a GPU kernel: it is named for the <code>Kernel</code> interface in <code>contracts/kernel/</code> that the cost model implements. Packages under <code>contracts/</code> import only what <span class="inv">SUB-1</span> allows, and engine modules import only these packages. The cost model, the validators and the loader are imported by the simulator and, for the loader, by the cost model (Table 1). A refit changes data and no contract, so it needs no change in any engine module. A contract changes only as <span class="inv">SUB-1</span> allows.</p>
 <p><b>What one module costs.</b> Anyone who fetches the module downloads all of it, mostly vendor <code>config.json</code> files (Go&rsquo;s limit for a module is 500 MB). Go compiles only the packages a program imports, so an engine build never compiles the cost model or the embedded data. A CI check fails if the module exceeds 100 MB uncompressed, well before Go&rsquo;s limit (<span class="inv">SUB-13</span>).</p>
 
 <h3 id="s3-3">3.3 Data: a path first, the embedded copy as the default</h3>
@@ -51,10 +46,10 @@
 <ul>
 <li><b>A path.</b> <code>--catalog &lt;dir&gt;</code> and <code>--registry &lt;dir&gt;</code> (or <code>BLIS_CATALOG</code> and <code>BLIS_REGISTRY</code>) name directories with the same layout as <code>substrate/catalog/</code> and <code>substrate/registry/</code>, such as a checkout, a working tree or an exported revision. When a path is given, the run uses that directory <em>instead of</em> the embedded copy. Recalibration uses this. A fitting script writes candidate coefficients to a directory, and the released simulator scores them with no rebuild. Comparing two coefficient registries means running one binary twice with two paths.</li>
 <li><b>The embedded copy.</b> When no path is given, the run uses the data compiled into the simulator with <code>go:embed</code>. A release therefore carries the exact data it was tested with, and a user of a released binary needs no checkout. <code>inference-sim</code> cannot be installed with <code>go install …@version</code>, because Go refuses that for a module whose <code>go.mod</code> has a <code>replace</code> directive, and <code>inference-sim</code> carries one for the router fork (<span class="inv">X11</span>). So each release ships signed binaries for the supported platforms, with the provenance and bill of materials of <span class="inv">X21</span>. A source build needs a checkout at the tag.</li>
-<li><b>What stays fixed.</b> A model runs only if it is in the catalog in use, and it is resolved from its <code>graph.yaml</code>. A missing model is refused with the catalog's source (the embedded release, or a path) and the relative path its entry belongs at. No run creates or changes catalog or coefficient registry files, no run fetches anything from the network, and the deployment always comes from a required scenario.</li>
+<li><b>What stays fixed.</b> A model runs only if it is in the catalog in use, and it is resolved from its <code>graph.yaml</code>. A missing model is refused with the catalog&rsquo;s source (the embedded release, or a path) and the relative path its entry belongs at. No run creates or changes catalog or coefficient registry files, no run fetches anything from the network, and the deployment always comes from a required scenario.</li>
 </ul>
 <p>The two flags are independent. A run may, for example, use the embedded catalog with a candidate coefficient registry.</p>
-<p><b>Private additions.</b> To run a private model against a pinned catalog and registry, <code>--catalog-overlay &lt;dir&gt;</code> and <code>--registry-overlay &lt;dir&gt;</code> add entries to the data in use. An entry is identified as follows:</p>
+<p><b>Private additions.</b> To run a private model against a pinned catalog and coefficient registry, <code>--catalog-overlay &lt;dir&gt;</code> and <code>--registry-overlay &lt;dir&gt;</code> add entries to the data in use. An entry is identified as follows:</p>
 <ul>
 <li>In the catalog, a whole model directory (<code>models/&lt;name&gt;/</code>), or a whole hardware, device, network or workload file.</li>
 <li>In the coefficient registry, one coefficient, identified by its set, its name, its scope and its method.</li>
@@ -63,19 +58,19 @@
 <p>Overlays have their own flags because a recalibration candidate replaces the whole coefficient registry, and one flag that could either replace or add would make an A/B comparison ambiguous.</p>
 
 <h4>Which files count as data</h4>
-<p>The file patterns are defined once, in the top-level package of <code>substrate/</code> (<code>data.go</code>). It must sit there, because Go's <code>go:embed</code> can only embed files at or below the package's own directory. The patterns are: hardware, devices, networks, workloads, measurement sources, each model's <code>model.yaml</code> and <code>graph.yaml</code>, every coefficient set, and acceptance and routing profiles. Most of the ledger is not runtime data: pricing never reads it, and it can be large, because it lists every unit. Seed-holding jobs (the CI jobs that hold the secret used to assign data roles, §10.2) read it from a checkout of <code>inference-sim</code> at the commit they build, including those in <code>accuracy-dashboard</code>. The exception is the three published role lists (<code>catalog/ledger/published/</code>), which are embedded so that <code>inference-sim ledger</code> can print them offline.</p>
-<p>The <code>go:embed</code> directive must list literal patterns, so a test checks that they equal the loader's. A path is read with the same patterns, and the loader refuses anything that would make the data ambiguous:</p>
+<p>The file patterns are defined once, in the top-level package of <code>substrate/</code> (<code>data.go</code>). It must sit there, because Go&rsquo;s <code>go:embed</code> can only embed files at or below the package&rsquo;s own directory. The patterns are: hardware, devices, networks, workloads, measurement sources, each model&rsquo;s <code>model.yaml</code> and <code>graph.yaml</code>, every coefficient set, and acceptance and routing profiles. Most of the ledger is not runtime data: pricing never reads it, and it can be large, because it lists every unit. Seed-holding jobs (the CI jobs that hold the secret used to assign data roles, §10.2) read it from a checkout of <code>inference-sim</code> at the commit they build, including those in <code>accuracy-dashboard</code>. The exception is the three published role lists (<code>catalog/ledger/published/</code>), which are embedded so that <code>inference-sim ledger</code> can print them offline.</p>
+<p>The <code>go:embed</code> directive must list literal patterns. A path is read with the same patterns, so the load test of <span class="inv">SUB-9</span> shows any difference between them. The loader refuses anything that would make the data ambiguous:</p>
 <ul>
-<li>a file under a data directory that matches no pattern, such as <code>coefficients/x.yml</code> where <code>.yaml</code> is expected. Ignoring it would silently drop a candidate's change.</li>
+<li>a file under a data directory that matches no pattern, such as <code>coefficients/x.yml</code> where <code>.yaml</code> is expected. Ignoring it would silently drop a candidate&rsquo;s change.</li>
 <li>a symbolic link;</li>
 <li>a data file containing a carriage return;</li>
 <li>two paths that differ only in letter case.</li>
 </ul>
-<p>The data directories are exactly those the patterns in <code>data.go</code> name. Files outside them, such as scripts and documents, are ignored. Two things inside them are ignored by name: a model directory's <code>config.json</code>, and everything under <code>catalog/ledger/</code> except <code>published/</code>. The check that <code>graph.yaml</code>'s recorded <code>derived_from</code> hash matches <code>config.json</code> runs in the validators, in CI, not in the loader. So a path load and an embedded load validate the same files in the same way (<span class="inv">SUB-9</span>).</p>
+<p>The data directories are exactly those the patterns in <code>data.go</code> name. Files outside them, such as scripts and documents, are ignored. Two things inside them are ignored by name: a model directory&rsquo;s <code>config.json</code>, and everything under <code>catalog/ledger/</code> except <code>published/</code>. The check that <code>graph.yaml</code>&rsquo;s recorded <code>derived_from</code> hash matches <code>config.json</code> runs in the validators, in CI, not in the loader. So a path load and an embedded load validate the same files in the same way (<span class="inv">SUB-9</span>).</p>
 <p>Vendor <code>config.json</code> files are not data in this sense. They stay in the repository for provenance and for the graph deriver, but the runtime never reads them. Every model value the runtime needs is a field of the graph, written by the deriver from <code>config.json</code> and the safetensors headers. No runtime code reads <code>config.json</code>, no model value is hard-coded in the cost model or an engine, and no user is asked to copy a value from a checkpoint into a setting (<span class="inv">SUB-3</span>).</p>
 
 <h4>Recording what was used</h4>
-<p>Every run computes a content hash for each of the catalog and the coefficient registry. It lists every data file as <code>&lt;sha256 of the file's bytes&gt;  &lt;path relative to the catalog or registry directory, with forward slashes&gt;</code>, sorts the lines by path in byte order, ends every line, including the last, with a line feed, and takes the SHA-256 of the result. The loader refuses carriage returns, so the hash is the same on every machine. The <code>Result</code> document records, for each of the catalog and the coefficient registry:</p>
+<p>Every run computes a content hash for each of the catalog and the coefficient registry. It lists every data file as <code>&lt;sha256 of the file's bytes&gt;  &lt;path relative to the catalog or coefficient registry directory, with forward slashes&gt;</code>, sorts the lines by path in byte order, ends every line, including the last, with a line feed, and takes the SHA-256 of the result. The loader refuses carriage returns, so the hash is the same on every machine. The <code>Result</code> document records, for each of the catalog and the coefficient registry:</p>
 <ul>
 <li>its source: <code>embedded</code> or <code>path</code>;</li>
 <li>its content hash;</li>
@@ -95,7 +90,7 @@
 <p>Each run also reports which coefficient registry entries were selected (a lookup returned them), and which coefficient files were never loaded. The report covers every reader behind the <code>Environment</code>, including acceptance and routing profiles. Without it, a candidate that adds a coefficient family no released code reads would be silently ignored and would look like a no-op. The landing gate uses this report (<span class="inv">VAL-6</span>).</p>
 
 <h4>The ledger in a candidate</h4>
-<p>A candidate may add data units, for example after a data drop. The gate and select jobs read units from the candidate's tree and compare them, by <code>unit_id</code>, with the ledger at the pull request's merge base:</p>
+<p>A candidate may add data units, for example after a data drop. The gate and select jobs read units from the candidate&rsquo;s tree and compare them, by <code>unit_id</code>, with the ledger at the pull request&rsquo;s merge base:</p>
 <ul>
 <li>a new unit has its role drawn by the job;</li>
 <li>a <code>unit_id</code> present at the merge base but absent from the candidate is refused, unless an alias table or a new partition version covers it. A unit whose identifying fields changed shows up exactly this way, because its <code>unit_id</code> is a hash of those fields.</li>
@@ -103,14 +98,5 @@
 <p>Roles are never read from a file (<span class="inv">D4</span>), so a candidate cannot change which units are held out.</p>
 
 <h3 id="s3-4">3.4 Checks by directory</h3>
-<p>CI is filtered by path: a change to one directory runs that directory&rsquo;s checks, so a catalog-only change does not run the cost model&rsquo;s slow race suite. Any change also runs the cross-directory checks, because catching mismatches between directories is the reason the parts live together: the validators run against the data, and the cost model against the data it embeds.</p>
-<div class="tbl"><table>
-<caption><b>Checks run when a directory of the substrate changes.</b> Each protects the correctness of its directory&rsquo;s data or code.</caption>
-<thead><tr><th>Directory</th><th>Language</th><th>Checks on change</th></tr></thead>
-<tbody>
-<tr><td><code>contracts/</code></td><td>Go</td><td>build; tests; API-compatibility check of the <code>contracts/</code> packages against the last release; conformance suites</td></tr>
-<tr><td><code>catalog/</code></td><td>YAML, Python</td><td>validators; graph deriver <code>--check</code>; deriver tests; ledger checks</td></tr>
-<tr><td><code>registry/</code></td><td>YAML, Python</td><td>validators; property tests; writers <code>--check</code> on redistributable fixtures; landing gate</td></tr>
-<tr><td><code>kernel/</code></td><td>Go</td><td>tests; race test; conformance; engine-neutrality checks; price-change report</td></tr>
-</tbody></table></div>
+<p>CI is filtered by path: a change to one directory runs that directory&rsquo;s checks, so a catalog-only change does not run the cost model&rsquo;s slow race suite. Any change also runs the cross-directory checks, because catching mismatches between directories is the reason the parts live together: the validators run against the data, and the cost model against the data it embeds. The checks per directory are the last column of Table 1.</p>
 <p>Python tooling keeps its own lock files under <code>catalog/scripts/</code> and <code>registry/scripts/</code>.</p>

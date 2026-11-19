@@ -1,31 +1,38 @@
 v1_id	fate	v2_id	reason
 D3	changed	D3	A source with a live feed joins continuously, each row pinned by id and content hash; the archive and the feed split at a cutoff id and a run keeps one date across it
 D4	changed	D4	Legacy-side detail moved to the prose of 10.2; the rule keeps per-role-key draws, append-only roles and alias tables
-D7	changed	D7	Seed-holding jobs and aggregates use min_points; a new source's first cut-points allot training roles only; approvals became maintainer practice
 D8	kept	D8	Same rule, shortened; release label and private deployment figures removed
 COV-2	changed	COV-2	No age limit: older anchor units are scored at their own grade, and the measured date is a slice attribute
 COV-6	changed	COV-6	Scoring is by commit distance from the modelled commit; a run on the modelled commit is the same build and can be G1 or G2 (DC1)
 COV-7	changed	COV-7	Coverage is a funnel per scored source (11.6); the provisional-point rule keeps its content without launcher commit hashes
 COV-8	kept	COV-8	Workflow file name removed
-COV-11	changed	COV-11	The small-slice minimum moves to COV-13 (min_points)
 T-M1	changed	T-M1	Onboarding is one to three pieces; one catalog-only pull request holds only for a model with no model support and no new primitive family
 T-M2	changed	T-M2	The simulator refuses by name; the onboard --plan command is removed
-T-D2	changed	T-D2	A new source has no held-out role
+T-D2	changed	T-D2	A new source has no held-out role, and its role key puts near-copies in one role
 T-D3	changed	T-D3	Rows are pinned by id or hash as well as revisions
 T-E1	changed	T-E1	The engine models a commit; the simulator change is the commit bump
 T-E2	changed	T-E2	Names the new commit; a listed model backport may remain
 T-E3	changed	T-E3	Lists are regenerated at the commit
 T-E6	changed	T-E6	Old commits are served by inference-sim release branches, not per-engine branches
 T-B3	changed	T-B3	One capability per pull request is maintainer practice
-T-F1	changed	T-F1	Release-note naming of the issue is maintainer practice
+T-F1	changed	T-F1	A fidelity fix worsens no lane beyond the margin; release-note naming of the issue is maintainer practice
 T-K1	changed	T-K1	One pull request in inference-sim; the router fork changes in its own repository
 T-P1	merged	T-E2	An upstream patch release is one more commit under the engine-upgrade procedure; per-engine blis tags retire
 T-S1	changed	T-S1	Moved into the new-data-source procedure (12.2)
-D9	new	D9	Accuracy only on held-out units; new sources draw training roles only
 D10	new	D10	Each run's settings come from its own records; a missing value is a named substitution
 D11	new	D11	No new GPU or cluster experiments; missing measurements are priced by the most trusted fallback
-COV-13	new	COV-13	Slicing by any recorded attribute, with the min_points rule for small slices
 T-D5	new	T-D5	Scenario writer tested field by field against the run's records
-T-M4	new	T-M4	Model support: engine-facing code ported at the modelled commit
-T-M5	new	T-M5	A model backport holds model code only and is listed in the Upstream record
-T-N3	new	T-N3	A new engine's oracle runs the upstream code and the port matches it
+T-M4	new	T-M4	Model support: engine-facing code ported at the modelled commit; weights and priced-equals-launched checks pass; coefficient methods reported
+T-M5	changed	T-M5	A backport is defined by path and checked by differential traces
+T-N3	changed	T-N3	The oracle replaces only what X5 allows
+D7	changed	D7	Seed-holding jobs and aggregates use min_points, which counts role keys; a new source's first cut-points allot training roles only; an evaluation budget per partition version; approvals became maintainer practice
+D9	new	D9	Accuracy only on held-out units; adds the prospective figure; new sources draw training roles only
+COV-10	changed	COV-10	No error is zeroed inside measurement noise; noise is published beside the raw error
+COV-11	changed	COV-11	Every figure has a role-key count and a 95% cluster-bootstrap interval (11.8)
+COV-13	new	COV-13	Slicing by any recorded attribute; min_points counts role keys
+COV-14	new	COV-14	Event-level scoring for sources with per-request data, and ranking validity per workload
+COV-15	new	COV-15	Release obligation to maximise coverage, accuracy, fidelity and grades; fit_available entries
+T-E7	new	T-E7	Engine upgrade passes the whole-run gate, prices changed kernel and engine-path identities, and reports the grade-mix change
+T-N1	changed	T-N1	Additions to contracts, catalog and registry that name no engine; every kernel the engine lowers to is priced
+T-N4	new	T-N4	A new engine passes every tier, the conformance suites, memory closure, coupled replay and byte checks, and is registered and scored
+T-B2	changed	T-B2	Each engine models or refuses the capability; its coefficients have methods; COV-15 holds
