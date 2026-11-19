@@ -1,0 +1,58 @@
+name: design
+
+on:
+  # Code changes only. An edit to a pull request's title or body (type `edited`) triggers nothing, so it can never
+  # change the pull request's merge state.
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the tests read tag v1.0.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"   # the picker and redirect tests run their scripts under Node
+
+      - name: Tests
+        run: python3 -m unittest discover -s tools/tests -v
+
+      - name: Pages are built from their sources
+        run: |
+          python3 -I tools/build.py 2.0.0 --check
+          python3 -I tools/build.py --landing --check
+
+      - name: Structure and standing-design checks on v2.0.0
+        run: |
+          status=0
+          for page in v2.0.0/*.html; do
+            echo "== $page"
+            python3 -I tools/check.py "$page" || status=1
+            python3 -I tools/standcheck.py "$page" || status=1
+          done
+          exit $status
+
+      - name: Privacy scan
+        env:
+          PRIVACY_PATTERNS: ${{ secrets.PRIVACY_PATTERNS }}
+        run: |
+          # The pattern list names private things, so it is kept in a repository secret,
+          # not in the tree. Pull requests from forks cannot read secrets; the scan is
+          # skipped for them and runs again on the maintainers' branch.
+          if [ -z "$PRIVACY_PATTERNS" ]; then
+            echo "::warning::PRIVACY_PATTERNS is not available; privacy scan skipped"
+            exit 0
+          fi
+          printf '%s\n' "$PRIVACY_PATTERNS" > "$RUNNER_TEMP/privacy-patterns.txt"
+          if git grep -n -I -i -P -f "$RUNNER_TEMP/privacy-patterns.txt"; then
+            echo "::error::a private name appears in the files above"
+            exit 1
+          fi
+          echo "privacy scan clean"
