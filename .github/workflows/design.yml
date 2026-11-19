@@ -1,7 +1,10 @@
 name: design
 
 on:
+  # Code changes only. An edit to a pull request's title or body (type `edited`) triggers nothing, so it can never
+  # change the pull request's merge state.
   pull_request:
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: read
