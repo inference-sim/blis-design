@@ -216,7 +216,7 @@ other groups are easier in one repository.**
 
 **Request.** A GB200 configuration for both models on 16 GPUs, the capacity of Muse Spark (a model already in the
 catalog; its open checkpoint is Muse-Spark-Open), for the team to use and verify. DC4 is done when each scenario
-simulates on GB200 with every coefficient's method named (Table W row 9). BLIS runs no experiment (§1.6). If the team
+simulates on GB200, and every NVIDIA preset of the two vLLM recipes (Table DC4.1) simulates, with every coefficient's method named (Table W row 9). BLIS runs no experiment (§1.6). If the team
 shares measured runs of these models, they are added as a source under §1.3's rules.
 
 **Facts** (checked 2026-11-18; `evidence/NEW-MODELS-GB200.md`).
@@ -232,6 +232,34 @@ shares measured runs of these models, they are added as a source under §1.3's r
   their DSpark drafters, `Inkling2DSparkModel` and `MistralLarge4DSparkModel`. blis-vllm moves from v0.33.0 to this
   commit by one engine upgrade (design §12.4), and the upgrade report lists both models.
 - **SGLang:** blis-sglang stays at the commit it models, v0.5.23 (`297e54fd105e974cdf401e5b4d20253a22c16f90`).
+
+**vLLM recipes. Decided (2026-11-19).** vLLM publishes a recipe for each model, with presets for different
+hardware. Every NVIDIA preset of both recipes, at the vLLM commit BLIS models, is runnable by BLIS. The recipes are
+[`thinkingmachines/Inkling-2-Small.yaml`](https://github.com/vllm-project/vllm/blob/b582592d5a628cc24d3899da1e17f835a346b854/recipes/models/thinkingmachines/Inkling-2-Small.yaml) and
+[`mistralai/Mistral-Large-4-1T-A52B.yaml`](https://github.com/vllm-project/vllm/blob/b582592d5a628cc24d3899da1e17f835a346b854/recipes/models/mistralai/Mistral-Large-4-1T-A52B.yaml). AMD presets are out of
+scope.
+
+**Table DC4.1. The NVIDIA presets of the two recipes, each of which BLIS must run.**
+
+| Model | Hardware | Precision | Layouts (the recipe's strategies) |
+|---|---|---|---|
+| Inkling-2-Small | GB200 | NVFP4 with MXFP8 (the default variant) | one 4-GPU tray at TP4, context capped at 262,144 and 256 sequences; two trays at TP8 with the full 1M context |
+| Mistral-Large-4 | GB300 | NVFP4 (default) or FP8 | one tray at TP4; two trays at TP8; two trays with data and expert parallelism (DP8, EP); 1P1D P/D with one tray per side |
+| Mistral-Large-4 | B300 | NVFP4 (default) or FP8 | one 8-GPU node at TP8 |
+| Mistral-Large-4 | B200 | NVFP4 | one 8-GPU node at TP8; 1P1D P/D with one node per side |
+| Mistral-Large-4 | H200 | FP8 | two 8-GPU nodes at TP16, or at PP2 × TP8 |
+
+What "runnable" means:
+- A scenario is written from the preset's resolved command: its arguments and environment, unchanged and in vLLM's
+  own names (design X1), on the preset's hardware and node count. The opt-in features (reasoning, tool calling and
+  the DSpark drafter) are run both off and on.
+- Each preset simulates with every coefficient's method named. Every argument the preset passes, including the
+  launcher-only ones such as `--no-numa-bind`, has a status in blis-vllm's field list (design VLM-3).
+- A preset is refused only where vLLM at the modelled commit refuses it (§5.2).
+- A test reads each preset from the recipe at the modelled commit and simulates it, so a recipe change shows up at
+  the next engine upgrade.
+- The recipes' performance headlines carry no run records, so they are not data units (design §10.2). They are not
+  used for fitting or for accuracy.
 
 **Table DC4. Neither model is expected to need new graph vocabulary, and both would run on GB200 with their main
 kernels priced by a fallback entry until fitted. Mistral-Large-4's `config.json` is not yet read. The detail is in
