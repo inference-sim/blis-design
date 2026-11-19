@@ -1,0 +1,25 @@
+v1_id	fate	v2_id	reason
+FID-1	changed	FID-1	worded for engine modules and the modelled commit; paths follow the consolidated layout; sites are time, randomness, environment, thread and platform reads in any language; the CUDA platform decision runs with faked device properties; a native replacement sits at an interposer, build flag or injected interface
+FID-2	changed	FID-2	oracle locks to the modelled commit (any upstream commit); for a C++ upstream it drives the upstream code through its bindings with an instrumented build for coverage; an upstream with two implementations of a decision is run with each by a differential test
+FID-3	changed	FID-3	review of a changed trace is maintainer practice; the update flag and the oracle comparison stay automated
+FID-7	changed	FID-7	compares against the upstream at the modelled commit
+FID-9	changed	FID-9	engine modules, not repositories
+FID-12	changed	FID-12	subject was store packages that are out of scope; now a connector or backend whose decisions live outside the tree is refused by name
+(none)	new	FID-14	an engine upgrade regenerates the three lists at any commit, locks the oracle and re-runs every tier; a diff generator compares any two commits; a backport changes no trace, plan, step-shape sequence or kernel selection of another model
+DEV-12	changed	DEV-12	process only (change class in pull-request template) becomes a Maintainer practice statement with no check
+VAL-1	changed	VAL-1	not_charged only for a cost the upstream does not perform, citing an FID-11 case; validator path follows the consolidated layout
+VAL-2	changed	VAL-2	also lists a lookup served at rank 3 or lower as fit_available when fit units exist; a release carries none unexplained
+VAL-4	changed	VAL-4	removal approval is maintainer practice; precedence and refusal checks stay
+VAL-6	changed	VAL-6	non-inferiority margin, role-key BCa bootstrap, Holm over lanes, criteria and metrics; merge order for small lanes, shared seeds, merged small lanes, cumulative release check
+VAL-7	changed	VAL-7	ratchet raise approval is maintainer practice; the ratchet test stays
+VAL-8	changed	VAL-8	engine-path costs match on code identity; carry-over by an upgrade-written transferred entry; the cross-check runs in the simulator package
+VAL-11	changed	VAL-11	review guidance block becomes a Maintainer practice sentence; the lint stays
+FID-4	changed	FID-4	branch coverage of ported functions, by recorded or fuzzed scenarios
+DEV-2	changed	DEV-2	rounds within an instant (a message is delivered in the round that sent it); the key gains the round, and internal events get a key
+DEV-5	changed	DEV-5	the zero-time bound is in rounds per instant
+DEV-7	changed	DEV-7	Kolmogorov-Smirnov bound for converters; a point with a failed replication is not scored
+DEV-11	changed	DEV-11	the coverage test covers the stopping rule, a known difference, equal configurations and one better configuration
+(none)	new	DEV-14	metamorphic relations and an analytic check of the event core
+VAL-3	changed	VAL-3	also records the share of predicted time at each rank; a not_charged entry that does not meet VAL-1 counts as assumed
+VAL-5	changed	VAL-5	error of fitted methods is held-out error on the same chip; the others by leave-one-chip-out, split by generation; the rank order is revisable by a validation change
+VAL-10	changed	VAL-10	bootstrap resamples whole sweeps; unidentified is judged against a stated scale
