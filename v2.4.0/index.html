@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLIS design</title>
+<meta name="description" content="An introduction to the BLIS design in three steps: a three-page summary, a seven-page summary, and the full target design.">
+<style>
+:root { color-scheme: light; }
+html { background: #fff; }
+body { font-family: Charter, "Iowan Old Style", Georgia, "Times New Roman", serif; font-size: 11pt; line-height: 1.4; color: #1b1f24; max-width: 6.7in; margin: 0 auto; padding: 0.5in 16px; }
+h1 { font-size: 20pt; line-height: 1.15; margin: 0 0 0.35em; }
+h2 { font-size: 13pt; line-height: 1.2; margin: 1.4em 0 0.4em; border-bottom: 1px solid #c9d1d9; padding-bottom: 2px; }
+p { margin: 0 0 0.6em; }
+.lead { color: #3a424a; }
+a { color: #1d4f91; text-decoration: none; }
+a:hover { text-decoration: underline; }
+ol.steps { padding-left: 1.4em; margin: 0 0 0.8em; }
+ol.steps li { margin: 0 0 0.7em; }
+.len { color: #5b6570; font-size: 9.5pt; }
+footer { margin-top: 2em; font-size: 9.5pt; color: #5b6570; }
+</style>
+</head>
+<body><!--topbar-->
+<meta name="blis-design-version" content="2.4.0">
+<style>
+.blis-topbar{--tb-bg:#f2f0ea;--tb-fg:#1d1d1f;--tb-muted:#5b5b63;--tb-rule:#d9d6cf;--tb-field:#ffffff;--tb-accent:#1f5fbf;
+  display:flex;flex-wrap:wrap;align-items:center;gap:.25rem .75rem;box-sizing:border-box;margin:0 0 .75rem;padding:.4rem 16px;
+  background:var(--tb-bg);color:var(--tb-fg);border-bottom:1px solid var(--tb-rule);
+  font:14px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;text-align:left}
+@media (prefers-color-scheme: dark){.blis-topbar{--tb-bg:#23232a;--tb-fg:#ececf0;--tb-muted:#a3a3ad;--tb-rule:#3a3a44;--tb-field:#15151a;--tb-accent:#7fb0ff}}
+.blis-topbar label{color:var(--tb-muted);font-weight:600}
+.blis-topbar select{max-width:100%;font:inherit;color:var(--tb-fg);background:var(--tb-field);border:1px solid var(--tb-rule);border-radius:4px;padding:.15rem .4rem}
+.blis-topbar select:focus-visible{outline:2px solid var(--tb-accent);outline-offset:1px}
+@media print{.blis-topbar{display:none}}
+</style>
+<div class="blis-topbar"><label for="blis-version">Design version</label><select id="blis-version"><option value="2.4.0" selected>2.4.0</option></select></div>
+<script>
+(function () {
+  var meta = document.querySelector('meta[name="blis-design-version"]');
+  var sel = document.getElementById('blis-version');
+  if (!meta || !sel) return;
+  var current = meta.content;
+  var versions = [{ version: current, path: null }];
+  var SAFE = /^[A-Za-z0-9._-]+\/$/;
+
+  function render() {
+    sel.innerHTML = '';
+    versions.forEach(function (v) {
+      var o = document.createElement('option');
+      o.value = v.version;
+      o.textContent = v.version;
+      sel.appendChild(o);
+    });
+    sel.value = current;
+  }
+
+  function usable(v) {
+    return v && typeof v.version === 'string' && v.version !== '' &&
+      (v.path === undefined || v.path === null || SAFE.test(v.path));
+  }
+
+  render();
+
+  sel.addEventListener('change', function () {
+    var chosen = sel.value;
+    if (chosen === current) return;
+    var entry = versions.filter(function (v) { return v.version === chosen; })[0];
+    if (!entry || !entry.path || !SAFE.test(entry.path)) { sel.value = current; return; }
+    var name = location.pathname.split('/').pop() || 'index.html';
+    location.assign('../' + entry.path + name + location.hash);
+  });
+
+  try {
+    fetch('../versions.json', { cache: 'no-cache' })
+      .then(function (r) { if (!r.ok) throw new Error('versions.json ' + r.status); return r.json(); })
+      .then(function (data) {
+        if (!data || !Array.isArray(data.versions)) return;
+        var list = data.versions.filter(usable);
+        if (!list.length) return;
+        if (!list.some(function (v) { return v.version === current; })) list.unshift({ version: current, path: null });
+        versions = list;
+        render();
+      })
+      .catch(function () { /* the page keeps its own version only */ });
+  } catch (e) { /* fetch is unavailable, for example on file:// */ }
+})();
+</script>
+<!--/topbar-->
+<h1>BLIS design</h1>
+<p class="lead">BLIS simulates an LLM serving cluster. It runs the router of llm-d, hosted in simulated time with no change to any routing decision, and Go ports of the vLLM and SGLang engines, each modelling an upstream commit. These pages explain how its code is divided into components, what each owns, and the rules that keep them correct.</p>
+
+<h2>Read in this order</h2>
+<p>The three documents say the same thing at three depths. Stop when you have what you need.</p>
+<ol class="steps">
+<li><a href="blis-design-3-pages.html">The design in three pages</a> <span class="len">(3 printed pages)</span><br>
+The shape of the simulator, for a reader who already knows llm-d and vLLM: the components, what each owns, and how a simulated step flows between them.</li>
+<li><a href="blis-design-7-pages.html">The design in seven pages</a> <span class="len">(7 printed pages)</span><br>
+The same account with the detail a contributor needs before changing code.</li>
+<li><a href="blis-target-design.html">The full target design</a> <span class="len">(the reference)</span><br>
+The authority. Every rule, how it is checked, and why it exists. Each claim in the summaries links to the section here that states it.</li>
+</ol>
+
+<h2>What the design is</h2>
+<p>The design is a standing document. Every statement in it holds for every release: it says what must be true, and it has no dates or milestones. Release plans are separate and are not part of these pages. The design has a version number, and the rule for numbering versions is in the <a href="https://github.com/inference-sim/blis-design#version-numbers">README of blis-design</a>.</p>
+
+<h2>The code</h2>
+<p>The code lives under <a href="https://github.com/inference-sim">github.com/inference-sim</a>. Start with <a href="https://github.com/inference-sim/inference-sim">inference-sim</a>: the simulator, the substrate and one directory for each engine. The router fork, accuracy-dashboard and blis-config-search are separate repositories, and the component table of the design lists them all. To ask for a feature or report a problem, open an issue in the repository that owns the behaviour.</p>
+
+<footer>Each summary is a single HTML file that prints to US Letter. It links to the full design in the same folder.</footer>
+</body>
+</html>
