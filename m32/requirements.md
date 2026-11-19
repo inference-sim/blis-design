@@ -389,3 +389,40 @@ well the fitted model reproduces them, as a training diagnostic labelled as such
 - The heavy ci workflow and its required aggregate do not run on a text-only `edited` event. The retarget case is
   detected through `github.event.changes.base`, so it stays covered.
 - A test or CI self-check must prove that a body edit leaves `mergeStateStatus` unchanged.
+
+## 6. New models that need engine code BLIS does not model yet
+
+**Maintainer question (2026-11-18).** Teams ask for models that only an unreleased engine build supports. The
+first case is a GB200 configuration (16 GPUs, Muse Spark's capacity) for Mistral-Large-4 and Inkling-2-Small.
+How should BLIS handle such requests, and does it need a rethink of the design or of the split between
+blis-substrate and blis-vllm?
+
+**Facts** (checked 2026-11-18):
+- Mistral-Large-4 (`MistralLarge4ForCausalLM`, with a DSpark drafter) is in vLLM v0.34.0, released 2026-11-16.
+  It is not in v0.33.0, the release blis-vllm models. Its Hugging Face repository is gated.
+- Inkling-2-Small (`Inkling2ForConditionalGeneration`, 594B) is only on vLLM main: vllm-project/vllm#67325,
+  merged 2026-11-18 as `abb8194dc3`. It is not in v0.34.0. Recent releases came about two weeks apart (v0.32.0
+  2026-10-18, v0.34.0 2026-11-16). blis-substrate#88 tracks it.
+- The design's onboarding path (§12.1, T-M1) asks that a model be data only: one blis-substrate pull request, no
+  engine, router or simulator code. The preflight it describes, `inference-sim onboard --plan`, is not built.
+- Each engine repository models one upstream release (LIF-5). Facts that change with an engine release live on
+  the engine branch for that release (§2.2, §14.4).
+
+**Proposal.** The split is right: a model's structure is engine-neutral (blis-substrate), and how an engine runs
+it is engine behaviour (blis-vllm). Requests like this stall for three narrower reasons, each fixable:
+1. *blis-vllm trails vLLM releases.* M3.2 ports v0.33.0 to v0.34.0 as a diff, as was done from v0.32.0. That
+   alone covers Mistral-Large-4. Set a standing rule that blis-vllm follows each vLLM release within a set
+   time.
+2. *LIF-5 has no place for a model that is only on upstream main.* Allow a **model backport**: the upstream
+   commits that add one model (here #67325), applied to the modelled release on a named branch, with the
+   commits listed in its Upstream record. Points it produces name the backport as a release difference, and it
+   folds away when the upstream release that contains it is modelled. A backport may carry model code only,
+   never scheduler, KV or connector changes.
+3. *Onboarding still touches engine-shaped code in blis-substrate.* The graph deriver holds vLLM lowering, whose
+   move is planned for M4. Pull it into M3.2 so that a new architecture is a graph handler plus data, and the
+   engine lowers the new primitives, which is T-M1's intent. Build the `onboard --plan` preflight, so every
+   request gets the same answer: what exists, what is missing, which engine build, and which coefficients come
+   from which method.
+4. *Answer each request with a confidence.* For a model with no measured runs on the target chip, the
+   configuration is a prediction with no held-out evidence. Say so, with the known gaps. On GB200, decode is
+   about 1.35 times slow per token until blis-substrate#140 and blis-vllm#272 land (§0.2).
