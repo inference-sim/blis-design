@@ -45,7 +45,7 @@
 <tr><td><code>SUB-9</code></td><td>kept</td><td><span class="inv">SUB-9</span></td><td>Unchanged.</td></tr>
 <tr><td><code>SUB-10</code></td><td>changed</td><td><span class="inv">SUB-10</span></td><td>Runs for the cost model and every engine module.</td></tr>
 <tr><td><code>SUB-11</code></td><td>kept</td><td><span class="inv">SUB-11</span></td><td>Unchanged.</td></tr>
-<tr><td><code>SUB-12</code></td><td>kept</td><td><span class="inv">SUB-12</span></td><td>Unchanged.</td></tr>
+<tr><td><code>SUB-12</code></td><td>changed</td><td><span class="inv">SUB-12</span></td><td>The second validation layer is each engine module's refusal; the substrate has no rule layer (contracts/rules/ is removed).</td></tr>
 <tr><td><code>SUB-13</code></td><td>changed</td><td><span class="inv">SUB-13</span></td><td>The one Go module is inference-sim; no nested go.mod, and the module-zip bound covers the whole module.</td></tr>
 <tr><td><code>SUB-14</code></td><td>kept</td><td><span class="inv">SUB-14</span></td><td>Unchanged.</td></tr>
 <tr><td><code>SUB-15</code></td><td>changed</td><td><span class="inv">SUB-15</span></td><td>The deriver writes checkpoint facts only; lowering lives only in engine modules.</td></tr>
@@ -78,7 +78,7 @@
 <tr><td><code>KVS-5</code></td><td>retired</td><td>&mdash;</td><td>blis-kvstore and the KV store contract are out of scope.</td></tr>
 <tr><td><code>KVS-6</code></td><td>retired</td><td>&mdash;</td><td>blis-kvstore and the KV store contract are out of scope.</td></tr>
 <tr><td><code>KVS-7</code></td><td>retired</td><td>&mdash;</td><td>blis-kvstore and the KV store contract are out of scope.</td></tr>
-<tr><td><code>RTR-1</code></td><td>kept</td><td><span class="inv">RTR-1</span></td><td>Unchanged.</td></tr>
+<tr><td><code>RTR-1</code></td><td>changed</td><td><span class="inv">RTR-1</span></td><td>The commit and history checks leave; merge strategy and upstream-merge review are maintainer practice.</td></tr>
 <tr><td><code>RTR-2</code></td><td>kept</td><td><span class="inv">RTR-2</span></td><td>Unchanged.</td></tr>
 <tr><td><code>RTR-3</code></td><td>changed</td><td><span class="inv">RTR-3</span></td><td>The fork owns the hosting contract and its conformance suite; the API diff runs in the fork.</td></tr>
 <tr><td><code>RTR-4</code></td><td>kept</td><td><span class="inv">RTR-4</span></td><td>Unchanged.</td></tr>
@@ -104,7 +104,7 @@
 <tr><td><code>SIM-17</code></td><td>kept</td><td><span class="inv">SIM-17</span></td><td>Unchanged.</td></tr>
 <tr><td><code>SIM-18</code></td><td>changed</td><td><span class="inv">SIM-18</span></td><td>The rule shares one file system for each (model, root_dir) pair; the clause on two models leaves.</td></tr>
 <tr><td><code>CFG-1</code></td><td>kept</td><td><span class="inv">CFG-1</span></td><td>Unchanged.</td></tr>
-<tr><td><code>CFG-2</code></td><td>kept</td><td><span class="inv">CFG-2</span></td><td>Unchanged.</td></tr>
+<tr><td><code>CFG-2</code></td><td>changed</td><td><span class="inv">CFG-2</span></td><td>The bot's pull request leaves; a committed report is the generator's output and never hand-edited (maintainer practice).</td></tr>
 <tr><td><code>CFG-3</code></td><td>kept</td><td><span class="inv">CFG-3</span></td><td>Unchanged.</td></tr>
 <tr><td><code>CFG-4</code></td><td>kept</td><td><span class="inv">CFG-4</span></td><td>Unchanged.</td></tr>
 <tr><td><code>CFG-5</code></td><td>kept</td><td><span class="inv">CFG-5</span></td><td>Unchanged.</td></tr>
@@ -112,7 +112,7 @@
 <tr><td><code>FID-1</code></td><td>changed</td><td><span class="inv">FID-1</span></td><td>Worded for engine modules and the modelled commit; paths follow the consolidated layout.</td></tr>
 <tr><td><code>FID-2</code></td><td>changed</td><td><span class="inv">FID-2</span></td><td>The oracle locks to the modelled commit; for a C++ upstream it drives the upstream code through bindings.</td></tr>
 <tr><td><code>FID-3</code></td><td>changed</td><td><span class="inv">FID-3</span></td><td>Review of a changed trace is maintainer practice; the update flag and the oracle comparison stay automated.</td></tr>
-<tr><td><code>FID-4</code></td><td>kept</td><td><span class="inv">FID-4</span></td><td>Unchanged.</td></tr>
+<tr><td><code>FID-4</code></td><td>changed</td><td><span class="inv">FID-4</span></td><td>Branch coverage of ported functions, by recorded or fuzzed scenarios.</td></tr>
 <tr><td><code>FID-5</code></td><td>kept</td><td><span class="inv">FID-5</span></td><td>Unchanged.</td></tr>
 <tr><td><code>FID-6</code></td><td>kept</td><td><span class="inv">FID-6</span></td><td>Unchanged.</td></tr>
 <tr><td><code>FID-7</code></td><td>changed</td><td><span class="inv">FID-7</span></td><td>Compares against the upstream at the modelled commit.</td></tr>
@@ -122,28 +122,28 @@
 <tr><td><code>FID-11</code></td><td>kept</td><td><span class="inv">FID-11</span></td><td>Unchanged.</td></tr>
 <tr><td><code>FID-12</code></td><td>changed</td><td><span class="inv">FID-12</span></td><td>The rule refuses by name a connector or backend whose decisions live outside the tree; its KV store subject leaves.</td></tr>
 <tr><td><code>DEV-1</code></td><td>kept</td><td><span class="inv">DEV-1</span></td><td>Unchanged.</td></tr>
-<tr><td><code>DEV-2</code></td><td>kept</td><td><span class="inv">DEV-2</span></td><td>Unchanged.</td></tr>
+<tr><td><code>DEV-2</code></td><td>changed</td><td><span class="inv">DEV-2</span></td><td>Rounds within an instant; the key gains the round, and internal events get a key.</td></tr>
 <tr><td><code>DEV-3</code></td><td>kept</td><td><span class="inv">DEV-3</span></td><td>Unchanged.</td></tr>
 <tr><td><code>DEV-4</code></td><td>kept</td><td><span class="inv">DEV-4</span></td><td>Unchanged.</td></tr>
-<tr><td><code>DEV-5</code></td><td>kept</td><td><span class="inv">DEV-5</span></td><td>Unchanged.</td></tr>
+<tr><td><code>DEV-5</code></td><td>changed</td><td><span class="inv">DEV-5</span></td><td>The zero-time bound is in rounds per instant.</td></tr>
 <tr><td><code>DEV-6</code></td><td>kept</td><td><span class="inv">DEV-6</span></td><td>Unchanged.</td></tr>
-<tr><td><code>DEV-7</code></td><td>kept</td><td><span class="inv">DEV-7</span></td><td>Unchanged.</td></tr>
+<tr><td><code>DEV-7</code></td><td>changed</td><td><span class="inv">DEV-7</span></td><td>Kolmogorov-Smirnov bound for converters; a point with a failed replication is not scored.</td></tr>
 <tr><td><code>DEV-8</code></td><td>kept</td><td><span class="inv">DEV-8</span></td><td>Unchanged.</td></tr>
 <tr><td><code>DEV-9</code></td><td>kept</td><td><span class="inv">DEV-9</span></td><td>Unchanged.</td></tr>
 <tr><td><code>DEV-10</code></td><td>kept</td><td><span class="inv">DEV-10</span></td><td>Unchanged.</td></tr>
-<tr><td><code>DEV-11</code></td><td>kept</td><td><span class="inv">DEV-11</span></td><td>Unchanged.</td></tr>
+<tr><td><code>DEV-11</code></td><td>changed</td><td><span class="inv">DEV-11</span></td><td>The coverage test covers the stopping rule, a known difference, equal configurations and one better configuration.</td></tr>
 <tr><td><code>DEV-12</code></td><td>changed</td><td><span class="inv">DEV-12</span></td><td>The change class in a pull-request template becomes a maintainer practice statement with no check.</td></tr>
 <tr><td><code>DEV-13</code></td><td>kept</td><td><span class="inv">DEV-13</span></td><td>Unchanged.</td></tr>
 <tr><td><code>VAL-1</code></td><td>changed</td><td><span class="inv">VAL-1</span></td><td>Validator path follows the consolidated layout.</td></tr>
 <tr><td><code>VAL-2</code></td><td>changed</td><td><span class="inv">VAL-2</span></td><td>An assumed entry exists for every chip in a family without a roofline and in every new family; the point names the method.</td></tr>
-<tr><td><code>VAL-3</code></td><td>kept</td><td><span class="inv">VAL-3</span></td><td>Unchanged.</td></tr>
+<tr><td><code>VAL-3</code></td><td>changed</td><td><span class="inv">VAL-3</span></td><td>Also records the share of predicted time at each rank; a not_charged entry that does not meet VAL-1 counts as assumed.</td></tr>
 <tr><td><code>VAL-4</code></td><td>changed</td><td><span class="inv">VAL-4</span></td><td>Removal approval is maintainer practice; precedence and refusal checks stay.</td></tr>
-<tr><td><code>VAL-5</code></td><td>kept</td><td><span class="inv">VAL-5</span></td><td>Unchanged.</td></tr>
+<tr><td><code>VAL-5</code></td><td>changed</td><td><span class="inv">VAL-5</span></td><td>Error of fitted methods is held-out error on the same chip; the others by leave-one-chip-out, split by generation; the rank order is revisable by a validation change.</td></tr>
 <tr><td><code>VAL-6</code></td><td>changed</td><td><span class="inv">VAL-6</span></td><td>The landing decision for unjudged entries and regressions is a maintainer decision; lane is defined at first use.</td></tr>
 <tr><td><code>VAL-7</code></td><td>changed</td><td><span class="inv">VAL-7</span></td><td>Ratchet raise approval is maintainer practice; the ratchet test stays.</td></tr>
 <tr><td><code>VAL-8</code></td><td>changed</td><td><span class="inv">VAL-8</span></td><td>Engine-path costs match on code identity; carry-over is per engine commit.</td></tr>
 <tr><td><code>VAL-9</code></td><td>kept</td><td><span class="inv">VAL-9</span></td><td>Unchanged.</td></tr>
-<tr><td><code>VAL-10</code></td><td>kept</td><td><span class="inv">VAL-10</span></td><td>Unchanged.</td></tr>
+<tr><td><code>VAL-10</code></td><td>changed</td><td><span class="inv">VAL-10</span></td><td>Bootstrap resamples whole sweeps; unidentified is judged against a stated scale.</td></tr>
 <tr><td><code>VAL-11</code></td><td>changed</td><td><span class="inv">VAL-11</span></td><td>Review guidance block becomes a Maintainer practice sentence; the lint stays.</td></tr>
 <tr><td><code>D1</code></td><td>changed</td><td><span class="inv">D1</span></td><td>The review guidance block leaves.</td></tr>
 <tr><td><code>D2</code></td><td>kept</td><td><span class="inv">D2</span></td><td>Unchanged.</td></tr>
@@ -161,8 +161,8 @@
 <tr><td><code>COV-6</code></td><td>changed</td><td><span class="inv">COV-6</span></td><td>Scoring is by commit distance from the modelled commit; a run on the modelled commit is the same build and can be G1 or G2.</td></tr>
 <tr><td><code>COV-7</code></td><td>changed</td><td><span class="inv">COV-7</span></td><td>Coverage is a funnel per scored source (11.6); the provisional-point rule drops launcher commit hashes.</td></tr>
 <tr><td><code>COV-8</code></td><td>kept</td><td><span class="inv">COV-8</span></td><td>The workflow file name leaves.</td></tr>
-<tr><td><code>COV-9</code></td><td>kept</td><td><span class="inv">COV-9</span></td><td>Unchanged.</td></tr>
-<tr><td><code>COV-10</code></td><td>kept</td><td><span class="inv">COV-10</span></td><td>Unchanged.</td></tr>
+<tr><td><code>COV-9</code></td><td>changed</td><td><span class="inv">COV-9</span></td><td>A release maximises coverage, accuracy, fidelity and grades against the previous release, and carries no unexplained fit_available lookup.</td></tr>
+<tr><td><code>COV-10</code></td><td>changed</td><td><span class="inv">COV-10</span></td><td>No error is zeroed inside measurement noise, and noise is published beside the raw error; a source with per-request data is scored at every level of 8.9 and the event statistics are published.</td></tr>
 <tr><td><code>COV-11</code></td><td>changed</td><td><span class="inv">COV-11</span></td><td>The small-slice minimum moves to COV-13 (min_points).</td></tr>
 <tr><td><code>COV-12</code></td><td>kept</td><td><span class="inv">COV-12</span></td><td>Unchanged.</td></tr>
 <tr><td><code>T-M1</code></td><td>changed</td><td><span class="inv">T-M1</span></td><td>Onboarding is one to three pieces; a catalog-only pull request holds only for a model with no model support and no new primitive family.</td></tr>
@@ -187,10 +187,10 @@
 <tr><td><code>T-R3</code></td><td>kept</td><td><span class="inv">T-R3</span></td><td>Unchanged.</td></tr>
 <tr><td><code>T-R4</code></td><td>kept</td><td><span class="inv">T-R4</span></td><td>Unchanged.</td></tr>
 <tr><td><code>T-R5</code></td><td>changed</td><td><span class="inv">T-R5</span></td><td>The Size line leaves.</td></tr>
-<tr><td><code>T-N1</code></td><td>kept</td><td><span class="inv">T-N1</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-N1</code></td><td>changed</td><td><span class="inv">T-N1</span></td><td>Additions to contracts, catalog and registry that name no engine; every kernel the engine lowers to is priced.</td></tr>
 <tr><td><code>T-N2</code></td><td>kept</td><td><span class="inv">T-N2</span></td><td>Unchanged.</td></tr>
 <tr><td><code>T-B1</code></td><td>kept</td><td><span class="inv">T-B1</span></td><td>Unchanged.</td></tr>
-<tr><td><code>T-B2</code></td><td>kept</td><td><span class="inv">T-B2</span></td><td>Unchanged.</td></tr>
+<tr><td><code>T-B2</code></td><td>changed</td><td><span class="inv">T-B2</span></td><td>Each engine models or refuses the capability; its coefficients have methods; COV-15 holds.</td></tr>
 <tr><td><code>T-B3</code></td><td>changed</td><td><span class="inv">T-B3</span></td><td>One capability per pull request is maintainer practice.</td></tr>
 <tr><td><code>T-C1</code></td><td>kept</td><td><span class="inv">T-C1</span></td><td>Unchanged.</td></tr>
 <tr><td><code>T-P1</code></td><td>merged</td><td><span class="inv">T-E2</span></td><td>An upstream patch release is one more commit under the engine-upgrade procedure (12.4), which T-E2 states; per-engine tags retire.</td></tr>
@@ -208,4 +208,4 @@
 <tr><td><code>LIF-6</code></td><td>changed</td><td><span class="inv">LIF-6</span></td><td>Names a commit in place of a release; KV stores leave.</td></tr>
 <tr><td><code>LIF-7</code></td><td>changed</td><td><span class="inv">LIF-7</span></td><td>Directories replace repositories; the release-bot refusal is maintainer practice; the dead-code check stays.</td></tr>
 </tbody></table></div>
-<p>Rules with no v1.0.0 identifier: <span class="inv">COV-13</span>, <span class="inv">D9</span>, <span class="inv">D10</span>, <span class="inv">D11</span>, <span class="inv">FID-14</span>, <span class="inv">T-D5</span>, <span class="inv">T-M4</span>, <span class="inv">T-M5</span>, <span class="inv">T-N3</span>.</p>
+<p>Rules with no v1.0.0 identifier: <span class="inv">COV-13</span>, <span class="inv">D9</span>, <span class="inv">D10</span>, <span class="inv">D11</span>, <span class="inv">DEV-14</span>, <span class="inv">FID-14</span>, <span class="inv">T-D5</span>, <span class="inv">T-M4</span>, <span class="inv">T-M5</span>, <span class="inv">T-N3</span>.</p>
