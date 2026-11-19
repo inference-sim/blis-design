@@ -20,7 +20,7 @@ DEFINED = re.compile(
 INDEXED = re.compile(
     r'<span class="inv">([A-Z]+(?:-[A-Z]+)?-?)(\d+)</span>(?:–(?:<span class="inv">)?(\d+)(?:</span>)?)?')
 
-FATES = {"kept", "changed", "merged", "retired"}
+FATES = {"changed", "merged", "retired"}
 # Retirement is allowed for X10 (no bottom-up merge), the KVS family (the KV-store
 # repository is out of scope) and any rule named here after the maintainer agrees.
 RETIRE_PREFIXES = ("KVS-",)

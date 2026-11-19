@@ -37,9 +37,7 @@
 ├── tools/              generators and other tools (§13)
 └── go.mod              the one Go module: github.com/inference-sim/inference-sim
 </code></pre>
-<p>The hosting contract (<code>embed</code> and its conformance suite) is not in <code>contracts/</code>. It lives in the router fork (§5), so that the fork imports no BLIS code.</p>
-<p><code>inference-sim</code> is one Go module (<span class="inv">SUB-13</span>). The name <code>kernel/</code> comes from the <code>Kernel</code> interface in <code>contracts/kernel/</code>, not from a GPU kernel. A refit changes data and no contract, so it needs no change in any engine module.</p>
-<p><b>What one module costs.</b> Go compiles only the packages a program imports, so an engine build never compiles the cost model or the embedded data. A CI check fails if the module exceeds 100 MB uncompressed (<span class="inv">SUB-13</span>).</p>
+<p><code>inference-sim</code> is one Go module (<span class="inv">SUB-13</span>). The name <code>kernel/</code> comes from the <code>Kernel</code> interface in <code>contracts/kernel/</code>, not from a GPU kernel.</p>
 
 <h3 id="s3-3">3.3 Data: a path first, the embedded copy as the default</h3>
 <p>The catalog and the coefficient registry reach a running program in one of two ways. Both are always available, and every run records which one it used.</p>
@@ -56,7 +54,7 @@
 <p>An overlay entry with the same identity as an existing entry replaces it; any other entry is added. The combined data are then validated in full, including the rules that each lookup has at least one entry (<span class="inv">VAL-2</span>) and at most one per rank (<span class="inv">VAL-4</span>). An overlay may not contain ledger files.</p>
 
 <h4>Which files count as data</h4>
-<p>The file patterns are defined once, in the top-level package of <code>substrate/</code> (<code>data.go</code>). It must sit there, because Go&rsquo;s <code>go:embed</code> can only embed files at or below the package&rsquo;s own directory. The patterns are: hardware, devices, networks, workloads, measurement sources, each model&rsquo;s <code>model.yaml</code> and <code>graph.yaml</code>, every coefficient set, and acceptance and routing profiles. Most of the ledger is not runtime data: pricing never reads it, and it can be large, because it lists every unit. Secret-holding jobs (the CI jobs that hold the secret used to assign data roles, §10.2) read it from a checkout of <code>inference-sim</code> at the commit they build, including those in <code>accuracy-dashboard</code>. No part of the ledger is embedded.</p>
+<p>The file patterns are defined once, in the top-level package of <code>substrate/</code> (<code>data.go</code>). It must sit there, because Go&rsquo;s <code>go:embed</code> can only embed files at or below the package&rsquo;s own directory. The patterns are: hardware, devices, networks, workloads, measurement sources, each model&rsquo;s <code>model.yaml</code> and <code>graph.yaml</code>, every coefficient set, and acceptance and routing profiles. The ledger is not runtime data: pricing never reads it, and it is large. Secret-holding jobs (<a href="#s10-2">§10.2</a>), including those in <code>accuracy-dashboard</code>, read it from a checkout of <code>inference-sim</code> at the commit they build. No part of it is embedded.</p>
 <p>The <code>go:embed</code> directive must list literal patterns. A path is read with the same patterns, so the load test of <span class="inv">SUB-9</span> shows any difference between them. The loader refuses anything that would make the data ambiguous:</p>
 <ul>
 <li>a file under a data directory that matches no pattern, such as <code>coefficients/x.yml</code> where <code>.yaml</code> is expected. Ignoring it would silently drop a candidate&rsquo;s change.</li>
@@ -65,7 +63,6 @@
 <li>two paths that differ only in letter case.</li>
 </ul>
 <p>The data directories are exactly those the patterns in <code>data.go</code> name. Files outside them, such as scripts and documents, are ignored. Two things inside them are ignored by name: a model directory&rsquo;s <code>config.json</code>, and everything under <code>catalog/ledger/</code>. The check that <code>graph.yaml</code>&rsquo;s recorded <code>derived_from</code> hash matches <code>config.json</code> runs in the validators, in CI, not in the loader. So a path load and an embedded load validate the same files in the same way (<span class="inv">SUB-9</span>).</p>
-<p>Vendor <code>config.json</code> files are not data in this sense. They stay for provenance and for the graph deriver. The runtime reads only the graph&rsquo;s fields, which the deriver writes from <code>config.json</code> and the safetensors headers (<span class="inv">SUB-3</span>).</p>
 
 <h4>Recording what was used</h4>
 <p>Every run computes a content hash for each of the catalog and the coefficient registry. It lists every data file as <code>&lt;sha256 of the file's bytes&gt;  &lt;path relative to the catalog or coefficient registry directory, with forward slashes&gt;</code>, sorts the lines by path in byte order, ends every line, including the last, with a line feed, and takes the SHA-256 of the result. The loader refuses carriage returns, so the hash is the same on every machine. The <code>Result</code> document records, for each of the catalog and the coefficient registry:</p>
@@ -85,15 +82,10 @@
 
 <h4>Checking data at load</h4>
 <p>Whatever its source, the data is validated when it is loaded, by the same validators CI runs. That includes the checks <em>between</em> the catalog and the coefficient registry, for example that every chip a coefficient names exists in the catalog in use.</p>
-<p>Each run also reports which coefficient registry entries were selected (a lookup returned them), and which coefficient files were never loaded. The report covers every reader behind the <code>Environment</code>, including acceptance and routing profiles. Without it, a candidate that adds a coefficient family no released code reads would be silently ignored and would look like a no-op. The landing gate uses this report (<span class="inv">VAL-6</span>).</p>
+<p>Each run also reports which coefficient registry entries were selected (a lookup returned them), and which coefficient files were never loaded. The report covers every reader behind the <code>Environment</code>, including acceptance and routing profiles. The landing gate uses this report (<span class="inv">VAL-6</span>).</p>
 
 <h4>The ledger in a candidate</h4>
-<p>A candidate may add data units, for example after a data drop. The gate and select jobs read units from the candidate&rsquo;s tree and compare them, by <code>unit_id</code>, with the ledger at the pull request&rsquo;s merge base:</p>
-<ul>
-<li>a new unit has its role drawn by the job;</li>
-<li>a <code>unit_id</code> present at the merge base but absent from the candidate is refused, unless an alias table or a new partition version covers it. A unit whose identifying fields changed shows up exactly this way, because its <code>unit_id</code> is a hash of those fields.</li>
-</ul>
-<p>Roles are never read from a file (<span class="inv">D4</span>), so a candidate cannot change which units are held out.</p>
+<p>A candidate may add data units. The gate and select jobs compare the candidate&rsquo;s units, by <code>unit_id</code>, with the ledger at the pull request&rsquo;s merge base, and draw the role of each new unit. A <code>unit_id</code> present at the merge base but absent from the candidate is refused unless an alias table or a new partition version covers it (<span class="inv">D4</span>); a unit whose identifying fields changed is refused this way, because its <code>unit_id</code> hashes those fields. Roles are never read from a file (<span class="inv">D4</span>), so a candidate cannot change which units are held out.</p>
 
 <h3 id="s3-4">3.4 Checks by directory</h3>
 <p>CI is filtered by path: a change to one directory runs that directory&rsquo;s checks, so a catalog-only change does not run the cost model&rsquo;s slow race suite. Any change also runs the cross-directory checks (the validators against the data, the cost model against the embedded data), which are the reason the parts live together. The checks per directory are the last column of Table 1.</p>

@@ -1,7 +1,7 @@
 <!-- ============================================================ -->
 <h2 id="s14"><span class="secno">14</span>Versions and releases</h2>
 
-<p>This design has its own version number, numbered and tagged by the rule in the <a href="https://github.com/inference-sim/blis-design#version-numbers">README of blis-design</a>, stated nowhere else. This section is about the versions of the code the design describes.</p>
+<p>This section is about the versions of the code the design describes. The design&rsquo;s own version is numbered by the rule named in <a href="#s1">§1</a>.</p>
 
 <h3 id="s14-1">14.1 Version schemes</h3>
 <p>An engine module models one upstream <b>commit</b>: a release tag, or any commit on the upstream&rsquo;s main or a release branch (<span class="inv">LIF-5</span>). <code>inference-sim</code> is the one tagged release. Every other repository is pinned by commit.</p>
@@ -11,7 +11,7 @@
 <tbody>
 <tr><td>Simulator</td><td><code>inference-sim</code>, with <code>substrate/</code> and <code>engines/</code></td><td><code>vX.Y.Z</code>, the only BLIS tag</td><td>Semantic versions over what users see: the command line, the scenario format and the <code>Result</code> document. Prices and decisions are not part of that surface; a release that changes them is MINOR or PATCH, and its notes carry the price-change report. Moving an engine module to another upstream commit is MINOR, because the refusal of scenarios that name the old commit is part of the scenario contract (<span class="inv">LIF-6</span>). MAJOR is kept for changes to the command line, the scenario format or the <code>Result</code> document.</td></tr>
 <tr><td>Engine modules</td><td><code>engines/vllm</code>, <code>engines/sglang</code></td><td>No version of their own: the <code>Upstream</code> record in <code>provenance.go</code></td><td>The record names the upstream commit the module models and the release it descends from. The module holds no code for any other commit, except a listed model backport (<a href="#s7">§7</a>).</td></tr>
-<tr><td>Substrate</td><td><code>substrate/</code></td><td>No version of its own</td><td>A compatible contract addition, new data or pricing forms, or changed values are listed in the notes of the release that first contains them. An incompatible contract change is one pull request that moves every implementer (<span class="inv">SUB-1</span>, <a href="#s12-8">§12.8</a>), and the release that contains it is MINOR while <code>inference-sim</code> is at v0.</td></tr>
+<tr><td>Substrate</td><td><code>substrate/</code></td><td>No version of its own</td><td>A compatible contract addition, new data or pricing forms, or changed values are listed in the notes of the release that first contains them. The release that contains an incompatible contract change (<span class="inv">SUB-1</span>) is MINOR while <code>inference-sim</code> is at v0.</td></tr>
 <tr><td>Router fork</td><td>the llm-d router fork</td><td>One commit of <code>llm-d-r</code>, by its pseudo-version, in <code>inference-sim</code>&rsquo;s one <code>replace</code> directive (<span class="inv">X11</span>). A tag is optional and never pinned.</td><td>The fork carries one llm-d release at a time, because the router is one module with upstream&rsquo;s import path. A tag, if made, has the form <code>v&lt;upstream&gt;-blis.N</code>, and every tag stays.</td></tr>
 <tr><td>Applications</td><td><code>blis-config-search</code>, <code>accuracy-dashboard</code></td><td>No release. The scoring harness of <code>accuracy-dashboard</code> is pinned by commit in <code>inference-sim</code>&rsquo;s harness pin file (<span class="inv">X7</span>).</td><td>Each pins an <code>inference-sim</code> release by its tag and commit, runs nightly and on every new release (<a href="#s13-6">§13.6</a>), and records its own commit on every reported value it writes (<span class="inv">X8</span>).</td></tr>
 </tbody></table></div>
@@ -47,9 +47,7 @@
 </ul>
 
 <h3 id="s14-3">14.3 The SGLang engine module</h3>
-<p><code>engines/sglang</code> does for SGLang what <code>engines/vllm</code> does for vLLM. It models one SGLang commit, which <code>stack.json</code> records.</p>
-<p>The module&rsquo;s surface list records each setting, its default and the behaviour it selects at the modelled commit, and the upgrade report regenerates it (<a href="#s7-5">§7.5</a>, <a href="#s12-4">§12.4</a>). This design states no setting or default of one commit. A run&rsquo;s resolved defaults are compared with the modelled commit&rsquo;s (<span class="inv">SGL-3</span>).</p>
-<p>It does not port SGLang&rsquo;s own router, because llm-d is the router in the llm-d stack.</p>
+<p><code>engines/sglang</code> is an engine module like <code>engines/vllm</code> (<a href="#s5-2">§5.2</a>). It does not port SGLang&rsquo;s own router, because llm-d is the router in the llm-d stack.</p>
 
 <h3 id="s14-4">14.4 Release branches</h3>
 <p><code>inference-sim</code> has a main branch, which models the newest upstream commit of each engine BLIS supports, and release branches <code>release-vX.Y</code>. When an engine module moves to a new upstream commit, <code>inference-sim</code> cuts <code>release-vX.Y</code> from its last release that ran the old commit.</p>
