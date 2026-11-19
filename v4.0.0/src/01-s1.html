@@ -1,0 +1,40 @@
+<!-- ============================================================ -->
+<h2 id="s1"><span class="secno">1</span>How to read this document</h2>
+
+<p><b>Words.</b> <b>MUST</b>, <b>MUST NOT</b> and <b>SHOULD</b> mean what they mean in RFC 2119. An <em>invariant</em> is a statement about the code that every merged pull request and every release keeps true. <em>Upstream</em> means vLLM, SGLang or llm-d, whichever the sentence is about. Appendix B defines every term.</p>
+
+<p><b>Components.</b> A <b>component</b> is a part of the BLIS code with one owner. Table 1 (§2.2) lists them all, and says what each may import and what it must never contain. A component is a directory of <code>inference-sim</code> or a repository of its own. These words have fixed meanings:</p>
+<ul>
+<li>BLIS code lives in four <b>repositories</b>: <code>inference-sim</code>, the router fork, <code>accuracy-dashboard</code> and <code>blis-config-search</code>.</li>
+<li><code>inference-sim</code> is one <b>Go module</b>, and its directories <code>substrate/</code>, <code>engines/</code>, <code>sim/</code> and <code>cmd/</code> are packages of it.</li>
+<li>An <b>engine module</b> is one directory under <code>engines/</code>: the Go port of one upstream engine, at one upstream commit. The word is never used for a Go module. The commit it ports is its <b>modelled commit</b> (§7.1).</li>
+<li>The <b>simulator</b> is the code in <code>sim/</code> and <code>cmd/</code>. The <b>substrate</b> is <code>substrate/</code>, and its parts are named by directory (§3). A rule that says <code>inference-sim</code> means the repository; a rule that says the simulator means <code>sim/</code> and <code>cmd/</code>.</li>
+<li>The <b>router fork</b> is llm-d&rsquo;s router code, made runnable in simulated time and kept in a repository of its own (§2.1). The <b>hosting contract</b> is the interface through which the simulator runs it. It lives in the router fork (§5).</li>
+</ul>
+<p>§8 uses the word &ldquo;component&rdquo; for a part of the simulated system, such as an engine instance or a link, and defines it there.</p>
+
+<p><b>Registries.</b> Three things in this design are called registries, and the word is never used alone. The <b>coefficient registry</b> is the fitted and assumed coefficients, with their provenance (<code>substrate/registry/</code>, the <code>--registry</code> flag); it is what <code>--catalog</code> is paired with. The <b>invariant registry</b> is the project&rsquo;s rules, each with its statement, checks and status (<code>substrate/contracts/invariants/</code>, §13.1). The <b>metric registry</b> is the definition of every metric a <code>Result</code> may report (<code>contracts/metrics</code>, §8.7). An upstream&rsquo;s own tables are called registration tables, and engines are said to register a factory.</p>
+
+<p><b>Identifiers.</b> Every invariant has a short identifier, such as <span class="inv">X3</span> or <span class="inv">SUB-4</span>. Appendix C maps each identifier of version 1.0.0 to its place in this version. The prefixes are:</p>
+<div class="tbl"><table>
+<caption><b>Each prefix names one family of rules, and the section that states it.</b></caption>
+<thead><tr><th>Prefix</th><th>Covers</th><th>Section</th></tr></thead>
+<tbody>
+<tr><td><span class="inv">X</span></td><td>rules that span components</td><td><a href="#s4">§4</a></td></tr>
+<tr><td><span class="inv">SUB</span>, <span class="inv">VLM</span>, <span class="inv">SGL</span>, <span class="inv">RTR</span>, <span class="inv">SIM</span>, <span class="inv">CFG</span></td><td>rules for one component</td><td><a href="#s5">§5</a></td></tr>
+<tr><td><span class="inv">FID</span></td><td>fidelity to upstream code</td><td><a href="#s7">§7</a></td></tr>
+<tr><td><span class="inv">DEV</span></td><td>simulation method</td><td><a href="#s8">§8</a></td></tr>
+<tr><td><span class="inv">VAL</span></td><td>how coefficient values are obtained</td><td><a href="#s9">§9</a></td></tr>
+<tr><td><span class="inv">D</span></td><td>data roles</td><td><a href="#s10">§10</a></td></tr>
+<tr><td><span class="inv">COV</span></td><td>accuracy coverage</td><td><a href="#s11">§11</a></td></tr>
+<tr><td><span class="inv">LIF</span></td><td>versions and releases</td><td><a href="#s14">§14</a></td></tr>
+<tr><td><span class="inv">T-…</span></td><td>outcomes of one trigger (for example <span class="inv">T-A1</span> for accuracy ideas)</td><td><a href="#s12">§12</a></td></tr>
+</tbody></table></div>
+
+<p><b>How a rule is enforced.</b> A rule is automated, a maintainer practice or agent guidance, and the design says which (<a href="#s4-kinds">§4.2</a>). A statement that begins Maintainer practice: is kept by a person with write access and names no check.</p>
+
+<p><b>Versions of this design and the release plans.</b> This design has a version number. The rule for numbering and tagging versions is in the <a href="https://github.com/inference-sim/blis-design/blob/main/README.md#version-numbers">README of blis-design</a>, and is stated nowhere else. Each release has a separate <b>release plan</b>, which records where the code stands, schedules the work that brings it in line with this design, and lists the release&rsquo;s open questions. A plan may relax an invariant for a stated period, naming it, but may not create a rule. A new rule enters this document first, with an identifier. Each plan names the design version it implements.</p>
+
+<p><b>Two short companions.</b> Two summaries sit beside the design for a reader who knows llm-d and vLLM: a three-page summary of the architecture, and a seven-page summary with the detail a contributor needs before changing code. A page is a standard print page (US Letter, 0.9 inch margins, 10.5 point text). A summary does not grow when the design does. It links every claim to the section that states it, and defers to the design where they differ. A section a summary cites keeps its number.</p>
+
+<p><b>Citations.</b> A claim about upstream code cites the upstream source at a pinned commit, in the form <span class="inv">X23</span> gives. The commits are the ones <code>stack.json</code> records for each engine module and for the llm-d router. When an engine module moves to a new modelled commit, the citations that describe its behaviour move with it. A claim drawn from reading code that a recorded run has not confirmed is marked <span class="inferred">inferred</span>.</p>
