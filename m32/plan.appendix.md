@@ -6,14 +6,14 @@ the workstreams in dependency order; pull-request numbers are assigned when the 
 expiring sources) starts now. Row 6 has no issue or pull request yet and gates the engine-path costs of rows 9, 15 and
 18, so it is filed first.
 
-**Table W. Twenty-six workstreams in dependency order. Every group of Table DC has a row (rows 1 to 8), a
+**Table W. Twenty-seven workstreams in dependency order. Every group of Table DC has a row (rows 1 to 8), a
 dependency cell holds row numbers only, and once row 2 lands, a row that names blis-substrate, blis-vllm or blis-sglang
 is done in inference-sim.**
 
 | # | Workstream | Owner repositories | Depends on rows | Done when |
 |---|---|---|---|---|
 | 1 | Size the migration from the actual workflows, checks and open issues (Table DC, Sizing) | inference-sim, blis-substrate, blis-vllm, blis-sglang, the router fork | none | a list of workflows, checks and open issues per repository, and the pull-request sequence for rows 2, 3 and 5, is published |
-| 2 | Migration: the hosting contract to the router fork; blis-substrate, blis-vllm and blis-sglang into inference-sim with history; issue transfer; checks; retire the three repositories (DC3, Table DC) | the three repositories, inference-sim, the router fork | 1 | the three repositories are archived and inference-sim's CI runs their checks by directory |
+| 2 | Migration: the hosting contract to the router fork; blis-substrate, blis-vllm and blis-sglang into inference-sim with history; issue transfer; checks; retire the three repositories (DC3, Table DC) | the three repositories, inference-sim, the router fork | 1, 27 | the three repositories are archived and inference-sim's CI runs their checks by directory |
 | 3 | Engines model an upstream commit: generators at any commit, the upgrade report, commit identity, commit distance in grading, model backports; `engine.version` removed from the scenario schema and the simulator (refused as an unknown field), `inference-sim version` printing the commits a build runs, and the dashboard's scenario writer writing no engine version (LIF-6, SIM-1, design §11.2) (DC1, Table DC) | blis-vllm, blis-sglang, accuracy-dashboard, inference-sim | 2 | a run on another commit is graded by its commit distance, an upgrade report is generated, and a scenario with a version field is refused as an unknown field |
 | 4 | The vLLM and SGLang particulars of Table DC (tuned MoE configuration, defaults at two commits, platform preferences, KV events, step boundary, backport paths, P/D allocation, radix-tree core, surface lists); the TensorRT-LLM sites are recorded, not built | blis-vllm, blis-sglang | 3 | each particular is in the engine's surface list or generator at its modelled commit |
 | 5 | Lowering out of the graph deriver; `contracts/rules/` removed (DC2, Table DC) | blis-substrate, blis-vllm, blis-sglang | 2 | the deriver writes checkpoint facts only and `contracts/rules/` is gone |
@@ -38,6 +38,7 @@ is done in inference-sim.**
 | 24 | The 150 open M3.1 issues (§0.4), each taken into the row its plan item matches; the issue numbers are re-mapped after the transfer | as listed in `m31-carried.tsv` | 2 | each issue is closed or named in a row above |
 | 25 | The whole-run held-out gate in accuracy-dashboard, and the rule that every accuracy change lands through it (Table DC "Whole-run gate", "Gate as the path") | accuracy-dashboard | 2 | a pre-registered change receives one held evaluation as aggregates on its pull request, the budget count is recorded, and the nightly and pre-release runs pass on main |
 | 26 | AISimulate's held units become training roles, configiq's units become anchor 0 to 99 after the D2 join confirms no consumer read one under a training role, and the operator-level held-out gate becomes validate-unit reporting (Table DC "Partition version", "Operator-level evidence") | blis-substrate | 25 | only InferenceX has a held cut-point, only InferenceX and configiq have an anchor cut-point, every configiq unit is an anchor unit, and no InferenceX unit changed role |
+| 27 | blis-vllm's compatibility code removed: what the current engine uses from `compat/` moves into `core/` as v0.33.0 code, then `compat/` and blis-vllm's `rules/` are deleted (Table DC "Compatibility code") | blis-vllm | 1 | `go list -deps ./...` lists no `compat/` or `rules/` package, and every oracle tier passes at v0.33.0 |
 
 Row 18's gates must be written and merged before any fitting reads the new sources (VAL-6: the split and success
 criteria are committed first).
