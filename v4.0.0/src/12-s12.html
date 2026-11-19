@@ -80,7 +80,7 @@
 <li><b>Classify</b> every new surface item (<span class="inv">X9</span>) and every new configuration field (<span class="inv">VLM-3</span>).</li>
 <li><b>Regenerate</b> the recorded traces that changed. Each gets a <code>trace-reviewed:</code> line with its reason.</li>
 <li><b>Price.</b> Each kernel implementation whose selection or kernel hash changed gets a coefficient by the methods of §9. Each engine-path identity that changed gets a <code>transferred</code> entry from the previous identity, whose rule is the per-function diff, so that a coefficient survives the upgrade until a refit. A <code>transferred</code> value states its rule (§9.2).</li>
-<li><b>Merge.</b> The simulator’s <code>stack.json</code> then names the new commit, and scenarios naming the old one are refused with the message of <span class="inv">LIF-6</span>.</li>
+<li><b>Merge.</b> The simulator’s <code>stack.json</code> then names the new commit, and every <code>Result</code> records it (<span class="inv">LIF-6</span>). A user who needs the old commit uses the release that ran it.</li>
 </ol></div></div>
 <div class="row"><div class="k">Done when</div><div class="v"><ul>
 <li><span class="inv">T-E1</span> Changes are confined to the engine’s directory, the simulator’s commit bump, and the coefficients the report named. Every kernel implementation and engine-path identity that changed has an entry with a stated method. The whole-run gate (<a href="#s13-5">§13.5</a>) ran for the candidate against the previous release on held units, and no lane worsened beyond the margin of <span class="inv">VAL-6</span>, or each worsening lane is recorded as a defect in another term (<span class="inv">VAL-11</span>). The report states the change in each lane’s grade mix.</li>
@@ -88,7 +88,7 @@
 <li><span class="inv">T-E3</span> The surface list and field list are complete for the new commit.</li>
 <li><span class="inv">T-E4</span> Every changed trace carries its review line.</li>
 <li><span class="inv">T-E5</span> The replacement manifest is unchanged, or changed with a reason.</li>
-<li><span class="inv">T-E6</span> The new release refuses scenarios naming the old commit with the message of <span class="inv">LIF-6</span>. The release that message names pins the old commit and reproduces its own recorded byte-gate output.</li>
+<li><span class="inv">T-E6</span> The new release’s <code>stack.json</code> names the new commit and its Results record it (<span class="inv">LIF-6</span>). The previous release, which pins the old commit, reproduces its own recorded byte-gate output.</li>
 </ul></div></div>
 </div>
 
