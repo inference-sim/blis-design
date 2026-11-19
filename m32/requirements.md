@@ -1,7 +1,7 @@
 # BLIS M3.2 requirements
 
 These are the requirements for M3.2, the release after M3.1, captured with the maintainer from 2026-11-18. The
-design they build on is [design v4.1.0](https://inference-sim.github.io/blis-design/v4.1.0/blis-target-design.html).
+design they build on is [design v4.2.0](https://inference-sim.github.io/blis-design/v4.2.0/blis-target-design.html).
 Table W gives the order in which they are built.
 
 **Labels.** Each item carries one label:
@@ -11,7 +11,7 @@ Table W gives the order in which they are built.
 - **Open**: not yet decided. It names its owner, what decides it and a default that applies until the maintainer
   decides.
 
-Section DC lists what M3.2 builds for design v4.1.0. It comes first because the maintainer asked that design
+Section DC lists what M3.2 builds for design v4.2.0. It comes first because the maintainer asked that design
 changes be the first requirement.
 
 **Evidence.** The notes in `evidence/`, next to this file, back the figures:
@@ -28,7 +28,7 @@ named here is under `github.com/inference-sim/` unless another owner is shown.
 
 ## Terms
 
-**Repositories.** Design v4.1.0 has one simulator repository and the router fork. M3.2 builds that layout (DC3).
+**Repositories.** Design v4.2.0 has one simulator repository and the router fork. M3.2 builds that layout (DC3).
 Until the migration lands, the three repositories below still exist, and the issue numbers in this file name them.
 - **inference-sim**: the simulator. Its tagged release is the only one a milestone requires (v0.18.0 is M3.0,
   v0.18.1 is M3.1). Since M3.1 the other repositories are pinned by commit, and their tags are optional.
@@ -61,11 +61,11 @@ Until the migration lands, the three repositories below still exist, and the iss
   InferenceX rows published after the dump and added to the ledger one by one, each pinned by its row id and the
   SHA-256 of its content.
 
-**Design rules, sections and terms.** IDs such as X7, SUB-15, COV-6, T-M1 or D6 name rules of design v4.1.0
-([Appendix A](https://inference-sim.github.io/blis-design/v4.1.0/blis-target-design.html#appA)). "Design §n.m" is a
+**Design rules, sections and terms.** IDs such as X7, SUB-15, COV-6, T-M1 or D6 name rules of design v4.2.0
+([Appendix A](https://inference-sim.github.io/blis-design/v4.2.0/blis-target-design.html#appA)). "Design §n.m" is a
 design section and links to it. A bare "§n" is a section of this file (§0 to §5, including §3A to §3C). DC1 to DC3 are
 the design changes and DC4 is the team request. Terms not defined here are defined in the design's
-[Appendix B](https://inference-sim.github.io/blis-design/v4.1.0/blis-target-design.html#appB) and keep its sense,
+[Appendix B](https://inference-sim.github.io/blis-design/v4.2.0/blis-target-design.html#appB) and keep its sense,
 including "lane". A model backport is written "backport". An **estimated substitution** is a named substitution whose
 value comes from a stated rule rather than a record.
 
@@ -92,7 +92,7 @@ value comes from a stated rule rather than a record.
   before the ledger keep their old fit or held side (design §10.2).
 
 **Grades.** G1 (exact) to G5 (not scored), as design
-[§11.3](https://inference-sim.github.io/blis-design/v4.1.0/blis-target-design.html#s11-3) defines them. G1 and G2
+[§11.3](https://inference-sim.github.io/blis-design/v4.2.0/blis-target-design.html#s11-3) defines them. G1 and G2
 need the run's own engine commit; G3 and G4 are other commits, by commit distance.
 
 **Coefficients.**
@@ -113,9 +113,9 @@ need the run's own engine commit; G3 and G4 are other commits, by commit distanc
 
 ## DC. Design changes (DC1 to DC3) and a team request (DC4)
 
-**Status.** M3.2 implements [design v4.1.0](https://inference-sim.github.io/blis-design/v4.1.0/blis-target-design.html).
+**Status.** M3.2 implements [design v4.2.0](https://inference-sim.github.io/blis-design/v4.2.0/blis-target-design.html).
 The design states the rules. DC1 to DC3 are **Decided**: the design adopts them, and this section states each once.
-Table DC lists what M3.2 builds. Rule IDs and sections are those of v4.1.0. The lowering work of DC2, planned
+Table DC lists what M3.2 builds. Rule IDs and sections are those of v4.2.0. The lowering work of DC2, planned
 for M4, is part of M3.2.
 
 **Why.** Changes crossed repositories in sequence: a per-pool offload fix needed three pull requests in three
@@ -166,7 +166,7 @@ other groups are easier in one repository.**
 | Rules layer | Remove `contracts/rules/` and move model values into graph fields; each engine module's refusal is the engine layer of validation | SUB-12 |
 | Onboarding command | Remove `onboard --plan` with its tests and docs. Simulating the requested scenario and the upgrade report answer the same questions | T-M2 |
 | **Compatibility code (DC2)** | Table W row 27 | |
-| Compatibility code | blis-vllm's engine (`vllmengine`, v0.33.0) still depends on `compat/`, the old v0.31 engine, and on blis-vllm's own `rules/` package (not `contracts/rules/`). Port what the engine uses into `core/` against v0.33.0 and check it with the oracle tiers; do not copy it unchanged. Then delete `compat/` and `rules/`. Do this before the migration, so the old code does not move into inference-sim | [LIF-5](https://inference-sim.github.io/blis-design/v4.1.0/blis-target-design.html#s14-2), DC2, SUB-12 |
+| Compatibility code | blis-vllm's engine (`vllmengine`, v0.33.0) still depends on `compat/`, the old v0.31 engine, and on blis-vllm's own `rules/` package (not `contracts/rules/`). Port what the engine uses into `core/` against v0.33.0 and check it with the oracle tiers; do not copy it unchanged. Then delete `compat/` and `rules/`. Do this before the migration, so the old code does not move into inference-sim | [LIF-5](https://inference-sim.github.io/blis-design/v4.2.0/blis-target-design.html#s14-2), DC2, SUB-12 |
 | **Any commit (DC1), all engines** | Table W row 3 | |
 | Generators | Make `gen_surface.py`, `gen_kernel_impls.py` and `gen_fields.py` work at any commit. At M3.1 `gen_surface.py` refuses a checkout at another commit, `gen_kernel_impls.py` needs one `kernels/<tag>/attention.json` per release, and `gen_fields.py` holds release-specific paths. Lock the oracle environment to the commit | X9, FID-2, T-E3 |
 | Upgrade report | Generate the report of design §12.4 (surface diff, field demand, source diff, and for each model the catalog entry, model support and missing coefficients). Every new surface entry gets a status. The dashboard uses the same diff generator to grade a run. Include the Transformers-backed fallback paths of vLLM and SGLang as surface-list items, and list the models that run only through them | X9, design §12.4, design §11.3 |
@@ -191,7 +191,7 @@ other groups are easier in one repository.**
 | Cross-generation transfer | Validate the GB200 (Blackwell) to Hopper transfer rules (leave one generation out) before use. Until then a cross-generation transfer ranks as roofline | VAL-5, design §9.2 |
 | Ledger multiples | Record InferenceX's client multiples (10 measured, 2 warm-up, 12 in all) for `measurement_contaminated` in the ledger's source record | design §10.2 |
 | **Held-out gate** | Table W rows 25 and 26 | |
-| Whole-run gate | Build the gate of design §13.5 in accuracy-dashboard. A candidate job with no secret builds the candidate and runs the pinned harness. The gate job, which holds the secret, scores held units only and returns aggregates over at least `min_points` role keys, judged as VAL-6 states. It gives one evaluation per pre-registration and counts it against the partition version's budget. It reports on the pull request, runs nightly, and runs before each release against the previous release and the best published release | [VAL-6](https://inference-sim.github.io/blis-design/v4.1.0/blis-target-design.html#s9-4), D7, design §12.3, design §13.5 |
+| Whole-run gate | Build the gate of design §13.5 in accuracy-dashboard. A candidate job with no secret builds the candidate and runs the pinned harness. The gate job, which holds the secret, scores held units only and returns aggregates over at least `min_points` role keys, judged as VAL-6 states. It gives one evaluation per pre-registration and counts it against the partition version's budget. It reports on the pull request, runs nightly, and runs before each release against the previous release and the best published release | [VAL-6](https://inference-sim.github.io/blis-design/v4.2.0/blis-target-design.html#s9-4), D7, design §12.3, design §13.5 |
 | Gate as the path | Every M3.2 change that moves accuracy goes through the whole-run gate: each refit, each coefficient change and each engine upgrade. The refit of both engines (row 29) lands only through it | VAL-6, T-A1, T-A2 |
 | Operator-level evidence | Remove the operator-level held-out gate from the ledger workflow. The error job keeps reporting each method's error on validate units nightly, as method error, never as accuracy; it informs review and never decides a landing | VAL-5, VAL-11, design §13.5 |
 | Partition version | Write a new partition version that changes AISimulate's cut-points to training roles (fit 0 to 69, select 70 to 84, validate 85 to 99) and configiq's cut-points to anchor 0 to 99, and keeps the partition secret. Before switching, the D2 join must confirm that no consumer read a configiq unit under a training role and no consumer read an AISimulate held unit under a training role; any configiq unit read that way is left out, not made an anchor. No InferenceX unit changes role, and no secret is published. An agent prepares the change and the join report; a maintainer with write access writes and approves the new partition version (design §10.2, §13.7) | D2, D4, D7, D9 |
@@ -349,7 +349,7 @@ In C2, SGLang speculation, attention data parallelism, expert parallelism and P/
 refused in M3.1, as blis-sglang#126 states. A comment on blis-substrate#51 says what remains after switch groups.
 
 **Table 0.4b. The 150 issues by the Table W row that owns them.** Row 24 holds the issues that fit no row: 5 to close
-and 27 to triage (maintainer).
+and 27 to triage (A5, Table A).
 
 | Table W row | Issues | Table W row | Issues |
 |---|---|---|---|
@@ -734,4 +734,4 @@ measurement.
 - Each release publishes the support matrix: for each cell, whether it runs, and the share of predicted time priced
   by each method (measured, calibrated, transferred, literature, vendor_spec, roofline, assumed). The team can then
   see how far to trust each combination.
-- blis-config-search sweeps chip and fabric as axes, like any other capability ([CFG-6](https://inference-sim.github.io/blis-design/v4.1.0/blis-target-design.html#s5-5)).
+- blis-config-search sweeps chip and fabric as axes, like any other capability ([CFG-6](https://inference-sim.github.io/blis-design/v4.2.0/blis-target-design.html#s5-5)).

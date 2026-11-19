@@ -1,8 +1,10 @@
 # BLIS M3.2 plan
 
 This is the M3.2 plan. Table O gives the objectives, Table V the deliverables, and Table W (the next part) the
-workstreams. **Table W is the execution order.** The requirements that follow it are the source of truth; this page is
-generated from them.
+workstreams. **Table W is the execution order.** An agent can execute it end to end under the standing
+authorization (Table A, design §13.7): the maintainer gives two inputs once (a Hugging Face token and an archive
+location) and can revoke the authorization at any time. The requirements that follow are the source of truth; this
+page is generated from them.
 
 A **Proposal** item is the plan's default and is built as written unless review corrects it. An **Open** item has a
 named default that applies until the maintainer decides.

@@ -5,7 +5,7 @@ reading and editing; it is never merged into `main`, which holds the standing de
 
 Start with [`plan.html`](plan.html): the objectives, the deliverables and Table W, the execution order. The rules and
 figures are in [`requirements.md`](requirements.md), whose Terms section defines the project's terms. Section DC lists what
-M3.2 builds for [design v4.1.0](https://inference-sim.github.io/blis-design/v4.1.0/blis-target-design.html).
+M3.2 builds for [design v4.2.0](https://inference-sim.github.io/blis-design/v4.2.0/blis-target-design.html).
 Section 0 lists what M3.1 left for M3.2. Each requirement carries one of three labels, defined in the requirements.
 
 For a one-page overview of the data sources and the calibration process, download
