@@ -55,17 +55,20 @@ distance, which is finer.
 contract-change review set that removes `contracts/rules/` with model values moved into graph fields, from M3 to
 M4 (2026-11-17). The design already says a graph holds only what the checkpoint states, and that sharding,
 fusion, padding and the nodes emitted under a layout are lowering (SUB-15). It also says onboarding a model is
-one blis-substrate pull request with no engine code (§12.1, T-M1). Neither is true yet. The onboarding preflight
-the design describes, `inference-sim onboard --plan`, is not built.
+one blis-substrate pull request with no engine code (§12.1, T-M1). Neither is true yet.
 
 **Proposal.** Bring both into M3.2.
 - Move all lowering into the engine modules.
 - Remove `contracts/rules/`, as the contract-change review set (§12.8).
-- Build the onboarding preflight.
+
+No separate preflight command is needed. §12.1 describes one (`inference-sim onboard --plan`), which was never
+built. A run of the requested scenario already answers the same questions: a missing catalog entry or graph
+handler is refused by name (`not_in_catalog`), an engine refuses what it cannot lower, and the Result records
+which method each coefficient came from, which the dashboard reads as `coefficient_method`.
 
 **Effect.** Onboarding a new architecture becomes a graph handler plus data, and each engine lowers the new
-primitives in its own code. Every model request gets the same answer: what exists, what is missing, which engine
-build, and which coefficients come from which method.
+primitives in its own code. A team's model request is answered by running its scenario: what runs, what is
+refused and why, and which coefficients come from which method.
 
 ### D3. Consolidate blis-substrate, blis-vllm, blis-sglang and blis-kvstore into inference-sim
 
@@ -134,7 +137,7 @@ except where items share lines.
 | §7.6 port as a unit; §7.1 engine port frame | "at an exact pin" means an upstream commit; the model backport | D1 |
 | §8 lowering; SUB-15 | lowering lives only in engine modules; the deriver writes checkpoint facts only | D2 |
 | §11.2 to §11.4 grading | release difference becomes commit distance | D1 |
-| §12.1 onboarding; T-M1 | one pull request touching the catalog directory; the preflight is built | D2, D3 |
+| §12.1 onboarding; T-M1 | one pull request touching the catalog directory; a run of the requested scenario is the preflight, and the `onboard --plan` command is removed from the design | D2, D3 |
 | §12.8 contract-change review set | one pull request in one repository, plus the router fork | D3 |
 | §13 automation | the release bot without the pin cascade; path-filtered CI | D3 |
 | §14 versions: LIF-2, LIF-4, LIF-5, LIF-6, §14.4; X10, X11; SUB-13 | an engine models one commit; one repository's release branches; pins only to `contracts` and the router fork | D1, D3 |
