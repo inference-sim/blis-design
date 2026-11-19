@@ -843,10 +843,10 @@ how well the fitted model reproduces them, as a training diagnostic labelled as 
 
 ## 5. CI: editing a pull request's text must not change its merge state
 
-5.1 **Maintainer (2026-11-18).** File this for M3.2 in blis-design and in each repository's `ci.yml`:
-- Editing a pull request's title or body, without changing its base or head, never changes its merge state.
-- The checks that read the text become their own required checks (for example `pr / description`), triggered on
-  `edited` and nothing else.
-- The heavy CI workflow and its required aggregate do not run on a text-only `edited` event. A change of base is
-  detected through `github.event.changes.base`, so it stays covered.
-- A test or a CI self-check proves that editing a body leaves `mergeStateStatus` unchanged.
+5.1 **Maintainer (2026-11-18, revised 2026-11-19).** Editing a pull request's title or body never changes its merge
+state. CI runs only when the pull request's code changes.
+- No CI check reads a pull request's title or body. The text is maintainer practice, reviewed by people
+  (design v2.0.0's rule that process is maintainer practice).
+- Workflows trigger on `pull_request` events of type `opened`, `synchronize` and `reopened`, and on a change of
+  base. An `edited` event triggers nothing.
+- This supersedes the earlier idea of separate required checks that read the text.

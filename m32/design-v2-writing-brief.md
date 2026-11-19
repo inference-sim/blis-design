@@ -63,6 +63,8 @@ v2.0.0 is v1.0.0 edited, not a new document.
   - A v1.0.0 rule that exists only to automate process becomes maintainer practice (fate "changed"), or is retired
     if it is moot.
   - There is no CODEOWNERS file.
+  - Editing a pull request's title or body never changes its merge state. No check reads PR text, and CI runs
+    only when the code changes (opened, synchronize, reopened, base change), never on an `edited` event.
 - **Testing.** Correctness and invariants are checked by behavioural tests: conformance, differential, mutation,
   metamorphic and property tests. Never structural tests, such as tests of source text, order, hashes or goldens
   used as a shortcut.
