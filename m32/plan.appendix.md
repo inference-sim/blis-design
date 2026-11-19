@@ -10,9 +10,9 @@ to them, so the plan carries no decision that the requirements do not.
 - **Harvest the expiring sources immediately.** The SGLang nightly job logs and `consolidated-metrics`,
   and Tritonbench, expire at ~90 days. Begin the pinned private archive now, so the window keeps growing
   instead of rolling off before M3.2 starts.
-- **"No new GPU or cluster runs".** The real-vLLM load-timing test (blis-vllm#305) uses already-posted real
-  data, so it is not a new run. The GB200 custom all-reduce (blis-substrate#116) would be a new measurement on
-  GB200: it is open whether the maintainer grants that exception (§0.5).
+- **No new GPU or cluster runs, with no exceptions (§1.6).** The real-vLLM load-timing test (blis-vllm#305)
+  uses already-recorded real data. The GB200 custom all-reduce (blis-substrate#116) stays transferred until a
+  source measures it (§0.5).
 
 ## Execution — ownership and sequence
 
