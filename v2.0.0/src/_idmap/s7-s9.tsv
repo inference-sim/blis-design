@@ -1,0 +1,17 @@
+v1_id	fate	v2_id	reason
+FID-1	changed	FID-1	worded for engine modules and the modelled commit; paths follow the consolidated layout
+FID-2	changed	FID-2	oracle locks to the modelled commit (any upstream commit); for a C++ upstream the oracle drives the upstream code through its bindings
+FID-3	changed	FID-3	review of a changed trace is maintainer practice; the update flag and the oracle comparison stay automated
+FID-7	changed	FID-7	compares against the upstream at the modelled commit
+FID-9	changed	FID-9	engine modules, not repositories
+FID-12	changed	FID-12	subject was KV store packages modelled in blis-kvstore, which is out of scope; now a connector or backend whose decisions live outside the tree is refused by name
+(none)	new	FID-13	correctness is checked by behavioural tests only (conformance, differential, mutation, metamorphic, property); checked by the mutation sweep
+(none)	new	FID-14	an engine upgrade regenerates the three lists at any commit, locks the oracle and re-runs every tier; a backport changes no other model trace
+DEV-12	changed	DEV-12	process only (change class in pull-request template) becomes a Maintainer practice statement with no check
+VAL-1	changed	VAL-1	validator path follows the consolidated layout
+VAL-2	changed	VAL-2	assumed entry for every chip in families without a roofline and in every new family; the point names the method
+VAL-4	changed	VAL-4	removal approval is maintainer practice; precedence and refusal checks stay
+VAL-6	changed	VAL-6	landing decision for unjudged entries and regressions is a maintainer decision; lane defined at first use; gate paths follow the layout
+VAL-7	changed	VAL-7	ratchet raise approval is maintainer practice; the ratchet test stays
+VAL-8	changed	VAL-8	engine-path costs match on code identity; carry-over is per engine commit; kernel_impls.json of the modelled commit
+VAL-11	changed	VAL-11	review guidance block becomes a Maintainer practice sentence; the lint stays

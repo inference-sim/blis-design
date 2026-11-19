@@ -1,62 +1,56 @@
 <!-- ============================================================ -->
-<h2 id="s3"><span class="secno">3</span>blis-substrate</h2>
+<h2 id="s3"><span class="secno">3</span>The substrate</h2>
 
-<h3 id="s3-1">3.1 Why one repository</h3>
-<p>The substrate has four parts: the contracts and data types, the catalog of facts, the coefficient registry, and the cost model. They change together:</p>
+<h3 id="s3-1">3.1 Why the parts live together</h3>
+<p>The substrate is the directory <code>substrate/</code> of <code>inference-sim</code>. It has parts for contracts, the catalog with its ledger, the coefficient registry, the cost model, the validators and the loader. They change together:</p>
 <ul>
 <li>A model whose architecture is already supported needs only a catalog entry. A model with something new in its architecture usually needs a new data field, a catalog entry, new coefficients and a change to the cost model, all at once.</li>
-<li>The data are validated by the contracts' validators, and the cost model is tested against the data. If the parts lived in separate repositories, each change would be released in order, each release would force the next repository to update its pin, and consistency would rest on vendored copies and lock files. The release plan's background describes what that cost when the parts were separate.</li>
+<li>The validators check the data, and the cost model is tested against the data.</li>
 </ul>
-<p>In one repository, such a change is one pull request, one review and one release. Each release also embeds its own data, which is small enough to compile into the program. Paths still override the embedded copy, so a data-only recalibration that the released validators accept needs no rebuild (<a href="#s3-3">§3.3</a>).</p>
+<p>Such a change is one pull request, one review and one release, and it can include the engine module and the simulator change that use it. Each release embeds its own data, which is small enough to compile into the program. A path overrides the embedded copy, so a data-only recalibration that the released validators accept needs no rebuild (<a href="#s3-3">§3.3</a>).</p>
 
 <h3 id="s3-2">3.2 Layout</h3>
-<pre><code>blis-substrate/
-├── contracts/          the packages other repositories implement or call
-│   ├── *.go            package contracts: file loaders and bundle validation
-│   ├── engine/         engine.Engine, Batch, Transfer, PoolPlan, StepShape …
-│   ├── kernel/         the Kernel interface the cost model implements
-│   ├── embed/          the router contract the llm-d fork implements
-│   ├── kvstore/        the KV store contract blis-kvstore implements (§6.5)
-│   ├── spec/           data types: scenario, deployment, model graph, coefficient, …
-│   ├── vocab/          shared names: methods, sources, roles
-│   ├── check/          validation helpers shared by spec/ and validate/; fmath/, exact math functions
-│   ├── conformance/    test suites implementers run (enginetest, kerneltest, embedtest, kvstoretest)
-│   ├── invariants/     the invariant registry (§13)
-│   ├── toolchain       the one Go toolchain version every BLIS build uses (LIF-2)
-│   └── harness/        shared checks engine repositories run in their tests
-├── catalog/            published facts (YAML, vendor config.json); Python graph deriver
-│   └── ledger/         data sources, units and the role rule (§10)
-├── registry/           coefficient sets (YAML); Python fitting scripts
-├── kernel/             the cost model (Go); "kernel" here is a historical name
-├── validate/           validators for catalog and registry, and their commands (Go)
-├── data.go             package substrate: go:embed of catalog/ and registry/
-├── load/               the loader: reads data from a path or from the embedded copy
-├── tools/              the release bot (§13.6) and other repository tools
-├── README.md           the repository&rsquo;s one document (<span class="inv">X29</span>)
-├── .github/            workflows, filtered by path (§3.4), and the pull-request template
-└── go.mod              the one Go module: github.com/inference-sim/blis-substrate
+<pre><code>inference-sim/
+├── substrate/
+│   ├── contracts/      the packages the other components implement or call
+│   │   ├── *.go        package contracts: file loaders and bundle validation
+│   │   ├── engine/     engine.Engine, Batch, Transfer, PoolPlan, StepShape …
+│   │   ├── kernel/     the Kernel interface the cost model implements
+│   │   ├── spec/       data types: scenario, deployment, model graph, coefficient, …
+│   │   ├── vocab/      shared names: methods, sources, roles
+│   │   ├── transport/  the function that picks a transport library's form
+│   │   ├── metrics/    the metric registry
+│   │   ├── check/      validation helpers shared by spec/ and validate/; fmath/, exact math
+│   │   ├── conformance/  test suites implementers run (enginetest, kerneltest)
+│   │   ├── invariants/ the invariant registry (§13)
+│   │   ├── toolchain   the one Go toolchain version every BLIS build uses
+│   │   └── harness/    shared checks engine modules run in their tests
+│   ├── catalog/        published facts (YAML, vendor config.json); Python graph deriver
+│   │   └── ledger/     data sources, units and the role rule (§10)
+│   ├── registry/       coefficient sets (YAML); Python fitting scripts
+│   ├── kernel/         the cost model (Go); "kernel" here is a historical name
+│   ├── validate/       validators for catalog and registry, and their commands (Go)
+│   ├── load/           the loader: reads data from a path or from the embedded copy
+│   └── data.go         package substrate: go:embed of catalog/ and registry/
+├── engines/            one directory per engine (§7)
+├── sim/, cmd/          the simulator
+├── tools/              the release bot (§13.6) and other tools
+└── go.mod              the one Go module: github.com/inference-sim/inference-sim
 </code></pre>
-
-<p>The substrate is one Go module. Every repository that uses it pins one commit of its main branch, by that commit's pseudo-version; a tag on the substrate is optional and is never pinned (<span class="inv">X11</span>).</p>
-<p>The module has two kinds of package:</p>
+<p>The hosting contract (<code>embed</code> and its conformance suite) is not in <code>contracts/</code>. It lives in the router fork (§5), so that the fork imports no BLIS code.</p>
+<p><code>inference-sim</code> is one Go module (<span class="inv">SUB-13</span>). The packages of <code>substrate/</code> are of two kinds:</p>
 <ul>
-<li><b>Packages under <code>contracts/</code></b> hold interfaces, data types, validators of those types, conformance suites, the engine harness and the invariant registry. They import only the Go standard library, the YAML parser and each other. The engine repositories and the router fork import only these packages, and an import test in each of those repositories enforces it.</li>
-<li><b>All other packages</b> hold the cost model, the catalog and coefficient registry validators, the data loader, and the embedded data. Only <code>inference-sim</code> imports them.</li>
+<li><b>Packages under <code>contracts/</code></b> hold interfaces, data types, validators of those types, conformance suites, the engine harness and the invariant registry. They import only the Go standard library, the YAML parser and each other (<span class="inv">SUB-1</span>). Engine modules import only these packages.</li>
+<li><b>All other packages</b> hold the cost model, the validators, the data loader and the embedded data. Only the simulator imports them.</li>
 </ul>
-<p><b>Why a refit needs no engine or router release.</b> Suppose <code>blis-vllm</code> pins substrate commit A and <code>inference-sim</code> pins a later commit B of the substrate's main branch, which carries new coefficients. Go builds every module in a program with the newest version any of them requires, and a later commit on one branch has the higher pseudo-version, so <code>inference-sim</code>'s build uses B for <code>blis-vllm</code> too. The packages under <code>contracts/</code> change only compatibly, except through a contract-change review set (a group of pull requests across repositories, reviewed and released as one change), which releases every implementer together (<span class="inv">SUB-1</span>, §12.8). So <code>blis-vllm</code> compiles against B unchanged, and no new <code>blis-vllm</code> commit is needed. The nightly compatibility build (§13.4) confirms that every repository, at the commit the newest <code>inference-sim</code> release pins, still compiles and passes its tests against the newest substrate.</p>
-<p><b>Engines must not move the simulator's data.</b> The same rule works in reverse: if an engine required a newer substrate than <code>inference-sim</code> does, the simulator would be built with that newer substrate, and its embedded coefficients would change because of an engine release. To prevent that:</p>
-<ul>
-<li>An engine or the router fork requires the oldest substrate version whose <code>contracts/</code> packages it uses. It never requires a commit newer than <code>inference-sim</code>'s current requirement, and its required commit is an ancestor of the one <code>inference-sim</code> requires; the release bot refuses an <code>inference-sim</code> release that breaks either rule. When an engine needs a newer contract, the release bot moves <code>inference-sim</code> first, in the same review set. On a release branch (<a href="#s14-4">§14.4</a>) the bound is the substrate requirement of the <code>inference-sim</code> release branch the fix ships in. A fix that needs a newer contract moves that branch to the newer substrate first, in a PATCH release whose notes carry its price-change report. A fix that would need a substrate past an incompatible contract change is not backported.</li>
-<li>Before every <code>inference-sim</code> release, <code>go test</code> runs every engine and router package in a scratch copy of <code>inference-sim</code>'s module, with test dependencies added, so each is tested against the substrate the simulator actually selects (<span class="inv">LIF-2</span>).</li>
-<li><code>inference-sim</code>'s own requirement on the substrate must equal the version its build selects. If a dependency raises it, the build fails until the release bot moves <code>inference-sim</code>'s pin, which produces the usual price-change report (<span class="inv">LIF-2</span>).</li>
-</ul>
-<p><b>What one module costs.</b> A repository that pins the substrate downloads all of it, mostly vendor <code>config.json</code> files (the release plan's evidence gives the size at the time of that plan; Go's limit for a module is 500 MB). Go compiles only the packages a program imports, so an engine build never compiles the cost model or the embedded data. A CI check fails if the module exceeds 100 MB uncompressed, well before Go's 500 MB limit (<span class="inv">SUB-13</span>).</p>
+<p>Table 1 states both rules, and the import-graph lint enforces them. A refit changes data and no contract, so it needs no change in any engine module. A contract changes only as <span class="inv">SUB-1</span> allows.</p>
+<p><b>What one module costs.</b> Anyone who fetches the module downloads all of it, mostly vendor <code>config.json</code> files (Go&rsquo;s limit for a module is 500 MB). Go compiles only the packages a program imports, so an engine build never compiles the cost model or the embedded data. A CI check fails if the module exceeds 100 MB uncompressed, well before Go&rsquo;s limit (<span class="inv">SUB-13</span>).</p>
 
 <h3 id="s3-3">3.3 Data: a path first, the embedded copy as the default</h3>
 <p>The catalog and the coefficient registry reach a running program in one of two ways. Both are always available, and every run records which one it used.</p>
 <ul>
-<li><b>A path.</b> <code>--catalog &lt;dir&gt;</code> and <code>--registry &lt;dir&gt;</code> (or <code>BLIS_CATALOG</code> and <code>BLIS_REGISTRY</code>) name directories with the same layout as <code>blis-substrate/catalog/</code> and <code>blis-substrate/registry/</code>, such as a checkout, a working tree or an exported revision. When a path is given, the run uses that directory <em>instead of</em> the embedded copy. Recalibration uses this. A fitting script writes candidate coefficients to a directory, and the released simulator scores them with no rebuild. Comparing two coefficient registries means running one binary twice with two paths.</li>
-<li><b>The embedded copy.</b> When no path is given, the run uses the data compiled into the substrate with <code>go:embed</code>. A release therefore carries the exact data it was tested with, and a user of a released binary needs no checkout. <code>inference-sim</code> cannot be installed with <code>go install …@version</code>, because Go refuses that for a module whose <code>go.mod</code> has a <code>replace</code> directive, and <code>inference-sim</code> carries one (<span class="inv">X11</span>). So each release ships signed binaries for the three supported platforms, with the provenance and bill of materials of <span class="inv">X21</span>. A source build needs a checkout at the tag.</li>
+<li><b>A path.</b> <code>--catalog &lt;dir&gt;</code> and <code>--registry &lt;dir&gt;</code> (or <code>BLIS_CATALOG</code> and <code>BLIS_REGISTRY</code>) name directories with the same layout as <code>substrate/catalog/</code> and <code>substrate/registry/</code>, such as a checkout, a working tree or an exported revision. When a path is given, the run uses that directory <em>instead of</em> the embedded copy. Recalibration uses this. A fitting script writes candidate coefficients to a directory, and the released simulator scores them with no rebuild. Comparing two coefficient registries means running one binary twice with two paths.</li>
+<li><b>The embedded copy.</b> When no path is given, the run uses the data compiled into the simulator with <code>go:embed</code>. A release therefore carries the exact data it was tested with, and a user of a released binary needs no checkout. <code>inference-sim</code> cannot be installed with <code>go install …@version</code>, because Go refuses that for a module whose <code>go.mod</code> has a <code>replace</code> directive, and <code>inference-sim</code> carries one for the router fork (<span class="inv">X11</span>). So each release ships signed binaries for the supported platforms, with the provenance and bill of materials of <span class="inv">X21</span>. A source build needs a checkout at the tag.</li>
 <li><b>What stays fixed.</b> A model runs only if it is in the catalog in use, and it is resolved from its <code>graph.yaml</code>. A missing model is refused with the catalog's source (the embedded release, or a path) and the relative path its entry belongs at. No run creates or changes catalog or coefficient registry files, no run fetches anything from the network, and the deployment always comes from a required scenario.</li>
 </ul>
 <p>The two flags are independent. A run may, for example, use the embedded catalog with a candidate coefficient registry.</p>
@@ -66,10 +60,10 @@
 <li>In the coefficient registry, one coefficient, identified by its set, its name, its scope and its method.</li>
 </ul>
 <p>An overlay entry with the same identity as an existing entry replaces it; any other entry is added. The combined data are then validated in full, including the rules that each lookup has at least one entry (<span class="inv">VAL-2</span>) and at most one per rank (<span class="inv">VAL-4</span>). An overlay may not contain ledger files.</p>
-<p>Overlays have their own flags because a recalibration candidate replaces the whole coefficient registry. If one flag could either replace or add to the data, an A/B comparison would be ambiguous.</p>
+<p>Overlays have their own flags because a recalibration candidate replaces the whole coefficient registry, and one flag that could either replace or add would make an A/B comparison ambiguous.</p>
 
 <h4>Which files count as data</h4>
-<p>The file patterns are defined once, in the substrate's top-level package (<code>data.go</code>). That package must sit at the top of the repository, because Go's <code>go:embed</code> can only embed files at or below the package's own directory. The patterns are: hardware, devices, networks, workloads, measurement sources, each model's <code>model.yaml</code> and <code>graph.yaml</code>, every coefficient set, and acceptance and routing profiles. Most of the ledger is not runtime data: pricing never reads it, and it can be large, because it lists every unit. Seed-holding jobs (the CI jobs that hold the secret used to assign data roles, §10.2) read it from a checkout of the repository at the substrate commit they pin, including those in <code>accuracy-dashboard</code>. The exception is the three published role lists (<code>catalog/ledger/published/</code>), which are embedded so that <code>inference-sim ledger</code> can print them offline.</p>
+<p>The file patterns are defined once, in the top-level package of <code>substrate/</code> (<code>data.go</code>). It must sit there, because Go's <code>go:embed</code> can only embed files at or below the package's own directory. The patterns are: hardware, devices, networks, workloads, measurement sources, each model's <code>model.yaml</code> and <code>graph.yaml</code>, every coefficient set, and acceptance and routing profiles. Most of the ledger is not runtime data: pricing never reads it, and it can be large, because it lists every unit. Seed-holding jobs (the CI jobs that hold the secret used to assign data roles, §10.2) read it from a checkout of <code>inference-sim</code> at the commit they build, including those in <code>accuracy-dashboard</code>. The exception is the three published role lists (<code>catalog/ledger/published/</code>), which are embedded so that <code>inference-sim ledger</code> can print them offline.</p>
 <p>The <code>go:embed</code> directive must list literal patterns, so a test checks that they equal the loader's. A path is read with the same patterns, and the loader refuses anything that would make the data ambiguous:</p>
 <ul>
 <li>a file under a data directory that matches no pattern, such as <code>coefficients/x.yml</code> where <code>.yaml</code> is expected. Ignoring it would silently drop a candidate's change.</li>
@@ -90,11 +84,11 @@
 <p>It also records the build the simulator came from: the <code>inference-sim</code> release tag, or the commit it was built from.</p>
 <p>A run is exactly pinned when all of these hold:</p>
 <ul>
-<li>the simulator is an <code>inference-sim</code> release tag or a full commit of it, and its <code>stack.json</code> names the commit of every module it pins (<span class="inv">X11</span>); a tag is one way to name a commit, a pseudo-version another, and a branch names none;</li>
-<li>the catalog and coefficient registry hashes equal the embedded hashes of the substrate commit that <code>stack.json</code> names;</li>
+<li>the simulator is an <code>inference-sim</code> release tag or a full commit of it, and its <code>stack.json</code> names the router fork commit and the upstream commit each engine module models (<span class="inv">X11</span>); a tag is one way to name a commit, a pseudo-version another, and a branch names none;</li>
+<li>the catalog and coefficient registry hashes equal the embedded hashes of that commit;</li>
 <li>no overlay is used, and the simulator was built from a committed tree with no uncommitted change.</li>
 </ul>
-<p>Every other run is experimental, including every run with an overlay and every run from a tree with uncommitted changes. Only exactly pinned results are published (<span class="inv">X8</span>). An <code>inference-sim</code> tag still names a release, which the dashboard scores once (<span class="inv">COV-9</span>); a commit pin is not a release, and a published number records the commit it came from.</p>
+<p>Every other run is experimental, including every run with an overlay and every run from a tree with uncommitted changes. Only exactly pinned results are published (<span class="inv">X8</span>). A tag names a release, which the dashboard scores once (<span class="inv">COV-9</span>); a commit pin is not a release, and a published number records its commit.</p>
 
 <h4>Checking data at load</h4>
 <p>Whatever its source, the data is validated when it is loaded, by the same validators CI runs. That includes the checks <em>between</em> the catalog and the coefficient registry, for example that every chip a coefficient names exists in the catalog in use. A candidate coefficient registry that does not fit the catalog it runs with is refused.</p>
@@ -104,19 +98,19 @@
 <p>A candidate may add data units, for example after a data drop. The gate and select jobs read units from the candidate's tree and compare them, by <code>unit_id</code>, with the ledger at the pull request's merge base:</p>
 <ul>
 <li>a new unit has its role drawn by the job;</li>
-<li>a <code>unit_id</code> present at the merge base but absent from the candidate is refused, unless an alias table or a new partition version covers it and a person has approved it. A unit whose identifying fields changed shows up exactly this way, because its <code>unit_id</code> is a hash of those fields.</li>
+<li>a <code>unit_id</code> present at the merge base but absent from the candidate is refused, unless an alias table or a new partition version covers it. A unit whose identifying fields changed shows up exactly this way, because its <code>unit_id</code> is a hash of those fields.</li>
 </ul>
 <p>Roles are never read from a file (<span class="inv">D4</span>), so a candidate cannot change which units are held out.</p>
 
-<h3 id="s3-4">3.4 Directories, owners and CI</h3>
-<p>Each directory keeps its own owners, tools and checks.</p>
+<h3 id="s3-4">3.4 Checks by directory</h3>
+<p>CI is filtered by path: a change to one directory runs that directory&rsquo;s checks, so a catalog-only change does not run the cost model&rsquo;s slow race suite. Any change also runs the cross-directory checks, because catching mismatches between directories is the reason the parts live together: the validators run against the data, and the cost model against the data it embeds.</p>
 <div class="tbl"><table>
-<thead><tr><th>Directory</th><th>Language</th><th>Reviewed for</th><th>CI on change</th></tr></thead>
+<caption style="caption-side:bottom;text-align:left;color:var(--muted);padding-top:.5rem"><b>Checks run when a directory of the substrate changes.</b> Each protects the correctness of its directory&rsquo;s data or code.</caption>
+<thead><tr><th>Directory</th><th>Language</th><th>Checks on change</th></tr></thead>
 <tbody>
-<tr><td><code>contracts/</code></td><td>Go</td><td>compatibility of interfaces and types</td><td>build, tests, API-compatibility check of the <code>contracts/</code> packages against the substrate commit the newest <code>inference-sim</code> release pins, conformance suites</td></tr>
-<tr><td><code>catalog/</code></td><td>YAML, Python</td><td>sources and citations, vendor bytes</td><td>validators; graph deriver <code>--check</code>; deriver tests; ledger checks</td></tr>
-<tr><td><code>registry/</code></td><td>YAML, Python</td><td>held-out evidence, provenance, fitting method</td><td>validators; property tests; writers <code>--check</code> on redistributable fixtures; landing gate</td></tr>
-<tr><td><code>kernel/</code></td><td>Go</td><td>pricing correctness</td><td>tests; race test; conformance; engine-neutrality checks; price-change report</td></tr>
+<tr><td><code>contracts/</code></td><td>Go</td><td>build; tests; API-compatibility check of the <code>contracts/</code> packages against the last release; conformance suites</td></tr>
+<tr><td><code>catalog/</code></td><td>YAML, Python</td><td>validators; graph deriver <code>--check</code>; deriver tests; ledger checks</td></tr>
+<tr><td><code>registry/</code></td><td>YAML, Python</td><td>validators; property tests; writers <code>--check</code> on redistributable fixtures; landing gate</td></tr>
+<tr><td><code>kernel/</code></td><td>Go</td><td>tests; race test; conformance; engine-neutrality checks; price-change report</td></tr>
 </tbody></table></div>
-<p>CI is filtered by path: a catalog-only change does not run the cost model's slow race suite. Any change also runs the cross-directory checks, because catching mismatches between directories is the reason for the merge: validators run against the data, and the cost model against the data it embeds. Python tooling keeps its own lock files under <code>catalog/scripts/</code> and <code>registry/scripts/</code>.</p>
-
+<p>Python tooling keeps its own lock files under <code>catalog/scripts/</code> and <code>registry/scripts/</code>.</p>
