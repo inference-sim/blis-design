@@ -28,8 +28,9 @@ The versions:
 - [`v2.4.0/`](v2.4.0/index.html) is frozen in the same way.
 - [`v3.0.0/`](v3.0.0/index.html) is frozen in the same way.
 - [`v4.0.0/`](v4.0.0/index.html) is frozen in the same way.
-- [`v4.1.0/`](v4.1.0/index.html) is the latest. It is built from the sources in `v4.1.0/src/`. Its full design is
-  [`v4.1.0/blis-target-design.html`](v4.1.0/blis-target-design.html).
+- [`v4.1.0/`](v4.1.0/index.html) is frozen in the same way.
+- [`v4.2.0/`](v4.2.0/index.html) is the latest. It is built from the sources in `v4.2.0/src/`. Its full design is
+  [`v4.2.0/blis-target-design.html`](v4.2.0/blis-target-design.html).
 
 A new version starts as a copy of the latest version's `src/` in a new folder, plus one line in `versions.json`.
 
@@ -42,11 +43,11 @@ redirects to `v1.0.0/`, so an old link, anchor included, still lands on the same
 Only the standard library of Python 3 is needed. Run these from the repository root.
 
 ```
-python3 -I tools/build.py 4.1.0            # write v4.1.0/*.html from v4.1.0/src/
-python3 -I tools/build.py 4.1.0 --check    # fail, naming the page, if a built page is stale
+python3 -I tools/build.py 4.2.0            # write v4.2.0/*.html from v4.2.0/src/
+python3 -I tools/build.py 4.2.0 --check    # fail, naming the page, if a built page is stale
 python3 -I tools/build.py --landing        # write the root index.html from versions.json
-python3 -I tools/check.py v4.1.0/blis-target-design.html       # anchors, nesting, section and rule references
-python3 -I tools/standcheck.py v4.1.0/blis-target-design.html  # no dates, milestones or release wording
+python3 -I tools/check.py v4.2.0/blis-target-design.html       # anchors, nesting, section and rule references
+python3 -I tools/standcheck.py v4.2.0/blis-target-design.html  # no dates, milestones or release wording
 python3 -m unittest discover -s tools/tests                    # tests
 ```
 
