@@ -1,0 +1,39 @@
+v1_id	fate	v2_id	reason
+D3	changed	D3	A source with a live feed joins continuously, each row pinned by id and content hash; the archive and the feed split at a cutoff id and a run keeps one date across it
+D4	changed	D4	Legacy-side detail moved to the prose of 10.2; the rule keeps per-role-key draws, append-only roles and alias tables
+D8	changed	D8	Shortened; the borrowing steps are a table that states each step's value; release label removed
+COV-2	changed	COV-2	No age limit: older anchor units are scored at their own grade, and the measured date is a slice attribute
+COV-6	changed	COV-6	Scoring is by commit distance from the modelled commit; a run on the modelled commit is the same build and can be G1 or G2 (DC1)
+COV-7	changed	COV-7	Coverage is a funnel per scored source (11.6); the provisional-point rule keeps its content without launcher commit hashes
+COV-8	changed	COV-8	Workflow file name removed
+T-M1	changed	T-M1	Onboarding is one to three pieces; one catalog-only pull request holds only for a model with no model support and no new primitive family
+T-M2	changed	T-M2	The simulator refuses by name; the onboard --plan command is removed
+T-D2	changed	T-D2	A new source has no held-out role, and its role key puts near-copies in one role
+T-D3	changed	T-D3	Rows are pinned by id or hash as well as revisions
+T-E1	changed	T-E1	The engine models a commit; the simulator change is the commit bump; the whole-run gate, priced changed identities and the grade-mix report are part of the upgrade
+T-E2	changed	T-E2	Names the new commit; a listed model backport may remain
+T-E3	changed	T-E3	Lists are regenerated at the commit
+T-E6	changed	T-E6	Old commits are served by inference-sim release branches, not per-engine branches
+T-B3	changed	T-B3	One capability per pull request is maintainer practice
+T-F1	changed	T-F1	A fidelity fix worsens no lane beyond the margin; release-note naming of the issue is maintainer practice
+T-K1	changed	T-K1	One pull request in inference-sim; the router fork changes in its own repository
+T-P1	merged	T-E2	An upstream patch release is one more commit under the engine-upgrade procedure; per-engine blis tags retire
+T-S1	changed	T-S1	Moved into the new-data-source procedure (12.2)
+D10	new	D10	Each run's settings come from its own records; a missing value is a named substitution
+D11	new	D11	No new GPU or cluster experiments; missing measurements are priced by the most trusted fallback
+T-D5	new	T-D5	Scenario writer tested field by field against the run's records
+T-M4	new	T-M4	Model support: engine-facing code ported at the modelled commit; weights and priced-equals-launched checks pass; coefficient methods reported
+T-M5	new	T-M5	A backport is defined by path and checked by differential traces
+T-N3	new	T-N3	The oracle replaces only what X5 allows; a new engine passes every tier, the conformance suites, memory closure, coupled replay and byte checks, and is registered and scored
+D7	changed	D7	Seed-holding jobs and aggregates use min_points, which counts role keys; a new source's first cut-points allot training roles only; an evaluation budget per partition version; approvals became maintainer practice
+D9	new	D9	Accuracy only on held-out units; adds the prospective figure; new sources draw training roles only
+COV-10	changed	COV-10	No error is discounted for noise, which is published beside it; a source with per-request data is scored at every level of 8.9 and the event statistics are published
+COV-11	changed	COV-11	Every reported value has a role-key count and a 95% cluster-bootstrap interval (11.8); ranking validity is published per workload
+COV-13	new	COV-13	Slicing by any recorded attribute; min_points counts role keys
+T-N1	changed	T-N1	Additions to contracts, the catalog and the coefficient registry that name no engine; every kernel the engine lowers to is priced
+T-B2	changed	T-B2	Each engine models or refuses the capability; its coefficients have methods; COV-9 holds
+D1	changed	D1	The review guidance block leaves
+T-M3	changed	T-M3	The Size line leaves
+T-A4	changed	T-A4	The Size line leaves
+T-R5	changed	T-R5	The Size line leaves
+COV-9	changed	COV-9	A release maximises coverage, accuracy, fidelity and grades against the previous release, and carries no unexplained fit_available lookup

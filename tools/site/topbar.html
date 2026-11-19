@@ -1,0 +1,66 @@
+<!--topbar-->
+<meta name="blis-design-version" content="{{VERSION}}">
+<style>
+.blis-topbar{--tb-bg:#f2f0ea;--tb-fg:#1d1d1f;--tb-muted:#5b5b63;--tb-rule:#d9d6cf;--tb-field:#ffffff;--tb-accent:#1f5fbf;
+  display:flex;flex-wrap:wrap;align-items:center;gap:.25rem .75rem;box-sizing:border-box;margin:0 0 .75rem;padding:.4rem 16px;
+  background:var(--tb-bg);color:var(--tb-fg);border-bottom:1px solid var(--tb-rule);
+  font:14px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;text-align:left}
+@media (prefers-color-scheme: dark){.blis-topbar{--tb-bg:#23232a;--tb-fg:#ececf0;--tb-muted:#a3a3ad;--tb-rule:#3a3a44;--tb-field:#15151a;--tb-accent:#7fb0ff}}
+.blis-topbar label{color:var(--tb-muted);font-weight:600}
+.blis-topbar select{max-width:100%;font:inherit;color:var(--tb-fg);background:var(--tb-field);border:1px solid var(--tb-rule);border-radius:4px;padding:.15rem .4rem}
+.blis-topbar select:focus-visible{outline:2px solid var(--tb-accent);outline-offset:1px}
+@media print{.blis-topbar{display:none}}
+</style>
+<div class="blis-topbar"><label for="blis-version">Design version</label><select id="blis-version"><option value="{{VERSION}}" selected>{{VERSION}}</option></select></div>
+<script>
+(function () {
+  var meta = document.querySelector('meta[name="blis-design-version"]');
+  var sel = document.getElementById('blis-version');
+  if (!meta || !sel) return;
+  var current = meta.content;
+  var versions = [{ version: current, path: null }];
+  var SAFE = /^[A-Za-z0-9._-]+\/$/;
+
+  function render() {
+    sel.innerHTML = '';
+    versions.forEach(function (v) {
+      var o = document.createElement('option');
+      o.value = v.version;
+      o.textContent = v.version;
+      sel.appendChild(o);
+    });
+    sel.value = current;
+  }
+
+  function usable(v) {
+    return v && typeof v.version === 'string' && v.version !== '' &&
+      (v.path === undefined || v.path === null || SAFE.test(v.path));
+  }
+
+  render();
+
+  sel.addEventListener('change', function () {
+    var chosen = sel.value;
+    if (chosen === current) return;
+    var entry = versions.filter(function (v) { return v.version === chosen; })[0];
+    if (!entry || !entry.path || !SAFE.test(entry.path)) { sel.value = current; return; }
+    var name = location.pathname.split('/').pop() || 'index.html';
+    location.assign('../' + entry.path + name + location.hash);
+  });
+
+  try {
+    fetch('../versions.json', { cache: 'no-cache' })
+      .then(function (r) { if (!r.ok) throw new Error('versions.json ' + r.status); return r.json(); })
+      .then(function (data) {
+        if (!data || !Array.isArray(data.versions)) return;
+        var list = data.versions.filter(usable);
+        if (!list.length) return;
+        if (!list.some(function (v) { return v.version === current; })) list.unshift({ version: current, path: null });
+        versions = list;
+        render();
+      })
+      .catch(function () { /* the page keeps its own version only */ });
+  } catch (e) { /* fetch is unavailable, for example on file:// */ }
+})();
+</script>
+<!--/topbar-->

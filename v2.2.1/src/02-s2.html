@@ -1,0 +1,144 @@
+<!-- ============================================================ -->
+<h2 id="s2"><span class="secno">2</span>The shape of the system</h2>
+
+<h3 id="s2-1">2.1 One simulator repository, one router fork, two applications</h3>
+<p><code>inference-sim</code> holds everything that is built into the simulator: <code>substrate/</code>, <code>engines/vllm/</code>, <code>engines/sglang/</code> and the simulator itself (<code>sim/</code>, <code>cmd/</code>). They are packages of one Go module.</p>
+<p>Three repositories stay separate:</p>
+<ul>
+<li>The <b>router fork</b> is llm-d&rsquo;s router, kept close to upstream. It owns the hosting contract and depends on no BLIS code, so <code>inference-sim</code> can import it without a cycle.</li>
+<li><code>accuracy-dashboard</code> scores simulations against measured runs. A scorer independent of the simulator can be audited.</li>
+<li><code>blis-config-search</code> searches configurations.</li>
+</ul>
+<p>Pins between repositories are exact commits (<span class="inv">X11</span>). The checks of Table 1 keep the boundaries between the directories of <code>inference-sim</code>.</p>
+
+<figure class="fig-wide">
+<svg viewBox="0 0 960 500" role="img" aria-label="The layout of BLIS code. blis-config-search and accuracy-dashboard depend on inference-sim, which holds the simulator, two engine modules and the substrate. The simulator depends on the engine modules, the whole substrate and the router fork. The engine modules depend only on the substrate contracts. The router fork depends on no BLIS code.">
+<defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+<rect class="box" x="140" y="10" width="200" height="54" rx="6"/><text class="t-title" x="240" y="33" text-anchor="middle">blis-config-search</text><text class="t-small" x="240" y="51" text-anchor="middle">which configuration is best?</text>
+<rect class="box" x="400" y="10" width="200" height="54" rx="6"/><text class="t-title" x="500" y="33" text-anchor="middle">accuracy-dashboard</text><text class="t-small" x="500" y="51" text-anchor="middle">how accurate is BLIS?</text>
+
+<rect class="box" x="20" y="110" width="710" height="372" rx="8"/>
+<text class="t-title" x="36" y="132">inference-sim: one repository, one Go module</text>
+
+<rect class="box soft" x="40" y="146" width="670" height="54" rx="6"/><text class="t-title" x="375" y="169" text-anchor="middle">simulator (sim/, cmd/)</text><text class="t-small" x="375" y="187" text-anchor="middle">event loop, cluster, workload, replay; builds each engine at one site</text>
+
+<rect class="box" x="40" y="236" width="200" height="54" rx="6"/><text class="t-title" x="140" y="259" text-anchor="middle">engines/vllm</text><text class="t-small" x="140" y="277" text-anchor="middle">vLLM, one upstream commit</text>
+<rect class="box" x="260" y="236" width="200" height="54" rx="6"/><text class="t-title" x="360" y="259" text-anchor="middle">engines/sglang</text><text class="t-small" x="360" y="277" text-anchor="middle">SGLang, one upstream commit</text>
+
+<rect class="box acc" x="40" y="330" width="670" height="136" rx="8"/>
+<text class="t-title" x="56" y="350">substrate/</text>
+<rect class="box ok" x="55" y="380" width="120" height="68" rx="5"/><text class="t-title" x="115" y="406" text-anchor="middle">contracts</text><text class="t-small" x="115" y="424" text-anchor="middle">what engines use</text>
+<rect class="box" x="190" y="380" width="120" height="68" rx="5"/><text class="t-title" x="250" y="406" text-anchor="middle">catalog</text><text class="t-small" x="250" y="424" text-anchor="middle">facts, ledger</text>
+<rect class="box" x="325" y="380" width="120" height="68" rx="5"/><text class="t-title" x="385" y="400" text-anchor="middle">coefficient</text><text class="t-title" x="385" y="418" text-anchor="middle">registry</text>
+<rect class="box" x="460" y="380" width="120" height="68" rx="5"/><text class="t-title" x="520" y="406" text-anchor="middle">cost model</text><text class="t-small" x="520" y="424" text-anchor="middle">substrate/kernel</text>
+<rect class="box" x="595" y="380" width="100" height="68" rx="5"/><text class="t-title" x="645" y="406" text-anchor="middle">validate</text><text class="t-small" x="645" y="424" text-anchor="middle">and load</text>
+
+<rect class="box" x="770" y="146" width="170" height="110" rx="6"/><text class="t-title" x="855" y="172" text-anchor="middle">router fork</text><text class="t-small" x="855" y="192" text-anchor="middle">llm-d router, hosted</text><text class="t-small" x="855" y="208" text-anchor="middle">owns the hosting</text><text class="t-small" x="855" y="224" text-anchor="middle">contract; imports no</text><text class="t-small" x="855" y="240" text-anchor="middle">BLIS code</text>
+
+<path class="edge" d="M240,64 L300,110" marker-end="url(#a1)"/>
+<path class="edge" d="M500,64 L450,110" marker-end="url(#a1)"/>
+<path class="edge" d="M140,200 L140,236" marker-end="url(#a1)"/>
+<path class="edge" d="M360,200 L360,236" marker-end="url(#a1)"/>
+<path class="edge" d="M710,173 L768,173" marker-end="url(#a1)"/>
+<path class="edge" d="M600,200 L600,330" marker-end="url(#a1)"/>
+<text class="t-small" x="612" y="262">whole substrate</text>
+<path class="edge acc" d="M130,290 L115,380" marker-end="url(#a1)"/>
+<path class="edge acc" d="M350,290 L140,380" marker-end="url(#a1)"/>
+<text class="t-acc" x="215" y="318" style="font-size:11px">contracts only</text>
+</svg>
+<figcaption><b>Figure 1. Engine modules depend only on the substrate&rsquo;s contracts; only the simulator depends on the rest, and the router fork depends on no BLIS code.</b> An arrow means &ldquo;depends on&rdquo;. A coefficient or pricing change therefore touches no engine module (§3.2). The arrow from the simulator to the router fork is the hosting contract (§5).</figcaption>
+</figure>
+
+<h3 id="s2-2">2.2 Where a fact belongs</h3>
+<p>Every fact, rule and value has one owner. To find it, ask what the fact depends on:</p>
+<ul>
+<li>An engine&rsquo;s upstream commit, such as vLLM&rsquo;s default fraction of GPU memory: the engine module that models that engine.</li>
+<li>An llm-d release, such as how its prefix-cache scorer ranks endpoints: the router fork.</li>
+<li>The simulator&rsquo;s own design: the simulator.</li>
+<li>The hardware, the model, the physics or the data, whatever engine runs, such as H200 memory bandwidth or the speed of one attention kernel: the substrate.</li>
+<li>The user&rsquo;s configuration, such as the node count or the scorer weights: the scenario, copied verbatim.</li>
+</ul>
+<p>Work has one owner as well. Another component calls the owner&rsquo;s command or imports its package, so a fitting script that wants an end-to-end reported value (§8.7) runs the dashboard&rsquo;s scoring harness and writes no scorer of its own.</p>
+<p>Table 1 is the one statement of what each component owns and may import, and <span class="inv">SUB-1</span> is the one rule for <code>contracts/</code>, including its <code>golang.org/x/tools</code> exception. Other sections cite them and do not restate them. The import-graph lint (<code>go list</code>, required in CI) and the path-reference lint of <span class="inv">X7</span> enforce the rows for every directory component.</p>
+
+<div class="tbl"><table>
+<caption><b>Table 1. Components.</b> Each owns one kind of fact or work, imports only what its row allows, and has a check that fails when it holds or imports what it must not.</caption>
+<thead><tr><th>Component</th><th>Owns</th><th>May import</th><th>Must never contain</th><th>Enforced by</th></tr></thead>
+<tbody>
+<tr><td><b>contracts</b><br><code>substrate/contracts/</code></td><td>Shared types and interfaces, their validators, the conformance suites, the engine harness, the invariant registry, the Go toolchain version.</td><td>The Go standard library, the YAML parser and other <code>contracts</code> packages; <code>golang.org/x/tools</code> in <code>contracts/harness</code> and <code>contracts/conformance</code> only (<span class="inv">SUB-1</span>).</td><td>Data; the name or policy of any engine, router or application (<span class="inv">X2</span>); behaviour other than the shared validators, transport selection, numeric helpers, harness and conformance suites.</td><td>The import-graph lint; the API-compatibility check against the last release (<span class="inv">SUB-1</span>); the conformance suites.</td></tr>
+<tr><td><b>catalog</b><br><code>substrate/catalog/</code></td><td>Published facts about chips, host CPUs (with their single-thread scores), devices, networks, workloads and models; the graph deriver; the transport table (<span class="inv">SUB-22</span>).</td><td>contracts.</td><td>An engine&rsquo;s name, version or policy (<span class="inv">X2</span>); lowering (<span class="inv">SUB-15</span>); a fitted value (<span class="inv">SUB-18</span>); third-party raw data (<span class="inv">X12</span>).</td><td>The validators; the deriver&rsquo;s <code>--check</code> and its rederivation test (<span class="inv">SUB-15</span>); provenance rules (<span class="inv">SUB-3</span>).</td></tr>
+<tr><td><b>ledger</b><br><code>substrate/catalog/ledger/</code></td><td>Every data source&rsquo;s units, and the rule that draws their roles (§10).</td><td>contracts.</td><td>The partition secret; a stored role other than the three published lists (<span class="inv">D4</span>); a score.</td><td>The ledger checks; the comparison with the merge base (§3.3).</td></tr>
+<tr><td><b>coefficient registry</b><br><code>substrate/registry/</code></td><td>Coefficients, keyed by kernel implementation or, for engine-path costs, by the identity of the code that does the work; their writer scripts.</td><td>contracts.</td><td>A hand-edited value (<span class="inv">SUB-4</span>); an engine&rsquo;s name (<span class="inv">X2</span>).</td><td>Writers <code>--check</code>; the validators; property tests (<span class="inv">SUB-5</span>); the landing gate (<span class="inv">VAL-6</span>).</td></tr>
+<tr><td><b>cost model</b><br><code>substrate/kernel/</code></td><td>Pricing a fully lowered step: a <code>PoolPlan</code>, a <code>StepShape</code> and each KV move (<code>plan.Transfer</code>) to times and bytes (§6.1).</td><td>contracts; the catalog and the coefficient registry through the loader. No engine module.</td><td>Any default, backend choice or lowering (<span class="inv">SUB-6</span>); a read of <code>config.json</code> (<span class="inv">SUB-3</span>).</td><td>The import-graph lint; perturbation and property tests (<span class="inv">SUB-11</span>); engine-neutrality checks; the conformance suite for the <code>Kernel</code> interface.</td></tr>
+<tr><td><b>validators and loader</b><br><code>substrate/validate/</code>, <code>substrate/load/</code>, <code>substrate/data.go</code></td><td>The one Go implementation of each validation rule (<span class="inv">X15</span>); the loader and its content hash (§3.3).</td><td>contracts; the embedded data.</td><td>A second copy of a validation rule.</td><td>A test that a path and the embedded copy of one commit load to the same data and hash (<span class="inv">SUB-9</span>).</td></tr>
+<tr><td><b>engine module</b><br><code>engines/vllm/</code>, <code>engines/sglang/</code></td><td>For one upstream engine at one commit: scheduler, KV-cache manager, connectors, defaults, lowering, oracle, field list and surface list (§7).</td><td>contracts, and its own tree.</td><td>Another engine module; pricing; the substrate&rsquo;s data; a clock read or goroutine (<span class="inv">VLM-5</span>).</td><td>The import-graph lint; the oracle&rsquo;s differential tiers (§7.4); the conformance suites; surface-list completeness (<span class="inv">X9</span>).</td></tr>
+<tr><td><b>simulator</b><br><code>sim/</code>, <code>cmd/</code></td><td>The event loop, cluster, workload and replay; engine selection at one build site; the <code>Environment</code> (§6.3); link sharing; the <code>Result</code>; the commands the applications call.</td><td>The whole substrate; engine modules through the engine contract; the router fork through the hosting contract.</td><td>Engine behaviour; routing policy; pricing; a scorer; catalog or coefficient registry data except through the substrate (<span class="inv">X3</span>).</td><td>The import-graph lint, including the single build site; determinism and replay tests; the byte gate (<span class="inv">SIM-4</span>).</td></tr>
+<tr><td><b>router fork</b><br>separate repository</td><td>llm-d&rsquo;s router code, made runnable in simulated time; the hosting contract and its conformance suite.</td><td>llm-d and the Go standard library. No BLIS module (<span class="inv">X7</span>).</td><td>A change to a routing decision; an import of any <code>github.com/inference-sim/</code> package.</td><td>The fork&rsquo;s import test; the hosting contract&rsquo;s API diff and conformance suite (<span class="inv">RTR-3</span>); the hazard checks (<span class="inv">RTR-6</span>).</td></tr>
+<tr><td><b>accuracy-dashboard</b><br>separate repository</td><td>The scoring harness, the one scorer (<span class="inv">COV-1</span>); grades; coverage; the published site.</td><td>A release or commit of <code>inference-sim</code>, through its commands and schemas.</td><td>Its own list of modelled settings; a reported value computed on points used for fitting.</td><td>Schema validation of every document (<span class="inv">SUB-19</span>); the corpus comparison of <span class="inv">X13</span>.</td></tr>
+<tr><td><b>blis-config-search</b><br>separate repository</td><td>Experiment specifications, deterministic sweeps, rankings and reports.</td><td>A release of <code>inference-sim</code>, through its commands and schemas.</td><td>A copied list of settings (<span class="inv">CFG-3</span>); a document schema of its own.</td><td>Validation of every specification; an identical report from the same specification and pin (<span class="inv">CFG-2</span>).</td></tr>
+</tbody></table></div>
+
+<h3 id="s2-3">2.3 How one simulated step flows</h3>
+<p>Figure 2 follows one engine step through the system.</p>
+
+<figure class="fig-wide">
+<svg viewBox="0 0 960 400" role="img" aria-label="One simulated step, in five numbered stages. Once per pool: the scenario's upstream configuration reaches the engine module verbatim; the engine resolves defaults, lowers the model to named kernel implementations, sizes its KV budget, and hands the cost model a PoolPlan. Each step: the engine's scheduler forms a StepShape and asks the cost model to price it; the cost model reads hardware facts from the catalog and coefficients from the coefficient registry, and returns a step time to the engine; the engine reports the step done to the simulator, which advances simulated time; the simulator delivers the engine's metrics and KV events to the router, which routes the next request. All calls from engine to cost model go through an Environment that the simulator supplies.">
+<defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+
+<rect class="box soft" x="10" y="44" width="150" height="56" rx="6"/>
+<text class="t-title" x="85" y="68" text-anchor="middle">scenario</text>
+<text class="t-small" x="85" y="86" text-anchor="middle">upstream config, verbatim</text>
+
+<rect class="box" x="210" y="20" width="260" height="190" rx="6"/>
+<text class="t-title" x="340" y="42" text-anchor="middle">engine module</text>
+<text class="t-small" x="340" y="58" text-anchor="middle">engines/vllm or engines/sglang</text>
+<rect class="box ok" x="224" y="68" width="232" height="28" rx="4"/><text x="340" y="87" text-anchor="middle">resolve defaults as upstream does</text>
+<rect class="box ok" x="224" y="102" width="232" height="28" rx="4"/><text x="340" y="121" text-anchor="middle">lower the model to kernel code</text>
+<rect class="box ok" x="224" y="136" width="232" height="28" rx="4"/><text x="340" y="155" text-anchor="middle">size the KV budget</text>
+<rect class="box ok" x="224" y="170" width="232" height="28" rx="4"/><text x="340" y="189" text-anchor="middle">scheduler forms the step</text>
+
+<rect class="box acc" x="580" y="40" width="170" height="170" rx="6"/>
+<text class="t-title" x="665" y="66" text-anchor="middle">cost model</text>
+<text class="t-small" x="665" y="86" text-anchor="middle">prices primitives</text>
+<text class="t-small" x="665" y="102" text-anchor="middle">knows no engine</text>
+
+<rect class="box" x="800" y="40" width="150" height="56" rx="6"/>
+<text class="t-title" x="875" y="64" text-anchor="middle">catalog</text>
+<text class="t-small" x="875" y="82" text-anchor="middle">hardware and model facts</text>
+<rect class="box" x="800" y="140" width="150" height="56" rx="6"/>
+<text class="t-title" x="875" y="164" text-anchor="middle">coefficient registry</text>
+<text class="t-small" x="875" y="182" text-anchor="middle">by primitive, kernel, chip</text>
+<path class="edge" d="M800,68 L752,90" marker-end="url(#a2)"/>
+<path class="edge" d="M800,168 L752,150" marker-end="url(#a2)"/>
+
+<path class="edge" d="M160,72 L208,72" marker-end="url(#a2)"/>
+
+<path class="edge acc" d="M470,84 L578,84" marker-end="url(#a2)"/>
+<text class="t-acc" x="524" y="77" text-anchor="middle" style="font-size:11px">① PoolPlan</text>
+<text class="t-small" x="524" y="100" text-anchor="middle">once per pool</text>
+
+<path class="edge acc" d="M470,170 L578,170" marker-end="url(#a2)"/>
+<text class="t-acc" x="524" y="163" text-anchor="middle" style="font-size:11px">② StepShape</text>
+<path class="edge" d="M578,196 L470,196" marker-end="url(#a2)"/>
+<text class="t-small" x="524" y="190" text-anchor="middle">③ step time</text>
+
+<text class="t-small" x="580" y="232">Engine calls go through an Environment</text>
+<text class="t-small" x="580" y="248">that the simulator supplies (§6.3).</text>
+
+<rect class="box soft" x="210" y="290" width="260" height="56" rx="6"/>
+<text class="t-title" x="340" y="314" text-anchor="middle">simulator</text>
+<text class="t-small" x="340" y="332" text-anchor="middle">advances simulated time</text>
+<path class="edge" d="M340,210 L340,288" marker-end="url(#a2)"/>
+<text class="t-small" x="350" y="250">④ step done</text>
+<text class="t-small" x="350" y="266">metrics, KV events</text>
+
+<rect class="box" x="10" y="290" width="150" height="56" rx="6"/>
+<text class="t-title" x="85" y="314" text-anchor="middle">router fork</text>
+<text class="t-small" x="85" y="332" text-anchor="middle">routes the next request</text>
+<path class="edge" d="M210,318 L162,318" marker-end="url(#a2)"/>
+<text class="t-small" x="186" y="366" text-anchor="middle">⑤ engine metrics,</text>
+<text class="t-small" x="186" y="382" text-anchor="middle">KV events</text>
+</svg>
+<figcaption><b>Figure 2. The engine resolves its own behaviour and gives the cost model a fully resolved description of each step.</b> ① Once per pool, the engine module resolves its configuration, lowers the model, sizes its KV budget and sends the cost model a <code>PoolPlan</code> (§6.1). Each step: ② the scheduler forms a <code>StepShape</code> (§6.1); ③ the cost model prices it from the catalog and the coefficient registry and returns a time; ④ the engine reports the step done, with its metrics and KV events, and the simulator advances simulated time; ⑤ the simulator delivers the metrics and KV events to the router fork through the hosting contract. Not drawn: the engine asks the cost model for memory when it sizes its KV budget, and returns an <code>engine.Transfer</code> for each KV move (§6.2).</figcaption>
+</figure>
+
