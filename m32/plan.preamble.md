@@ -2,8 +2,7 @@
 
 This is the M3.2 plan. Table O gives the objectives, Table V the deliverables, and Table W (the next part) the
 workstreams. **Table W is the execution order.** An agent can execute it end to end under the standing
-authorization (Table A, design §13.7): the maintainer gives two inputs once (a Hugging Face token and an archive
-location) and can revoke the authorization at any time. The requirements that follow are the source of truth; this
+authorization (Table A, design §13.7): the maintainer gives one input once (a Hugging Face token) and can revoke the authorization at any time. The requirements that follow are the source of truth; this
 page is generated from them.
 
 A **Proposal** item is the plan's default and is built as written unless review corrects it. An **Open** item has a
@@ -35,7 +34,7 @@ in Table V are how M3.2 keeps them; the last column names the workstreams of Tab
 | 1 | **One repository** | blis-substrate, blis-vllm and blis-sglang become directories of inference-sim. A change to contracts, an engine and the simulator is one pull request, with no chain of re-pins. blis-vllm's old compatibility code is removed first | 4 | 1, 2, 27 |
 | 2 | **Any upstream commit** | An engine module models any vLLM or SGLang commit, not only a release. A model that lands upstream between upgrades is added as a backport. | 3 | 3, 4 |
 | 3 | **Three new calibration sources** | The vLLM CI perf API, SGLang's nightly metrics and job logs, and SGLang's profiler traces calibrate both engines, which row 29 refits. Each run's settings come from its own records. These sources are training data only | 1 | 10, 13, 14, 18, 29 |
-| 4 | **Many more scored points** | No age limit on scoring, a coverage funnel per source, and closed engine and table gaps. Scored InferenceX anchor units could grow from 238 to about 2,800, or up to about 4,700; configiq adds about 373 to 1,257 anchor units | 2 | 11, 12, 15, 16, 17 |
+| 4 | **Many more scored points** | No age limit on scoring, a coverage funnel per source, and closed engine and table gaps. Scored InferenceX anchor units could grow from 238 to about 2,800, or up to about 4,700; configiq adds about 373 to 1,257 anchor units | 2 | 12, 15, 16, 17 |
 | 5 | **A real held-out gate** | A new whole-run gate judges every accuracy change on held InferenceX runs, once per pre-registered change, and returns only aggregates. Before M3.2 no such gate runs | 1 | 25, 26 |
 | 6 | **Honest accuracy figures** | Accuracy is published only on held-out units, with one definition of each statistic, a closeness grade per point, and slices by any recorded attribute. configiq is used only for scoring (Terms) | 1, 2 | 16, 19, 26 |
 | 7 | **Clean lowering** | Lowering lives only in the engine modules; the catalog holds checkpoint facts only, and the rule layer is gone. A new model or engine touches fewer places | 3, 4 | 5, 27 |

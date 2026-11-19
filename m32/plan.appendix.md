@@ -20,9 +20,9 @@ authorization of Table A.**
 | 8 | Simplifications: the `ledger`, `invariants` and `compose` commands removed, the ledger no longer embedded, the gated-config nightly deleted with its environment and secret (A4), the InferenceX regeneration step dropped from the ledger nightly, the maintainer steps in the READMEs and PR template, the stale dashboard comment, the report role removed, one replication by default (Table DC) | inference-sim, blis-substrate, accuracy-dashboard | none | each deletion has merged and CI passes without it; the `config-fetch` environment and its `HF_TOKEN` secret are removed (A4) |
 | 9 | Mistral-Large-4 and Inkling-2-Small on GB200: catalog entries, model support, coefficients (DC4). The agent fetches Mistral-Large-4's gated `config.json` with `fetch_pinned_configs.py` using the token (I1), and the engine upgrade's report is reviewed by a different agent before merge (A1); every NVIDIA preset of the two vLLM recipes at the modelled commit (Table DC4.1) | blis-vllm, blis-substrate | 3, 6, 7, 25 | each scenario simulates on GB200, and a test simulates every NVIDIA preset of the two recipes (Table DC4.1), with every coefficient's method named and every preset argument classified in the field list. BLIS runs no experiment (§1.6). If the team shares measured runs of these models, they are added as a source under §1.3's rules |
 | 10 | Ingestion: the ledger follows each source, and the dump is reconciled with the API (§3A.1, §3A.9) | blis-substrate | none | a scheduled job ingests API rows together with the dump, and the straddling-run test passes |
-| 11 | Archive of the sources that expire (§3A.3). A job copies each expiring log as it is pulled; the archive location and credentials are input I2 | blis-substrate | none | a log fetched on day 0 is read back from the archive by its SHA-256 and equals the original; the archive location (input I2) is named in the ledger README |
+| 11 | Moved after M3.2: the archive of sources that expire (§3A.3, follow-on) | none | none | not part of M3.2 |
 | 12 | Count of anchor units whose inputs can be recovered, without simulating (§3A.8) | accuracy-dashboard | none | the count is published on the dashboard's coverage page |
-| 13 | The new calibration sources ingested, with training-only roles and the units of Table 1.4 (§1, §1.4) | blis-substrate | 10, 11 | each source's units are in the ledger, identified as Table 1.4 says, with training roles only |
+| 13 | The new calibration sources ingested, with training-only roles and the units of Table 1.4 (§1, §1.4) | blis-substrate | 10 | each source's units are in the ledger, identified as Table 1.4 says, with training roles only |
 | 14 | Settings provenance: each source's scenario writer has a field-against-record test, and the confirmations of §2.4 are made (§2.2, §2.4) | blis-substrate | 13 | every field is tested against its record, and the three confirmations are recorded in the cells of Table 2.3 in `evidence/SETTINGS-PROVENANCE.md`, each citing the file and commit read |
 | 15 | Engine and table coverage: SGLang field list, router table, the settings no engine module models (§3A.4), and the SGLang features refused in M3.1 (blis-sglang#64 to #71) with the other carried issues listed for this row | blis-sglang, blis-vllm, inference-sim, blis-substrate | 6, 25 | each listed blocker is modelled, proven inert, given an estimation rule or refused by name |
 | 16 | Scoring: no age limit, commit distances, funnels for InferenceX and configiq (§3A.2, §3A.5, §3A.6) | accuracy-dashboard | 3, 10, 12, 17, 26 | the funnels publish; no anchor unit is excluded for its date; every anchor unit whose inputs can be fetched (row 12's count) is scored or has a stated G5 reason; the scored count is published |
@@ -61,12 +61,11 @@ are performed this way.
 | A4 | Change repository settings: transfer issues, archive repositories, and remove the environments and secrets this plan retires | only the settings, transfers and archives this plan names |
 | A5 | Decide the defaults this plan leaves to the maintainer: the gate's evaluation budget (row 25) and the triage of the carried issues (row 24) | the decision and its reason are posted on the issue or pull request, and the maintainer may reverse it |
 
-**Inputs the maintainer gives once.**
+**Input the maintainer gives once.**
 
 | Input | For |
 |---|---|
 | I1. A Hugging Face access token, as a secret of the session | fetching gated model configs, such as Mistral-Large-4's (design X12; row 9) |
-| I2. The archive location for expiring sources, and its credentials | row 11 |
 
 **Never authorized.** A change to the design; retiring or publishing a partition secret; a step this plan does not
 name. Each needs the maintainer. M3.2 needs none of them. The maintainer revokes or narrows the authorization by

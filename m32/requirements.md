@@ -538,9 +538,10 @@ kept, otherwise the recipe at the run's commit; a private archive; never committ
   2026-07 and none before (Table F2 note);
 - 949 in-scope anchor units inside the age limit are missing from the dashboard nightly because the API no longer
   serves their superseded measurement; the dump supplies them;
-- inputs that expire (GitHub job logs and artifacts, about 90 days; SGLang's job logs and metrics artifacts; agentic
-  exports) are archived privately as they are pulled, before any other row starts, so their history keeps
-  growing instead of rolling off (Table W row 11). Tritonbench (90 days) and SGLang's AMD P/D artifacts (30 days)
+- **After M3.2 (follow-on).** Inputs that expire (GitHub job logs and artifacts, about 90 days; SGLang's job logs
+  and metrics artifacts; agentic exports) are archived privately as they are pulled, so their history keeps
+  growing instead of rolling off. Until then, an input that expires before it is used is lost, and M3.2 scores
+  what remains recoverable. Tritonbench (90 days) and SGLang's AMD P/D artifacts (30 days)
   join the archive if §1.3 brings them in.
 
 A point whose inputs are gone is G5, with a reason that names the missing record.
