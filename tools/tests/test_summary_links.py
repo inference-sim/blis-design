@@ -4,7 +4,7 @@ import re
 import tempfile
 import unittest
 
-from support import copy_site
+from support import copy_site, LATEST, LATEST_DIR
 
 import build  # noqa: E402  (tools/ is on sys.path via support)
 
@@ -34,10 +34,10 @@ class TestSummaryLinks(unittest.TestCase):
     def build_copy(self, tmp, edit=None):
         root = copy_site(tmp)
         if edit:
-            path = root / "v2.0.0/src/summary-3.html"
+            path = root / f"{LATEST_DIR}/src/summary-3.html"
             path.write_text(edit(path.read_text()))
-        build.build("2.0.0", root=root)
-        return root / "v2.0.0"
+        build.build(LATEST, root=root)
+        return root / LATEST_DIR
 
     def test_summary_links_resolve(self):
         with tempfile.TemporaryDirectory() as tmp:
