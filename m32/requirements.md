@@ -44,6 +44,26 @@ difference (§3A.5).
   connector changes. It folds away when the modelled commit contains it.
 - **When to move.** Move the modelled commit on each upstream release, and on demand when a team scenario needs
   a later commit. Each move re-runs the oracle and the goldens.
+- **Two kinds of engine work.** They are separate and should not be confused.
+  - The *engine upgrade* ports the diff of the code an engine module already models: the scheduler, KV-cache
+    manager, connectors, defaults and lowering. It changes behaviour for every model.
+  - *Model support* is work in the same engine module for one model. It is needed only when the model brings
+    engine-facing code of its own. That code mostly lives in the model's folder (for example
+    `vllm/models/inkling2/`), which an upgrade does not port:
+    - a KV-cache layout the module has not seen (as DeepSeek-V4's sliding-window cache and compressor were,
+      `core/kv/layers.go`);
+    - its own kernels, or a backend choice the module does not lower (as Muse Spark's fused kernels were,
+      blis-vllm#272);
+    - a new drafting method or scheduler hook.
+  - A model that brings none of these needs only catalog onboarding.
+- **Upgrade report.** Every engine upgrade generates a report of the models the new commit supports. For each
+  model it gives:
+  - whether the catalog has it;
+  - whether it needs model support, and for what (from the regenerated surface, field and kernel lists, which
+    must give every new entry a status, X9, and from the model's own code paths);
+  - the measured coefficients it lacks on each catalog chip.
+  The report is the to-do list for model requests. A team's request for a model the report marks catalog-only is
+  answered by onboarding alone.
 
 **Effect.** New models on upstream main can be modelled (D4). The vLLM CI perf and SGLang nightly runs can be
 fitted against the exact engine code that produced them (§1). Release-difference grading becomes commit
