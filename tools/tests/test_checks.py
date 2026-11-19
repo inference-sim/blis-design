@@ -1,9 +1,9 @@
-"""check.py and standcheck.py on fixture pages and on the built v2.0.0 design."""
+"""check.py and standcheck.py on fixture pages and on the built design of the latest version."""
 import pathlib
 import tempfile
 import unittest
 
-from support import REPO, run_tool
+from support import REPO, run_tool, LATEST, LATEST_DIR
 
 PAGE = """<!doctype html><html><head><meta charset="utf-8">
 <title>t</title>
@@ -46,17 +46,17 @@ class TestStandcheck(unittest.TestCase):
 
     def test_built_v2_pages_pass_check(self):
         for name in ("blis-target-design.html", "blis-design-3-pages.html", "blis-design-7-pages.html", "index.html"):
-            done = run_tool(REPO, "tools/check.py", REPO / "v2.0.0" / name)
+            done = run_tool(REPO, "tools/check.py", REPO / LATEST_DIR / name)
             self.assertEqual(done.returncode, 0, name + "\n" + done.stdout)
             self.assertIn("KB", done.stdout)
 
     def test_built_v2_summaries_pass_standcheck(self):
         for name in ("blis-design-3-pages.html", "blis-design-7-pages.html", "index.html"):
-            done = run_tool(REPO, "tools/standcheck.py", REPO / "v2.0.0" / name)
+            done = run_tool(REPO, "tools/standcheck.py", REPO / LATEST_DIR / name)
             self.assertEqual(done.returncode, 0, name + "\n" + done.stdout)
 
     def test_built_v2_full_design_passes_standcheck(self):
-        done = run_tool(REPO, "tools/standcheck.py", REPO / "v2.0.0/blis-target-design.html")
+        done = run_tool(REPO, "tools/standcheck.py", REPO / f"{LATEST_DIR}/blis-target-design.html")
         self.assertEqual(done.returncode, 0, done.stdout)
 
 

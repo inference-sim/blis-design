@@ -15,6 +15,10 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
 NODE = shutil.which("node")
+# The version under work: the latest in versions.json. Older versions are frozen.
+LATEST = json.loads((REPO / "versions.json").read_text())["latest"]
+LATEST_DIR = f"v{LATEST}"
+
 PAGES = ["index.html", "blis-design-3-pages.html", "blis-design-7-pages.html", "blis-target-design.html"]
 
 needs_node = unittest.skipUnless(
@@ -65,7 +69,7 @@ def git_show(ref, name):
     ).stdout
 
 
-def copy_site(dest, version="2.0.0"):
+def copy_site(dest, version=LATEST):
     """Copy the build inputs into `dest` so a test can edit them freely."""
     dest = pathlib.Path(dest)
     shutil.copytree(TOOLS, dest / "tools", ignore=shutil.ignore_patterns("tests", "__pycache__"))

@@ -19,8 +19,12 @@ The versions:
 
 - [`v1.0.0/`](v1.0.0/index.html) is frozen. Its pages are the pages at tag `v1.0.0` plus the top bar, and nothing else
   changed. Its full design is [`v1.0.0/blis-target-design.html`](v1.0.0/blis-target-design.html).
-- [`v2.0.0/`](v2.0.0/index.html) is built from the sources in `v2.0.0/src/`. Its full design is
-  [`v2.0.0/blis-target-design.html`](v2.0.0/blis-target-design.html).
+- [`v2.0.0/`](v2.0.0/index.html) is frozen. Its sources stay in `v2.0.0/src/`, and its pages still rebuild from
+  them unchanged.
+- [`v2.1.0/`](v2.1.0/index.html) is the latest. It is built from the sources in `v2.1.0/src/`. Its full design is
+  [`v2.1.0/blis-target-design.html`](v2.1.0/blis-target-design.html).
+
+A new version starts as a copy of the latest version's `src/` in a new folder, plus one line in `versions.json`.
 
 `versions.json` lists the versions that are published and names the latest. The root `index.html` links to the
 latest version. The root `blis-design-3-pages.html`, `blis-design-7-pages.html` and `blis-target-design.html` are
@@ -31,15 +35,15 @@ redirects to `v1.0.0/`, so an old link, anchor included, still lands on the same
 Only the standard library of Python 3 is needed. Run these from the repository root.
 
 ```
-python3 -I tools/build.py 2.0.0            # write v2.0.0/*.html from v2.0.0/src/
-python3 -I tools/build.py 2.0.0 --check    # fail, naming the page, if a built page is stale
+python3 -I tools/build.py 2.1.0            # write v2.1.0/*.html from v2.1.0/src/
+python3 -I tools/build.py 2.1.0 --check    # fail, naming the page, if a built page is stale
 python3 -I tools/build.py --landing        # write the root index.html from versions.json
-python3 -I tools/check.py v2.0.0/blis-target-design.html       # anchors, nesting, section and rule references
-python3 -I tools/standcheck.py v2.0.0/blis-target-design.html  # no dates, milestones or release wording
+python3 -I tools/check.py v2.1.0/blis-target-design.html       # anchors, nesting, section and rule references
+python3 -I tools/standcheck.py v2.1.0/blis-target-design.html  # no dates, milestones or release wording
 python3 -m unittest discover -s tools/tests                    # tests
 ```
 
-The sources are in `v2.0.0/src/`:
+The sources of a version are in its `src/` folder:
 
 - `head.html` and `style.css` hold the head of the full design.
 - `00-front.html` holds its title and abstract. `NN-<id>.html` holds one section each. The build lists them in

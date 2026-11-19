@@ -26,13 +26,17 @@ jobs:
 
       - name: Pages are built from their sources
         run: |
-          python3 -I tools/build.py 2.0.0 --check
+          # Every version that keeps its sources still rebuilds exactly; older versions are frozen.
+          for src in v*/src; do
+            v="${src%/src}"; python3 -I tools/build.py "${v#v}" --check
+          done
           python3 -I tools/build.py --landing --check
 
-      - name: Structure and standing-design checks on v2.0.0
+      - name: Structure and standing-design checks on the latest version
         run: |
+          latest="v$(python3 -I -c 'import json; print(json.load(open("versions.json"))["latest"])')"
           status=0
-          for page in v2.0.0/*.html; do
+          for page in "$latest"/*.html; do
             echo "== $page"
             python3 -I tools/check.py "$page" || status=1
             python3 -I tools/standcheck.py "$page" || status=1

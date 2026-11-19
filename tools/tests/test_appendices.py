@@ -1,4 +1,4 @@
-"""Appendices A and C and the size of v2.0.0, checked against v1.0.0's built page.
+"""Appendices A and C and the size of the latest version, checked against v1.0.0's built page.
 
 Each rule is a function that returns a list of problems, so a test can hand it a
 deliberately broken input and see it fail, then hand it the real page and see it pass.
@@ -8,10 +8,10 @@ import re
 import tempfile
 import unittest
 
-from support import REPO
+from support import REPO, LATEST, LATEST_DIR
 
 V1 = REPO / "v1.0.0/blis-target-design.html"
-V2 = REPO / "v2.0.0/blis-target-design.html"
+V2 = REPO / f"{LATEST_DIR}/blis-target-design.html"
 EXCEPTIONS = REPO / "tools/size-exceptions.txt"
 
 # The same pattern tools/check.py uses for a rule that is defined (not merely cited).
@@ -75,9 +75,9 @@ def appendix_c_problems(v1_ids, v2_ids, rows):
         if fate not in FATES:
             problems.append(f"{v1}: fate {fate!r} is not one of {sorted(FATES)}")
         if fate == "merged" and v2 not in v2_ids:
-            problems.append(f"{v1}: merged into {v2!r}, which v2.0.0 does not define")
+            problems.append(f"{v1}: merged into {v2!r}, which {LATEST_DIR} does not define")
         if fate in ("kept", "changed") and v2 not in v2_ids:
-            problems.append(f"{v1}: {fate} as {v2!r}, which v2.0.0 does not define")
+            problems.append(f"{v1}: {fate} as {v2!r}, which {LATEST_DIR} does not define")
         if fate == "retired" and not (v1 in RETIRE_CANDIDATES or v1.startswith(RETIRE_PREFIXES)):
             problems.append(f"{v1}: retired, but it is not a retirement candidate")
         if not reason:
