@@ -2,14 +2,14 @@
 
 These are the working requirements for M3.2, the release after M3.1, captured with the maintainer from
 2026-11-18. They are not yet a plan, and more will be added. The design they build on is
-[design v2.3.0](https://inference-sim.github.io/blis-design/v2.3.0/blis-target-design.html).
+[design v2.4.0](https://inference-sim.github.io/blis-design/v2.4.0/blis-target-design.html).
 
 **Labels.** Each item carries one label:
 - **Decided**: stated, decided or accepted by the maintainer.
 - **Proposal**: open to correction.
 - **Open**: not yet decided. An Open item names its owner and what decides it.
 
-Section DC lists what M3.2 builds for design v2.3.0. It comes first because the maintainer asked that design
+Section DC lists what M3.2 builds for design v2.4.0. It comes first because the maintainer asked that design
 changes be the first requirement. It cites later sections.
 
 **Evidence.** The notes in `evidence/`, next to this file, back the figures:
@@ -24,7 +24,7 @@ named here is under `github.com/inference-sim/` unless another owner is shown.
 
 ## Terms
 
-**Repositories.** Design v2.3.0 has one simulator repository and the router fork. M3.2 builds that layout (DC3).
+**Repositories.** Design v2.4.0 has one simulator repository and the router fork. M3.2 builds that layout (DC3).
 Until the migration lands, the three repositories below still exist, and the issue numbers in this file name them.
 - **inference-sim**: the simulator. Its tagged release is the only one a milestone requires (v0.18.0 is M3.0,
   v0.18.1 is M3.1). Since M3.1 the other repositories are pinned by commit, and their tags are optional.
@@ -57,11 +57,11 @@ Until the migration lands, the three repositories below still exist, and the iss
   InferenceX rows published after the dump and added to the ledger one by one, each pinned by its row id and the
   SHA-256 of its content.
 
-**Design rules, sections and terms.** IDs such as X7, SUB-15, LIF-5, COV-6, T-M1 or D6 name rules of design v2.3.0.
+**Design rules, sections and terms.** IDs such as X7, SUB-15, LIF-5, COV-6, T-M1 or D6 name rules of design v2.4.0.
 The letters group them: X across components, SUB substrate, LIF versions and releases, COV accuracy coverage, VAL
 coefficients, D the ledger, T a trigger's test. A design section is written "design §n.m" and links to the design.
 A bare § number is this file's own section (§0 to §4, §3A to §3C); the design changes are DC1 to DC3 and the team
-request is DC4, without a §. The design's glossary, [Appendix B](https://inference-sim.github.io/blis-design/v2.3.0/blis-target-design.html#appB),
+request is DC4, without a §. The design's glossary, [Appendix B](https://inference-sim.github.io/blis-design/v2.4.0/blis-target-design.html#appB),
 defines these terms, which keep its sense here: anchor, commit distance, drafter, engine module, engine upgrade,
 funnel, graph handler, graph vocabulary, headline, held-out unit, lowering, model backport (written "backport"),
 model support, named substitution (an **estimated substitution** is one whose value comes from a stated rule rather
@@ -79,17 +79,17 @@ are called groups here.
 - **Scenario**: the simulator's input describing one run to simulate: the deployment, the cluster and the workload.
 - **Unit**: one ledger entry. For InferenceX it is one configuration at one concurrency from one benchmark run,
   with every measurement of it. A **point** is a unit as the dashboard scores it.
-- **Role**: each unit has one of fit, select, validate, held, anchor or report, drawn once per role key by a
+- **Role**: each unit has one of fit, select, validate, held or anchor, drawn once per role key by a
   seeded rule (design §10.2). Fit units fit coefficients, select units choose between fits, validate units check a
   fit. **Held-out** units are held (one evaluation per pre-registration) and anchor (the **headline**, the
-  dashboard's accuracy figure). A report unit gives context only. **Training data** is every fit, select or validate unit and all
+  dashboard's accuracy figure). **Training data** is every fit, select or validate unit and all
   data from a source with no held or anchor role.
 - New InferenceX and configiq units draw 30% fit, 10% select, 10% validate, 30% held and 20% anchor. Older units
   were first split into a fit group and a held group; each stays in its group, and the ledger's rules split each
   group into roles (fit and select; held and anchor).
 
 **Grades.** G1 (exact) to G5 (not scored), as design
-[§11.3](https://inference-sim.github.io/blis-design/v2.3.0/blis-target-design.html#s11-3) defines them. G1 and G2
+[§11.3](https://inference-sim.github.io/blis-design/v2.4.0/blis-target-design.html#s11-3) defines them. G1 and G2
 need the run's own engine commit; G3 and G4 are other commits, by commit distance.
 
 **Coefficients.**
@@ -109,9 +109,9 @@ need the run's own engine commit; G3 and G4 are other commits, by commit distanc
 
 ## DC. Design changes (DC1 to DC3) and a team request (DC4)
 
-**Status.** M3.2 implements [design v2.3.0](https://inference-sim.github.io/blis-design/v2.3.0/blis-target-design.html).
+**Status.** M3.2 implements [design v2.4.0](https://inference-sim.github.io/blis-design/v2.4.0/blis-target-design.html).
 The design states the rules. DC1 to DC3 are **Decided**: the design adopts them, and this section states each once.
-Table DC lists what M3.2 builds. Rule IDs and sections are those of v2.3.0. The lowering work of DC2, planned
+Table DC lists what M3.2 builds. Rule IDs and sections are those of v2.4.0. The lowering work of DC2, planned
 for M4, is part of M3.2.
 
 **Why.** Changes crossed repositories in sequence: the per-pool offload fix took blis-substrate#402, blis-vllm#302
@@ -182,13 +182,14 @@ other groups are easier in one repository.**
 | Kernel lists | Generate each engine's `kernel_impls.json` as an engine-neutral copy under `substrate/registry/inputs/` with a freshness check, and move the VAL-8 cross-check into a simulator-package test. Connector and backend names of the vLLM and SGLang KV trees live only in each engine's surface list, with the NIXL storage plugins (GDS, POSIX and object) | X7, VAL-8, design §7.5 |
 | Cross-generation transfer | Validate the GB200 (Blackwell) to Hopper transfer rules (leave one generation out) before use. Until then a cross-generation transfer ranks as roofline | VAL-5, design §9.2 |
 | Ledger multiples | Record InferenceX's client multiples (10 measured, 2 warm-up, 12 in all) for `measurement_contaminated` in the ledger's source record | design §10.2 |
-| **Simplifications (design v2.1.0 to v2.3.0)** | Table W rows 8 and 22 | |
+| **Simplifications (design v2.1.0 to v2.4.0)** | Table W rows 8 and 22 | |
 | Simulator commands | Remove the `ledger`, `invariants` and `compose` commands from inference-sim, with their tests and docs pages, and the `blis invariants` mention in the README. Nothing calls them: the dashboard reads the ledger from the release checkout, and the substrate's own tool renders the invariant blocks | COV-2, X29, DEV-7 |
 | Ledger embedding | Stop embedding `catalog/ledger/published/` in the simulator's data; the loader ignores everything under `catalog/ledger/` | design §3.3, design §10.2 |
 | Dashboard nightly | Delete the stale "TEMPORARY until `blis ledger --list anchor`" comment in `api-nightly.yml`. It already reads the anchor list from the pinned checkout | COV-2 |
 | Gated-config nightly | Delete the substrate's `nightly-fetch-configs.yml` and its entries in `.github/check-runs.yaml`; remove the `config-fetch` environment and its `HF_TOKEN` secret. Keep `fetch_pinned_configs.py` and `derive_graph.py --check --fetched`, which a maintainer runs. Add the gated-model step to the catalog README and a checkbox to the pull-request template, outside the generated block | X12 |
 | InferenceX unit regeneration | Delete the Postgres regeneration step ("Regenerate the InferenceX units from the pinned dump") from the `gate-nightly` job of the substrate's `ledger.yml`. Keep the D2 join and the configiq regeneration. Add the local regeneration step (restore the dump, export, `ledger check-generated`) to the ledger README and a checkbox to the pull-request template, for a change to the dump pin or the ingest tool | D4 |
 | Process checks | Retire the checks that design v2 made maintainer practice. Delete `shared-nightly.yml` in the substrate (cited issues, quarantine list, private names in issue text) and the `schedule` trigger of the `blis` workflow in inference-sim, blis-substrate, blis-vllm, blis-sglang and blis-config-search. Delete the `tags.lock` check. From `shared-pr-checks.yml`, delete the pull-request body fetch and the description, commit-policy, review-thread, cited-issue and quarantine steps; signing and sign-off are set in branch protection. Keep the workflow lint, version literals, documentation references, licence and notice files, the generated copies and the selected-version lint. The VLM-3 field-list check stops reading issues | X28, X25, X14, X20, X24, LIF-1, LIF-3, VLM-3, design §4.2 |
+| Report role | Remove `RoleReport` from the ledger (`roles.go` and the published-list loops in `assign.go` and the ledger command), delete `catalog/ledger/published/report.yaml`, and update their tests. No unit holds the role, so no unit moves | design §10.2, D4, D7 |
 | Stale citations | Update the citations of closed issues that the nightly reports: 1 in inference-sim, 4 in blis-sglang, 4 in blis-config-search and 25 in blis-substrate. Where the gap is fixed, remove the comment; where it is not, cite an open issue that tracks it. No issue is reopened only to clear a check | X28 |
 | **A future engine (TensorRT-LLM)** | The first cases for the native-code step of design §12.6. Not built in M3.2; the sites are recorded in the surface list, with Table W row 4: the eviction policy's steady-clock read, the `getenv` of the window-size shares, the native and Python capacity schedulers (the oracle runs both), the pool allocation sites, an instrumented build for branch coverage, and, because the engine-plan path has no meta-tensor dispatch mode, a per-layer launch and shape dump or an instrumented native run for it | FID-1, FID-2, FID-4, FID-7, FID-11 |
 ### DC4. Support requested by a team: Mistral-Large-4 and Inkling-2-Small on GB200
