@@ -217,11 +217,12 @@ simulates on GB200 with every coefficient's method named, and the team's verific
   vllm-project/vllm#67325, merged 2026-11-18 as `abb8194dc3`. It is not in v0.34.0. Recent vLLM releases came
   about two weeks apart. blis-substrate#88 tracks onboarding it.
 
-**Engine upgrade. Open.** Owner: the maintainer. Which upgrade: (a) one vLLM main commit at or after `abb8194dc3`,
-which has both models (DC1, design §12.4), or (b) v0.34.0 for Mistral-Large-4 and the next release (v0.35, not yet
-cut) for Inkling-2-Small. Recommendation: (a), because one upgrade serves both and the upgrade report lists both
-models. The maintainer decides from that report and records the choice in an issue (design §12.4). Table W row 9
-starts when the choice is recorded, and row 3 names the commit.
+**Engine targets. Decided (2026-11-19).**
+- **vLLM:** main at `b582592d5a628cc24d3899da1e17f835a346b854` (2026-11-19), 143 commits after `abb8194dc3`. Its
+  model registry has both architectures, `Inkling2ForConditionalGeneration` and `MistralLarge4ForCausalLM`, and
+  their DSpark drafters, `Inkling2DSparkModel` and `MistralLarge4DSparkModel`. blis-vllm moves from v0.33.0 to this
+  commit by one engine upgrade (design §12.4), and the upgrade report lists both models.
+- **SGLang:** blis-sglang stays at the commit it models, v0.5.23 (`297e54fd105e974cdf401e5b4d20253a22c16f90`).
 
 **Table DC4. Neither model is expected to need new graph vocabulary, and both would run on GB200 with their main
 kernels priced by a fallback entry until fitted. Mistral-Large-4's `config.json` is not yet read. The detail is in
