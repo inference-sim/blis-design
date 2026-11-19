@@ -17,6 +17,51 @@ bar reads `versions.json`.
 **Spec:** `m32/design-v2-spec.md` on blis-design branch `m32-design-changes` (PR #36). The substance of v2.0.0 comes
 from `m32/requirements.md` there: the Terms, DC1 to DC5, §1.4, §1.6, §2, §3.2, §3A and §3B.
 
+## Decided (binding on every task)
+
+- **Open questions of DC, settled as the author's calls under the maintainer's "adopt everything":**
+  - Q1: the owner of an engine's directory (its `CODEOWNERS`) decides an on-demand engine upgrade, recorded in an
+    issue.
+  - Q2: a model backport has no grade of its own; it is graded by commit distance.
+  - Q3: `contracts/rules/` is removed together with the lowering move.
+  - Q4: the three repositories are consolidated.
+  - Q5 (DC4) is release content and stays out of the design.
+- **Sources of substance:**
+  - DC1 to DC3, as rules;
+  - DC5, as the coverage checklist;
+  - m32 §1.4, §1.6 and §3.2, as rules.
+  - DC4, and every figure, count, scenario name and `M3.x` label of the m32 text, stay out. Internal scenarios are
+    described generically.
+- **Rule IDs:**
+  - Prefixes survive the consolidation (SUB-, VLM-, SGL-, RTR-, and the rest).
+  - The candidate retirements are X10 (bottom-up merge), the KVS family (blis-kvstore is out), and any rule whose
+    only subject is the cross-repository pin sequence or per-engine release branches.
+  - Any other change is "changed" or "merged", never "retired".
+- **Simplicity gate:** v2.0.0's full design has no more defined rule IDs, top-level sections or kilobytes than
+  v1.0.0's (`check.py` prints the kilobytes). Any excess is justified line by line in the pull request.
+- **One home for each fact:**
+  - The component table is the one place for ownership and imports; the rules cite it.
+  - The table replaces §5's repository cards; it does not sit beside them.
+  - The design's own versioning rule is stated once, in the README; the design links to it.
+- **Seed layout:** the source files hold section bodies only. The build emits the head, the generated table of
+  contents, `<main>` and the closing tags. The seed starts from `/Users/sri/Documents/Projects/.design-notes`
+  (`part1..6.html`, `style.css`, `build.py`, `check.py`, `standcheck.py`), brought up to date with `main` by
+  splitting today's built page.
+- **The top bar:**
+  - It is wrapped in `<!--topbar-->` and `<!--/topbar-->` marker comments, and the version meta sits inside the
+    markers, so removing the fragment restores a page byte for byte.
+  - It is not sticky, so v1.0.0's sticky table of contents is unaffected.
+- **`versions.json`** lists only versions that exist on `main`. Task 2 ships `latest: 1.0.0` with one entry, and
+  Task 12 adds 2.0.0 when it merges.
+- **The root `index.html`** is static: a link to the latest version, written by the build. It redirects only when
+  `versions.json` loads.
+- **Tag:** `git tag -s` (the maintainer's SSH signing is configured), annotated.
+- **CI:**
+  - It checks out with `fetch-depth: 0`, so tags are present.
+  - It requires Node, which runs the picker and redirect scripts in behavioural tests. A test never falls back to
+    checking that code is present.
+  - It runs the M3.1 privacy-pattern scan.
+
 ## Global constraints
 
 - v2.0.0 is a standing design: no dates, milestones, release counts, issue lists or "today" in its standing
@@ -50,13 +95,18 @@ from `m32/requirements.md` there: the Terms, DC1 to DC5, §1.4, §1.6, §2, §3.
 
 ---
 
+### Task 0: Branch
+
+- [ ] After Task 1's tag exists, create branch `v2-design` from `main` at `d4e5230`, in a worktree
+  `blis-design-wt-v2`. Tasks 2 to 11 commit there.
+
 ### Task 1: Tag v1.0.0
 
 **Files:** none (git and GitHub only).
 
 - [ ] **Step 1:** In the blis-design clone, confirm `main` is at `d4e5230` with `git log -1 --format=%h origin/main`.
   Expected: `d4e5230`.
-- [ ] **Step 2:** Create a signed annotated tag:
+- [ ] **Step 2:** Create a signed, annotated tag:
   `git tag -s v1.0.0 d4e5230 -m "BLIS design v1.0.0: the standing design as of M3.1"`.
 - [ ] **Step 3:** Push it and create the release:
   `git push origin v1.0.0 && gh release create v1.0.0 --verify-tag --title "BLIS design v1.0.0" --notes-file <notes>`.
@@ -77,8 +127,8 @@ from `m32/requirements.md` there: the Terms, DC1 to DC5, §1.4, §1.6, §2, §3.
 - Test: `tools/tests/test_site.py`.
 
 **Interfaces:**
-- Produces: `versions.json` = `{"latest": "2.0.0", "versions": [{"version": "2.0.0", "path": "v2.0.0/"},
-  {"version": "1.0.0", "path": "v1.0.0/"}]}`. The top bar marks the current version by a
+- Produces: `versions.json` = `{"latest": "1.0.0", "versions": [{"version": "1.0.0", "path": "v1.0.0/"}]}`
+  (Task 12 adds 2.0.0). The top bar marks the current version by a
   `<meta name="blis-design-version" content="X.Y.Z">` in each page.
 - Produces: `tools/site/topbar.html`, an HTML fragment with the placeholder `{{VERSION}}`.
 
@@ -87,13 +137,14 @@ Steps:
   - `test_every_versioned_page_has_topbar_and_version_meta`: every `v*/**/*.html` contains the top-bar element and a
     version meta equal to its folder's version.
   - `test_versions_json_points_at_existing_folders`: each listed path exists, and `latest` is listed.
-  - `test_root_stubs_redirect_with_hash`: each root stub's script sets `location.replace` to
-    `v1.0.0/<name>` plus `location.hash`, and its `<noscript>` link targets the same file.
+  - `test_root_stubs_redirect_with_hash`: run each root stub's script under Node with a stub `location`
+    (`hash = "#cov-8"`), and assert that it navigates to `v1.0.0/<name>#cov-8`.
   - `test_v1_copies_differ_from_tag_only_by_topbar`: removing the top-bar element from each `v1.0.0/` page gives
     the bytes of that page at tag `v1.0.0` (read with `git show v1.0.0:<name>`).
-  - `test_picker_survives_missing_versions_json`: the inline script wraps the fetch in try/catch and, on failure,
-    renders the current version from the meta. Exercise it by running the script's `render` function under Node if
-    it is available; otherwise check the fallback branch is present.
+  - `test_picker_survives_missing_versions_json`: run the picker script under Node with a `fetch` that rejects,
+    and assert that it renders one option, equal to the page's version meta, and throws nothing.
+  - `test_picker_navigates_with_hash`: with `versions.json` loaded and the page at `v1.0.0/blis-target-design.html#x`,
+    choosing 2.0.0 navigates to `v2.0.0/blis-target-design.html#x`.
 - [ ] **Step 2:** Run `python3 -I -m unittest tools/tests/test_site.py`. Expected: the tests fail, because the
   folders do not exist yet.
 - [ ] **Step 3:** Create the files above. The picker is a `<select>` labelled "Design version", listing
@@ -109,7 +160,9 @@ Steps:
   `v<version>/src/`, with `--check` to compare instead of write.
 - Create: `tools/check.py` and `tools/standcheck.py`, ported from `.design-notes`, taking a page path.
 - Create: `v2.0.0/src/`, seeded by splitting today's `blis-target-design.html` at each `<h2 id=...>` into
-  `NN-<id>.html`, plus `style.css`, `head.html` and one source per summary (`summary-3.html`, `summary-7.html`).
+  `NN-<id>.html` (section bodies only), plus `style.css`, `head.html`, one source per summary (`summary-3.html`,
+  `summary-7.html`, seeded from v1.0.0's) and `index.html` (seeded from v1.0.0's). The meta description is
+  rewritten so that it holds no release wording.
 - Create: `.github/workflows/design.yml`, which runs the tests, `build.py --check`, `check.py` and
   `standcheck.py` on every pull request.
 - Test: `tools/tests/test_build.py`.
@@ -125,9 +178,11 @@ Steps:
     byte for byte apart from the top bar and the version meta.
   - `test_check_flags_stale_page`: after a source edit with no rebuild, `build.py --check` exits non-zero and names
     the page.
-  - `test_standcheck_rejects_a_date_in_a_standing_section`: a fixture section containing `2026-11-19` fails, and
-    the same text in §4.5 passes.
-  - `test_toc_lists_every_section_in_order`.
+  - `test_standcheck_rejects_release_content`: a fixture section containing a bare date (`2026-11-19`), an
+    `M3.2` label, or a sentence of the form "until a MINOR version adds" fails. The same section with a trigger test
+    ID (`T-E1`) passes. The check also scans the page's meta description.
+  - `test_toc_matches_source_order`: the table of contents lists the sections in the order of the `src/` file
+    names, which matches v1.0.0's order for every section that survives.
 - [ ] **Step 2:** Run them. Expected: they fail.
 - [ ] **Step 3:** Implement `build.py`, port the checks, seed `v2.0.0/src/` and add the workflow.
 - [ ] **Step 4:** Run the tests and `python3 -I tools/build.py 2.0.0 --check`. Expected: they pass.
@@ -196,27 +251,36 @@ requirements and must not include their release-specific figures.
 
 #### Task 8: The ledger, accuracy coverage and procedures (§10, §11, §12)
 
-- §10: data roles. Accuracy is reported only on held-out units. New sources carry training roles only. Roles are
+- §10: data roles. A measurement no source has is priced by the most trusted fallback (§9.2), and the point names
+  its method. Accuracy is reported only on held-out units. New sources carry training roles only. Roles are
   drawn per role key. A new data source joins the ledger continuously, with its run settings identified from its
   own records. No new GPU or cluster experiments.
 - §11: grades G1 to G5 with commit distance (DC1). Coverage is reported as a funnel per scored source. Older runs
   count at their grade, and there is no age limit. Accuracy is sliceable by any recorded attribute, with the rule
   for small slices.
 - §12: one **procedure** per recurring change: an engine upgrade, model support, onboarding a model, a new engine,
-  a new data source, and a fidelity fix. Each has its trigger, the components it touches, its steps and a "done
+  a new data source, and a fidelity fix (v1.0.0's §12 already has the last; the spec's five are the new or reworked
+  ones). Each has its trigger, the components it touches, its steps and a "done
   when". The `onboard --plan` command is removed: simulating the scenario and the upgrade report answer instead.
 
 #### Task 9: Automation, versions and appendices (§13, §14, A, B, C)
 
 - §13: CI per component directory with path filters; the release bot without the pin sequence.
-- §14: versions. An engine module pins one upstream commit. inference-sim is the one tagged release. The design's
-  own semantic versioning is stated.
+- §14: versions. An engine module pins one upstream commit. inference-sim is the one tagged release. Per-engine
+  release branches (LIF-2, LIF-4, LIF-5, LIF-6, §14.4) give way to inference-sim's release branches. The design's
+  own versioning links to the README, which is the one place it is stated.
 - Appendix A: the rule index, regenerated.
 - Appendix B: the glossary, merged with the m32 Terms that are standing.
 - Appendix C (new): a table mapping every v1.0.0 rule ID to its fate in v2.0.0 (kept, changed, merged into X, or
   retired), with one line of reason each.
-  - Test `test_appendix_c_covers_every_v1_id`: every ID in v1.0.0's Appendix A appears in Appendix C.
-  - Test `test_every_v2_rule_is_indexed`: every ID used in v2.0.0's text is in its Appendix A.
+  - Appendix A is edited by hand; there is no generator.
+  - Test `test_appendix_c_covers_every_v1_id`: every ID defined in v1.0.0 (each `<span class="inv">`, as
+    `check.py` reads them, with ranges expanded) has one row in Appendix C. Each fate is one of kept, changed,
+    merged or retired. A "merged into" names an ID defined in v2.0.0. Every "retired" ID is in the candidate list
+    under Decided.
+  - Test `test_every_v2_rule_is_indexed`: every ID defined in v2.0.0's text is in its Appendix A.
+  - Test `test_v2_is_not_larger_than_v1`: defined rule IDs, top-level sections and kilobytes are each at most
+    v1.0.0's, or the excess is listed in `tools/size-exceptions.txt` with its reason.
 
 ### Task 10: The three-page and seven-page summaries of v2.0.0
 
@@ -226,7 +290,7 @@ requirements and must not include their release-specific figures.
   states it. The three-page summary is for a reader who knows llm-d and vLLM; the seven-page one is for a
   contributor about to change code.
 - [ ] **Step 2:** Test `test_summary_links_resolve`: every `#anchor` link in the summaries exists in the full
-  design.
+  design, and every link targets `v2.0.0/blis-target-design.html`, not v1.0.0.
 - [ ] **Step 3:** Rebuild, run the checks, and commit.
 
 ### Task 11: Expert audits until clean
@@ -234,12 +298,17 @@ requirements and must not include their release-specific figures.
 - [ ] **Step 1:** Run three independent, read-only audits of all of v2.0.0 in parallel. Each gets the spec and this
   plan's global constraints, and none sees the author's notes:
   - **inference engineers:** vLLM, SGLang, llm-d and NVIDIA serving. They check correctness of engine behaviour,
-    fidelity, lowering, KV-cache and P/D statements, and the coefficient method.
+    fidelity, lowering, KV-cache and P/D statements, and the coefficient method. They also check that the rules
+    require the implementation bar: maximal coverage, accuracy, fidelity and closeness grades, and behavioural
+    testing.
   - **discrete-event-simulation experts:** the event model, time, ordering, determinism, warm-up, output analysis,
     and verification and validation.
   - **writing and consistency:** the writing bar, terms, cross-references, captions, contradictions, and the
     standing-design rule.
-- [ ] **Step 2:** Fix every finding. Re-run any audit with material findings, until each reports none material.
+- [ ] **Step 2:** Check coverage of M3.2. Each DC1 to DC3 statement, and each row of DC5's table, lands in a named
+  v2.0.0 rule or procedure. Record the mapping in the pull request.
+- [ ] **Step 3:** Check the site at 400 px width and in both themes (an audit item, not a test).
+- [ ] **Step 4:** Fix every finding. Re-run any audit with material findings, until each reports none material.
 - [ ] **Step 3:** Commit.
 
 ### Task 12: Pull request, release and m32
@@ -249,5 +318,6 @@ requirements and must not include their release-specific figures.
 - [ ] **Step 2:** After the merge, confirm on the live site that the picker switches versions, the old anchors
   redirect, and `latest` opens v2.0.0.
 - [ ] **Step 3:** Ask the maintainer, then tag `v2.0.0` (signed, annotated) and create its release.
-- [ ] **Step 4:** On the `m32` PR branch, mark section DC "adopted in design v2.0.0", and re-point the
-  requirements' rule citations to v2.0.0's IDs.
+- [ ] **Step 4:** On `m32-design-changes` (PR #36 into `m32`, the review route the maintainer asked for), mark
+  section DC "adopted in design v2.0.0", and re-point the requirements' rule citations to v2.0.0's IDs. The `m32`
+  branch is changed only through that PR.
