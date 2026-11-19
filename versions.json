@@ -1,6 +1,7 @@
 {
-  "latest": "2.4.0",
+  "latest": "3.0.0",
   "versions": [
+    {"version": "3.0.0", "path": "v3.0.0/"},
     {"version": "2.4.0", "path": "v2.4.0/"},
     {"version": "2.3.0", "path": "v2.3.0/"},
     {"version": "2.2.1", "path": "v2.2.1/"},
