@@ -1,0 +1,151 @@
+<h2 id="appB"><span class="secno">B</span>Glossary</h2>
+<div class="tbl"><table>
+<caption><b>Each term is used in one sense throughout. A term defined in a table or in bold where it is first used is not repeated here.</b></caption>
+<tbody>
+<tr><td><b>Agent</b></td><td>An AI coding agent that does one scoped task in a branch (<a href="#s13-7">§13.7</a>).</td></tr>
+<tr><td><b>Agent guidance</b></td><td>A rule an agent follows on every change it writes or reviews, rendered into each repository&rsquo;s <code>AGENTS.md</code> (§4.2, §13.2).</td></tr>
+<tr><td><b>Alias table</b></td><td>A generated map from old to new <code>unit_id</code> and role key, shipped when a source changes how it identifies units, so that each unit keeps its role (<span class="inv">D4</span>).</td></tr>
+<tr><td><b>Anchor</b></td><td>A ledger unit with the role <i>anchor</i>: the units on which the dashboard reports public accuracy. Only anchor units are scored for publication (§10.2, <span class="inv">COV-2</span>).</td></tr>
+<tr><td><b>Blocker backlog</b></td><td>The ranked list, per engine, of everything that lowers coverage or grade, with the points each entry blocks or demotes (§11.6).</td></tr>
+<tr><td><b>Byte gate</b></td><td>A fixed set of scenarios whose output must stay byte-identical across a refactor (<span class="inv">SIM-4</span>).</td></tr>
+<tr><td><b>Calibration stage</b></td><td>The part of the substrate that maps a simulated point to a predictive distribution of what would be measured (§15.2).</td></tr>
+<tr><td><b>Candidate job</b></td><td>The half of a scoring run that runs the candidate&rsquo;s code, with no partition secret and no network, and writes one prediction per unit (§10.2).</td></tr>
+<tr><td><b>Catalog</b></td><td>The published facts about chips, devices, networks, workloads and models, with each model&rsquo;s graph, in <code>substrate/catalog/</code> (§3).</td></tr>
+<tr><td><b>Code identity</b></td><td>The hash of the normalised bodies of the functions in the call closure of an engine&rsquo;s code path, generated at any commit. It keys an engine-path cost (§9.2).</td></tr>
+<tr><td><b>Coefficient registry</b></td><td>The substrate&rsquo;s fitted and assumed coefficients, each with its provenance, in <code>substrate/registry/</code> and read with <code>--registry</code> (§3.3, §9). Distinct from the invariant registry and the metric registry (§1).</td></tr>
+<tr><td><b>Commit distance</b></td><td>How far a run&rsquo;s engine commit is from the modelled one, counted from their merge base: commits apart, and releases apart where the two commits are in different releases (§11.3). A run on the modelled commit has distance zero.</td></tr>
+<tr><td><b>Common random numbers</b></td><td>Using the same random streams in two runs that are being compared, so their difference reflects the configuration, not chance (§8.4).</td></tr>
+<tr><td><b>Component</b></td><td>A part of the BLIS code with one owner: a directory of <code>inference-sim</code>, or a separate repository. Table 1 (<a href="#s2-2">§2.2</a>) lists them and says what each may import. Not to be confused with a model component.</td></tr>
+<tr><td><b>Configuration order</b></td><td>A decision grade: the share of pairs of points of different configurations at one concurrency, one of which dominates, for which the dominating point is named (§15.6).</td></tr>
+<tr><td><b>Conformance suite</b></td><td>A test suite in <code>contracts/conformance</code> that any implementation of a contract must pass.</td></tr>
+<tr><td><b>Content hash</b></td><td>The SHA-256 of a sorted list of every data file&rsquo;s own SHA-256 and relative path (§3.3). Equal hashes identify equal data.</td></tr>
+<tr><td><b>Cost model</b></td><td>The code in <code>substrate/kernel/</code> that prices a step from the plan, the step shape, the catalog and the coefficient registry.</td></tr>
+<tr><td><b>Cross-fitted</b></td><td>Said of features a stage is trained on: each training case&rsquo;s features come from a fit that excluded its part of the training data (§15.4, <span class="inv">DEC-2</span>).</td></tr>
+<tr><td><b>CUDA graph</b></td><td>A recorded sequence of GPU launches that replays quickly but only for fixed batch shapes, so engines pad a batch up to the next recorded shape.</td></tr>
+<tr><td><b>Cut-point</b></td><td>A bound on the role draw that sends a range of values to one role (§10.2).</td></tr>
+<tr><td><b>DCO</b></td><td>Developer Certificate of Origin: a <code>Signed-off-by</code> line by which the person who takes responsibility for a commit certifies it. Required by <span class="inv">X20</span> and kept by the reviewer; no program checks it.</td></tr>
+<tr><td><b>Decision case</b></td><td>The points an operator chooses among: one model, workload and chip, with several configurations at several concurrencies (§15.1).</td></tr>
+<tr><td><b>Decision stage</b></td><td>The part of the substrate that gives the probability that one candidate point dominates another, and the predicted front (§15.3).</td></tr>
+<tr><td><b>Deployment</b></td><td>A serving configuration, as a scenario&rsquo;s deployment document states it (<span class="inv">SUB-19</span>). For InferenceX, one role key covers one deployment under one benchmark type (§10.2).</td></tr>
+<tr><td><b>DEVS</b></td><td>The Discrete Event System Specification, Bernard Zeigler&rsquo;s formalism for discrete-event models, whose terms §8 uses.</td></tr>
+<tr><td><b>Drafter</b></td><td>What proposes speculative tokens for a target model: the model&rsquo;s own in-graph speculator, such as its MTP layers, or a separate drafter checkpoint with its own catalog entry (<span class="inv">D8</span>).</td></tr>
+<tr><td><b>Engine block, router block</b></td><td>The parts of a scenario that hold the engine&rsquo;s own configuration and llm-d&rsquo;s own configuration, copied verbatim from what the upstream accepts.</td></tr>
+<tr><td><b>Engine module</b></td><td>A directory under <code>engines/</code> that ports one upstream engine at one commit: its scheduler, KV-cache management, defaults and lowering, with its oracle and its Upstream record (<a href="#s5-2">§5.2</a>, <span class="inv">LIF-5</span>).</td></tr>
+<tr><td><b>Engine upgrade</b></td><td>Porting the diff of the code an engine module already models (scheduler, KV-cache manager, connectors, defaults, lowering) from one upstream commit to another. It changes behaviour for every model (§12.4).</td></tr>
+<tr><td><b>Environment</b></td><td>The interface through which an engine asks the substrate for model graphs, chip facts, memory sizes and prices (§6.3).</td></tr>
+<tr><td><b>Estimated point</b></td><td>A point the simulator did not simulate, predicted by the calibration stage from measurements alone, and labelled so (<span class="inv">DEC-3</span>).</td></tr>
+<tr><td><b>Estimation rule</b></td><td>An engine module&rsquo;s rule for a field the run did not record or the engine does not model: leave it unset, stand in with a stated setting, or none (§11.2).</td></tr>
+<tr><td><b>Exactly pinned, experimental</b></td><td>A run is exactly pinned when its build and data are committed and unmodified, as §3.3 states. Any other run is experimental. Only exactly pinned results are published.</td></tr>
+<tr><td><b>Experimental frame</b></td><td>The recorded description of what a run measures: its input generator, initial state, phases (warm-up, measured window, drain), stop rule, acceptance conditions and metric definitions (§8.6).</td></tr>
+<tr><td><b>Extrapolated, unidentified</b></td><td>Flags on a lookup or coefficient. Extrapolated: used outside the range of inputs its fit covered. Unidentified: its fit data do not determine its value. Both lower its rank for <span class="inv">VAL-3</span> (§9.3, <span class="inv">VAL-10</span>).</td></tr>
+<tr><td><b>Field list</b></td><td>The generated list (<code>fields.json</code>) of every configuration field and environment variable an upstream commit reads, each with a BLIS status (<span class="inv">VLM-3</span>).</td></tr>
+<tr><td><b>FLOPs</b></td><td>Floating-point operations.</td></tr>
+<tr><td><b>Front</b></td><td>The points of a decision case that no point dominates on a set of objectives, with the tolerance of <span class="inv">DEC-5</span> (§15.1).</td></tr>
+<tr><td><b>Funnel</b></td><td>The count of units at each stage from a source to scored, reported for each scored source (§11.6).</td></tr>
+<tr><td><b>Gate job, select job, error job</b></td><td>Three of the secret-holding jobs. The gate job and the select job score candidates on held and select units respectively; the error job measures each method&rsquo;s error on validate units. The select and error jobs run in <code>inference-sim</code> for operator-level work and in <code>accuracy-dashboard</code> for whole-run work; the gate job runs in <code>accuracy-dashboard</code> (§13.5).</td></tr>
+<tr><td><b>GEMM</b></td><td>General matrix multiply.</td></tr>
+<tr><td><b>Grade</b></td><td>G1 to G5: how closely BLIS reproduces a dashboard point, judged by its engine commit, its configuration and the methods of the coefficients that price it (§11.3).</td></tr>
+<tr><td><b>Graph handler, graph vocabulary</b></td><td>A graph handler is catalog code that builds one model family&rsquo;s graph from its <code>config.json</code>. The graph vocabulary is the set of node kinds a graph may use (<span class="inv">SUB-15</span>).</td></tr>
+<tr><td><b>Headline</b></td><td>The dashboard&rsquo;s published accuracy, computed from anchor units only (§11).</td></tr>
+<tr><td><b>Held</b></td><td>A ledger unit with the role <i>held</i>: used only to judge an accuracy change at its landing gate, in the gate job, never listed publicly (§10.2, <span class="inv">VAL-6</span>).</td></tr>
+<tr><td><b>HiCache</b></td><td>SGLang&rsquo;s hierarchical KV cache across GPU memory and host memory (§7.3).</td></tr>
+<tr><td><b>HiSparse</b></td><td>Hierarchical sparse attention for sparse-MLA models, in vLLM and SGLang. Host memory holds each request&rsquo;s whole KV cache; GPU memory holds the pages the sparse indexer selects, plus the newest tokens.</td></tr>
+<tr><td><b>HMAC</b></td><td>A keyed hash. Without the key (here, the partition secret) the output cannot be predicted.</td></tr>
+<tr><td><b>Holm correction</b></td><td>A way to test many lane, criterion and metric claims at once while keeping the chance of any false pass at the stated level (<span class="inv">VAL-6</span>).</td></tr>
+<tr><td><b>Hosting contract</b></td><td>The interface between the simulator and the router fork&rsquo;s embedded router: clock, runtime, sessions and KV events. The router fork owns it, with its conformance suite, so the fork depends on no BLIS module (<span class="inv">RTR-3</span>, <a href="#s5-3">§5.3</a>).</td></tr>
+<tr><td><b>In-flight depth</b></td><td>The most engine steps that run at once, <code>PoolPlan.InFlight</code>: 1 without asynchronous or overlap scheduling (<span class="inv">SIM-7</span>).</td></tr>
+<tr><td><b>Inert, unproven</b></td><td>A field status that a release plan may allow for a stated period (§1): a field believed to have no effect, whose proof is still to come.</td></tr>
+<tr><td><b>Invariant registry</b></td><td>The records of every invariant in this document: statement, checks and status, in <code>substrate/contracts/invariants/</code> (§13.1). Each repository&rsquo;s <code>AGENTS.md</code> section is generated from it.</td></tr>
+<tr><td><b>ISL, OSL</b></td><td>Input and output length of a request, in tokens.</td></tr>
+<tr><td><b>Kernel</b></td><td>A GPU kernel. The directory <code>substrate/kernel/</code> holds the cost model and is named for the <code>Kernel</code> interface it implements, not for a GPU kernel (§3.2).</td></tr>
+<tr><td><b>Kernel hash</b></td><td><code>CodeHash</code>: the hash that identifies a kernel implementation, of its source and target GPU architecture, or of a binary library (§6.2).</td></tr>
+<tr><td><b>Kernel implementation</b></td><td>The library, variant and kernel hash (<code>CodeHash</code>) that execute one primitive. The coefficient registry looks coefficients up by it.</td></tr>
+<tr><td><b>Known-bad input</b></td><td>An input that a check must reject. Each check in the invariant registry names one (<span class="inv">X18</span>).</td></tr>
+<tr><td><b>KV cache</b></td><td>The stored attention keys and values of each request. A <b>KV connector</b> moves it between machines; <b>KV tiering</b> moves it between GPU memory and host memory.</td></tr>
+<tr><td><b>KV-cache manager, KV-cache spec</b></td><td>In vLLM, the code that decides which blocks a request&rsquo;s KV cache holds, which prefix blocks it shares and which blocks are evicted. The model&rsquo;s layers are grouped, and each group has a <b>KV-cache spec</b>, such as full attention, sliding window or Mamba state. A registration table maps each spec type to a manager, and a coordinator runs one manager per group (§7.1).</td></tr>
+<tr><td><b>Landing gate</b></td><td>The accuracy check a coefficient or pricing change must pass to merge (<span class="inv">VAL-6</span>).</td></tr>
+<tr><td><b>Lane</b></td><td>A group of held-out points judged together: the points that share an engine, modelled commit, chip, model and layout. The landing gate judges each lane (<span class="inv">VAL-6</span>).</td></tr>
+<tr><td><b>Layout</b></td><td>How a model is split across GPUs: the tensor, pipeline, data, expert and context parallel widths, and where each rank is placed.</td></tr>
+<tr><td><b>Ledger</b></td><td>The committed list of every measured unit from every data source, with the rule that gives each unit a role (<code>substrate/catalog/ledger/</code>, §10).</td></tr>
+<tr><td><b>Legacy table, legacy side</b></td><td>The legacy table lists the units that were given a fit side or a held side before the ledger existed. Each keeps its side, and a held unit on a legacy side is reported as not blind (§10.2).</td></tr>
+<tr><td><b>llm-d stack</b></td><td>llm-d&rsquo;s router in front of vLLM or SGLang engines, as llm-d&rsquo;s published guides deploy it.</td></tr>
+<tr><td><b>Lowering</b></td><td>Turning a model&rsquo;s architecture into the concrete operations one engine runs on one layout: which attention backend, which fused operations, which data types, which page size, how it shards and pads. It lives only in engine modules (<span class="inv">SUB-15</span>, §6.1).</td></tr>
+<tr><td><b>Maintainer practice</b></td><td>A rule about process (review, approval, merge, issues, pull-request text, release notes, signing) that a maintainer with write access keeps with branch protection, required reviews and signed commits. It is written &ldquo;Maintainer practice:&rdquo; and has no check (§4.2).</td></tr>
+<tr><td><b>Manifest</b></td><td>The list of everything the oracle replaces.</td></tr>
+<tr><td><b>Memory pool</b></td><td>In SGLang, a store of KV cache or recurrent state in GPU memory, or, for HiCache, in host memory, with a separate allocator for its slots or pages. Each attention layout has its own pool type (§7.1).</td></tr>
+<tr><td><b>Metric registry</b></td><td>The list in <code>contracts/</code> of every metric&rsquo;s definition: formula, statistic, population, window and unit (§8.7, <span class="inv">DEV-8</span>).</td></tr>
+<tr><td><b>MLA</b></td><td>Multi-head latent attention: attention that stores a compressed latent instead of full keys and values.</td></tr>
+<tr><td><b>Model backport</b></td><td>Upstream commits that add one model, applied onto the modelled commit and listed in the Upstream record. It carries model code only, never scheduler, KV-cache or connector changes, and is dropped when the modelled commit contains it (§12.5).</td></tr>
+<tr><td><b>Model component</b></td><td>An atomic or coupled model: a part of the simulated system with its own state, changed only by its own internal events and by messages from other model components. Atomic examples are an engine instance, the router, a link, or a client (one source in the workload generator); a pool and the cluster are coupled (§8.1). This is the DEVS sense, and differs from a component of Table 1.</td></tr>
+<tr><td><b>Model support</b></td><td>Work in an engine module for one model, needed only when the model brings engine-facing code that an engine upgrade does not port, such as a new KV-cache layout, its own kernels or a new drafting method (§12.5).</td></tr>
+<tr><td><b>Modelled commit</b></td><td>The upstream commit an engine module models. A build runs one modelled commit of each engine (<span class="inv">LIF-5</span>, <span class="inv">LIF-6</span>).</td></tr>
+<tr><td><b>MoE</b></td><td>Mixture of experts.</td></tr>
+<tr><td><b>Move, move form, leg</b></td><td>A move is one movement of KV between two places. Its form is one of the closed list of §6.1. Its price is the sum of its legs, each a copy over one path that the catalog states (§6.1).</td></tr>
+<tr><td><b>MSER-5</b></td><td>A warm-up rule: batch the output series in fives and cut where the variance of the remaining mean is smallest (§8.8).</td></tr>
+<tr><td><b>MTP</b></td><td>Multi-token prediction: a speculative-decoding method where extra model layers draft the next few tokens.</td></tr>
+<tr><td><b>Named substitution</b></td><td>A value that no record of the run holds, stated on the point with the value used and its source. It lowers the grade. An <b>estimated substitution</b> is a named substitution whose value comes from a stated rule and not from a record (<span class="inv">D10</span>).</td></tr>
+<tr><td><b>NIXL</b></td><td>NVIDIA&rsquo;s library for moving KV caches between machines. vLLM&rsquo;s <code>NixlConnector</code>, the P/D connector llm-d&rsquo;s guides use most, is built on it.</td></tr>
+<tr><td><b>Not blind</b></td><td>A held-side reported value from a unit whose label predates the ledger, so that the unit may have influenced earlier choices. The gate reports each such unit as a separate reported value for as long as such units are used (§10.2).</td></tr>
+<tr><td><b>not_charged</b></td><td>A coefficient method for a cost that BLIS deliberately does not charge, with a written reason (<span class="inv">VAL-1</span>).</td></tr>
+<tr><td><b>Offered load</b></td><td>Requests arriving per second, set by the workload rather than by the system&rsquo;s response.</td></tr>
+<tr><td><b>Onboarding a model</b></td><td>One to three pieces of work, after any engine upgrade the model needs: a catalog entry, always; model support, when needed; and coefficients, only for a new primitive family (§12.1).</td></tr>
+<tr><td><b>Oracle</b></td><td>The harness that runs the upstream&rsquo;s own code with its environment replaced, and records its decisions.</td></tr>
+<tr><td><b>Overlay</b></td><td>A directory given with <code>--catalog-overlay</code> or <code>--registry-overlay</code>. Each entry replaces the entry with the same identity in the data in use, or is added if none exists (§3.3).</td></tr>
+<tr><td><b>P/D</b></td><td>Prefill/decode disaggregation: one pool of engines processes prompts (prefill), another generates tokens (decode), and the KV cache moves between them.</td></tr>
+<tr><td><b>Parallel DEVS</b></td><td>The form of DEVS in which all outputs at an instant are collected before any model component changes state (§8.2).</td></tr>
+<tr><td><b>Partition secret</b></td><td>The 256-bit secret that, with a role key, decides a unit&rsquo;s role. Only the secret-holding jobs read it (§10.2).</td></tr>
+<tr><td><b>Partition version</b></td><td>A numbered version of the ledger&rsquo;s role assignment. A new version is needed to change any existing unit&rsquo;s role.</td></tr>
+<tr><td><b>Perturbation test</b></td><td>A test that changes one field and checks that some price, decision, or field of the emitted plan or step shape changes (<span class="inv">SUB-11</span>, <span class="inv">VLM-3</span>).</td></tr>
+<tr><td><b>Pin file</b></td><td>A file that records the exact commit or release of another repository: the harness pin file in <code>inference-sim</code>, and the pin of an <code>inference-sim</code> release in each application (<span class="inv">X11</span>, <span class="inv">X23</span>).</td></tr>
+<tr><td><b>Pin, re-pin</b></td><td>To require an exact commit or release of another module, in <code>go.mod</code> or a pin file; to update that requirement.</td></tr>
+<tr><td><b>Point</b></td><td>One unit as the dashboard grades it, G1 to G5 (§11.3): for InferenceX, one benchmark run of one deployment and recipe fingerprint at one concurrency.</td></tr>
+<tr><td><b>Pool</b></td><td>A group of engine instances that share one configuration and layout, such as the prefill pool or the decode pool in P/D. Each pool has one <code>PoolPlan</code>.</td></tr>
+<tr><td><b>PoolPlan, StepShape, engine.Transfer, plan.Transfer</b></td><td>The objects an engine hands the cost model: a plan per engine pool, and the shape of each step. The engine reports each KV move as an <code>engine.Transfer</code>, which the cost model receives as a <code>plan.Transfer</code> (§6.1, §6.2). The unqualified word Transfer is not used.</td></tr>
+<tr><td><b>Pre-registration</b></td><td>The file of an accuracy change, committed before any held-out data is read, that states what the change will be judged on (§12.3).</td></tr>
+<tr><td><b>Price-change report</b></td><td>A report, generated for every release and every pull request that can change prices, of each benchmark scenario&rsquo;s step prices before and after the change (§13.3).</td></tr>
+<tr><td><b>Primitive</b></td><td>One kind of work the cost model prices: an attention step, a matrix multiply, a collective, a memory transfer.</td></tr>
+<tr><td><b>Primitive family</b></td><td>The coefficients that price one kind of primitive, such as dense GEMM, decode attention or all-reduce (<span class="inv">VAL-2</span>).</td></tr>
+<tr><td><b>Profile likelihood</b></td><td>A way to find a fitted coefficient&rsquo;s interval by refitting the others at each candidate value (<span class="inv">VAL-10</span>).</td></tr>
+<tr><td><b>Progress watchdog</b></td><td>A check that fails a run when no request changes state for a set number of engine steps while work is waiting (<span class="inv">SIM-7</span>).</td></tr>
+<tr><td><b>Provisional point</b></td><td>A point whose source records neither launch arguments nor frame, but whose row fits every preset of the launcher that published it. It is capped at G3 and kept out of the headline (<span class="inv">COV-7</span>).</td></tr>
+<tr><td><b>Pseudo-version</b></td><td>The Go version string that names one commit of a module that has no tag (<span class="inv">X11</span>).</td></tr>
+<tr><td><b>Quarantine list</b></td><td>The list of tests that fail on the main branch, each with an owning issue and an expiry date; listed tests do not block merges until they expire (<span class="inv">X25</span>).</td></tr>
+<tr><td><b>Radix cache, tree cache, tree core</b></td><td>SGLang&rsquo;s prefix cache: a tree of token sequences whose nodes hold KV cache, so that requests sharing a prefix reuse it. A <b>tree cache</b> is any implementation of SGLang&rsquo;s tree-cache interface. A <b>tree core</b> is the tree&rsquo;s own data structure inside a radix cache (§7.1).</td></tr>
+<tr><td><b>Ratchet</b></td><td>A count that CI allows to fall but never to rise.</td></tr>
+<tr><td><b>Recorded trace</b></td><td>The oracle&rsquo;s output for one scenario at one upstream commit, reviewed and committed (§7.4).</td></tr>
+<tr><td><b>Release branch</b></td><td>A branch <code>release-vX.Y</code> of <code>inference-sim</code>, cut when an engine module moves to a new upstream commit, and kept for fixes to the commit the last release ran (<a href="#s14-4">§14.4</a>).</td></tr>
+<tr><td><b>Reported value</b></td><td>A metric at a scope, with its aggregate: a number that a <code>Result</code>, a report or the dashboard shows. Two reported values are compared only when their metric, scope and aggregate are the same (§8.7, <span class="inv">DEV-8</span>).</td></tr>
+<tr><td><b>Result</b></td><td>The structured output of one run, written as JSON, including everything the run used (§3.3).</td></tr>
+<tr><td><b>Review question</b></td><td>A yes/no question, attached to a rule, that a reviewer applies to a pull request and answers with the files and lines that support the answer (§13.2). It is guidance and never a check: it fails no CI job.</td></tr>
+<tr><td><b>Role key</b></td><td>The fields of a data unit that decide its role, so near-copies of one measurement share a role (§10.2).</td></tr>
+<tr><td><b>Roofline</b></td><td>An estimate of a primitive&rsquo;s time as the larger of its compute time at peak FLOPs and its memory time at peak bandwidth.</td></tr>
+<tr><td><b>Router fork</b></td><td>llm-d&rsquo;s router code in a repository of its own. It owns the hosting contract and depends on no BLIS module (§2.1, §5.3).</td></tr>
+<tr><td><b>Router table</b></td><td>The substrate&rsquo;s map from a router a run used to the nearest policy llm-d&rsquo;s router offers (§11.4).</td></tr>
+<tr><td><b>Scenario</b></td><td>The YAML file a user gives BLIS: the engine and router configuration, the cluster, the workload and the seed.</td></tr>
+<tr><td><b>Scoring harness</b></td><td>The accuracy dashboard&rsquo;s tool that turns measured benchmark runs into scenarios, runs a given simulator build, and compares. The only end-to-end scorer (§11.7).</td></tr>
+<tr><td><b>Secret-holding job</b></td><td>One of the four kinds of CI job that hold the partition secret: the release, select, error and gate jobs. They run only code from <code>main</code>. Only these can compute <code>select</code>, <code>validate</code> and <code>held</code> roles (§10.2).</td></tr>
+<tr><td><b>Selected-version lint</b></td><td>A check that reads the versions Go actually chose for a build (<code>go list -m all</code>), not the versions written in <code>go.mod</code>.</td></tr>
+<tr><td><b>Separating error</b></td><td>The part of a simulated point&rsquo;s log error that differs from the case mean; only it can change a front (§15.1).</td></tr>
+<tr><td><b>Shared error</b></td><td>The mean of the simulated points&rsquo; log error over a decision case; it changes no front (§15.1).</td></tr>
+<tr><td><b>Simulated runtime</b></td><td>The router fork&rsquo;s runtime when BLIS hosts it: clock, timers, randomness and goroutines driven by simulated time (<span class="inv">RTR-7</span>, <span class="inv">X4</span>).</td></tr>
+<tr><td><b>Simulation model</b></td><td>BLIS&rsquo;s description of the serving system, as distinct from a language model and from the cost model (§8.9).</td></tr>
+<tr><td><b>Slice</b></td><td>The points that share an attribute value, such as one chip. Below <code>min_points</code> no aggregate is shown (<span class="inv">COV-13</span>).</td></tr>
+<tr><td><b>stack.json</b></td><td>The record, published with each <code>inference-sim</code> release, of its own commit, the router fork&rsquo;s commit, the upstream commit each engine module models, its Go toolchain version and its llm-d guides commit (<span class="inv">SIM-3</span>).</td></tr>
+<tr><td><b>Staging buffer</b></td><td>A region of host memory through which a move passes between a storage device and the GPU (§6.1).</td></tr>
+<tr><td><b>Substrate</b></td><td>The engine-independent foundation: the <code>substrate/</code> directory of <code>inference-sim</code> (§3).</td></tr>
+<tr><td><b>Surface list</b></td><td>The generated list of every feature an upstream commit offers, each with a BLIS status.</td></tr>
+<tr><td><b>Token record</b></td><td>The per-request counts an engine emits: prompt tokens, tokens served from local and external caches, tokens computed and tokens emitted (<span class="inv">SIM-12</span>).</td></tr>
+<tr><td><b>TP, DP, EP</b></td><td>Tensor, data and expert parallelism.</td></tr>
+<tr><td><b>Transcription</b></td><td>Upstream code that the oracle cannot run, such as a loop that blocks on network queues, rewritten for the oracle and listed in the manifest under its own kind (<span class="inv">FID-8</span>).</td></tr>
+<tr><td><b>Trigger</b></td><td>An outside event that starts BLIS work, such as a new upstream release or a new model (§12).</td></tr>
+<tr><td><b>TRT-LLM</b></td><td>NVIDIA&rsquo;s TensorRT-LLM serving engine. A new engine of this kind meets the same bar as vLLM and SGLang, with its C++ code checked through bindings (§7).</td></tr>
+<tr><td><b>UCX, NCCL</b></td><td>Transport libraries that choose how bytes move: UCX under NIXL, and NCCL for collectives and its own transfers (§6.1).</td></tr>
+<tr><td><b>Unit, role</b></td><td>A unit is the smallest piece of data the ledger tracks. Its role says what it may be used for.</td></tr>
+<tr><td><b>Upgrade report</b></td><td>The report an engine upgrade generates: the surface diff, the field demand, the source diff and, for each model the new commit supports, whether the catalog has it, whether it needs model support and which coefficients it lacks (§12.4).</td></tr>
+<tr><td><b>Upstream</b></td><td>The project BLIS reproduces: vLLM, SGLang or llm-d.</td></tr>
+<tr><td><b>Upstream record</b></td><td>The <code>Upstream</code> value in an engine module&rsquo;s <code>provenance.go</code>: the upstream commit the module models, the release that commit descends from, and any listed model backport (<span class="inv">LIF-5</span>).</td></tr>
+<tr><td><b>Validity domain</b></td><td>The range of models, chips, layouts, concurrencies, sequence lengths and replica counts that held-out data cover (§8.9).</td></tr>
+<tr><td><b>Value class</b></td><td>A range of values of a modelled field that its evidence covers: the values the evidence sets, or a range split at every threshold the upstream compares the field with (<span class="inv">VLM-3</span>).</td></tr>
+<tr><td><b>Verification, validation</b></td><td>Checking that the simulator does what its model says (verification), and checking that the model matches the real system (validation) (§8.9).</td></tr>
+<tr><td><b>Workload identity</b></td><td>The key under which a workload-dependent quantity, such as speculative acceptance or expert routing balance, is stored (<span class="inv">D8</span>).</td></tr>
+</tbody></table></div>

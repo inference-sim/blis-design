@@ -1,2 +1,3 @@
 # A metric listed here may exceed v1.0.0's value. Format: metric: reason.
-sections: Appendix C is a new top-level section that maps every v1.0.0 rule identifier to its fate, so that a citation of v1.0.0 can be followed.
+sections: Appendix C is a new top-level section that maps every v1.0.0 rule identifier to its fate, so that a citation of v1.0.0 can be followed; section 15 describes the calibration and decision stages.
+rule_ids: the calibration and decision stages of section 15 add five rules (DEC-1 to DEC-5) for parts of the substrate that v1.0.0 did not have.

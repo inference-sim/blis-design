@@ -1,0 +1,127 @@
+<!-- ============================================================ -->
+<h2 id="s15"><span class="secno">15</span>Calibration and decisions</h2>
+
+<p>An operator uses BLIS to choose a deployment: a configuration for the GPUs they have, or the hardware to buy. This
+section describes two stages of the substrate that turn simulated points into that choice. The <b>calibration
+stage</b> maps each simulated point to a distribution over what would be measured. The <b>decision stage</b> takes
+the candidate points of one decision and returns which of them are on the Pareto front, and with what probability one
+candidate dominates another. Both stages are fitted to measured runs and ship as data, as coefficients do. Neither
+changes how a step is simulated.</p>
+
+<h3 id="s15-1">15.1 Which errors change a decision</h3>
+<p>A <b>decision case</b> is the set of points an operator chooses among: one model, workload and chip, with several
+configurations, each at several concurrencies. A point has three objectives: throughput per dollar, interactivity
+(1000 over the P90 inter-token latency in milliseconds) and the P90 time to first token. A point <b>dominates</b>
+another on a set of objectives when it is better on each of them by more than a factor 1&nbsp;+&nbsp;&epsilon;, where
+&epsilon; is the tolerance recorded in the stage&rsquo;s artifact (<span class="inv">DEC-5</span>). The <b>front</b> of a case is the set of its points that
+no point dominates, on each of the three two-objective sets and on all three objectives.</p>
+<p>Write a simulated point&rsquo;s log error on each objective as a <b>shared error</b>, the mean of that error over
+the case&rsquo;s points, plus a <b>separating error</b>, the remainder. A shared error leaves every dominance relation,
+and so every front, unchanged, because it adds the same amount to both sides of each comparison. A separating error
+changes a pair&rsquo;s relation only when it exceeds the margin by which the pair&rsquo;s predicted relation holds.
+Point error, the measure of <a href="#s11">§11</a>, counts both kinds alike. The two stages below therefore act on
+differences between candidates, and the dashboard grades decisions separately from points (<a href="#s15-6">§15.6</a>).</p>
+
+<h3 id="s15-2">15.2 The calibration stage</h3>
+<p>The calibration stage (<code>substrate/calibration/</code>) maps the simulator&rsquo;s log prediction of each
+objective at each point to a predictive distribution. For objective <i>k</i> at point <i>z</i> of a configuration of
+layout kind <i>&kappa;</i>, the measured value is modelled as a <b>level</b> times the case mean of the prediction, plus
+a <b>gap scale</b> for <i>&kappa;</i> times the prediction&rsquo;s deviation from that mean, plus the effect of errors
+in the coefficient families acting through the simulator&rsquo;s sensitivity to each family, plus a <b>discrepancy</b>
+that is a Gaussian process over configuration and workload features, plus noise. The level absorbs shared error; the gap
+scale says how far the simulator&rsquo;s differences between candidates can be trusted. The discrepancy has zero mean,
+so that away from the data the stage returns the simulator&rsquo;s prediction, rescaled.</p>
+<p>The fitted errors of the coefficient families are corrections to coefficients. Where they are stable across the
+fitting folds, the registry&rsquo;s writer turns them into entries of method <code>calibrated</code>
+(<a href="#s9-2">§9.2</a>), and the next fit starts from those entries. The calibration stage never edits the
+registry itself.</p>
+<p>A point the simulator does not simulate, because no engine module models its layout, model or setting, has no
+prediction. The calibration stage then predicts it from the discrepancy alone, an interpolation between measured
+configurations. Such a point is an <b>estimated point</b>, not a simulated one, and is always labelled so
+(<span class="inv">DEC-3</span>).</p>
+
+<h3 id="s15-3">15.3 The decision stage</h3>
+<p>The decision stage (<code>substrate/decision/</code>) gives, for an ordered pair of points of one case and one
+front, the probability that the first dominates the second. Its inputs are differences between the two points: the
+simulator&rsquo;s predicted differences of the three objectives, the calibration stage&rsquo;s mean differences and
+spreads, and the differences of the two configurations&rsquo; parallel degrees, GPU counts, engine settings and
+concurrencies, together with properties of the case such as model size and chip figures. No model or chip identifier is
+an input. Because the simulator and calibration inputs are differences, a shared error cancels before it reaches the
+stage.</p>
+<p>The stage is an ensemble of gradient-boosted trees, one per front. It is monotone in each predicted difference: a
+larger predicted advantage of the first point never lowers the probability that it dominates. It is trained on both
+orderings of every pair, and its two estimates for a pair are normalised so that no two points dominate each other and
+the answer does not depend on the order in which the pair is presented. A point is on the predicted front unless some
+other point dominates it with probability above one half.</p>
+
+<h3 id="s15-4">15.4 Fitting the stages</h3>
+<p>Both stages are fitted offline by writer scripts in their directories, in the way coefficients are
+(<a href="#s9">§9</a>). A fit reads only training data in the sense of <a href="#s10-2">§10.2</a>: units with the role
+<code>fit</code> to fit, units with the role <code>select</code> to choose among candidate forms, settings and inputs,
+and units with the role <code>validate</code> to report typical error. It never reads a held-out unit.</p>
+<p>The decision stage reads calibration features. If the calibration features of a training case came from a
+calibration fitted on that case, they would be more accurate than the features of any new case, and the decision stage
+would weight them too heavily. The calibration features of every training case are therefore <b>cross-fitted</b>: the
+model&ndash;chip groups of the training data are divided into parts, and each case&rsquo;s features come from a fit
+that excluded its part (<span class="inv">DEC-2</span>).</p>
+<p>A fit writes its stage&rsquo;s artifact: the fitted parameters, the training data&rsquo;s content hash and role
+counts, the forms and settings the <code>select</code> units chose, and the writer&rsquo;s commit. An artifact is data
+in the sense of <a href="#s3-3">§3.3</a>: it is embedded in the release and may be replaced by a path, so a candidate
+artifact can be judged before it lands.</p>
+
+<h3 id="s15-5">15.5 Commands</h3>
+<p>The simulator&rsquo;s commands <code>blis run</code> and <code>blis replay</code> are unchanged: they simulate. Two
+uses of the stages are added.</p>
+<ul>
+<li><b>Calibrated output.</b> When asked, the <code>Result</code> document carries, beside each simulated value, the
+calibration stage&rsquo;s predictive mean and interval, and names the artifact that produced them.</li>
+<li><b><code>blis front</code>.</b> Given the <code>Result</code> documents of the candidates of one or more decision
+cases, it returns each point&rsquo;s predicted membership of each front, the probability that it is on each front,
+and, for any requested pair, the probability that one dominates the other. Estimated points are included and labelled.</li>
+</ul>
+<p>Search over which candidates to simulate belongs to the applications that call these commands
+(<a href="#s5-5">§5.5</a>). The stages know nothing of how candidates were chosen.</p>
+
+<h3 id="s15-6">15.6 How decisions are graded</h3>
+<p>The dashboard grades decisions as well as points, with its scoring harness and on held-out units only
+(<a href="#s11-7">§11.7</a>). For each decision case it reports three <b>decision grades</b>:</p>
+<ul>
+<li><b>Front F1</b>: the precision, recall and F1 of the predicted front against the measured one, on each front, with
+a point that is not answered counted as predicted off the front, beside the F1 of the rule that calls every point a
+front point.</li>
+<li><b>Front distance</b>: the largest amount, in log units on the worst objective, by which a measured front point
+beats every predicted front point at their measured values.</li>
+<li><b>Configuration order</b>: over the pairs of points of different configurations at the same concurrency of which
+one dominates, the share for which the dominating point is named.</li>
+</ul>
+<p>The grades are reported for the simulator alone, with the calibration stage, and with both stages, so that each
+stage&rsquo;s contribution is visible. An estimated point is graded with the others and also reported apart.</p>
+
+<h3 id="s15-7">15.7 Invariants</h3>
+<ul class="invlist">
+<li><span class="inv">DEC-1</span> <span class="stmt">The calibration and decision stages change no simulated value: a
+run with or without them produces the same simulated values and the same events.</span><span class="enf"><b>Checked
+by:</b> the byte gate (<span class="inv">SIM-4</span>) on runs with and without calibrated output.</span></li>
+<li><span class="inv">DEC-2</span> <span class="stmt">A fit of either stage reads only training data, and the calibration
+features of each training case of the decision stage come from a fit that excluded that case&rsquo;s model&ndash;chip
+group.</span><span class="enf"><b>Checked by:</b> the writer&rsquo;s role check against the ledger; a test that a
+held-out unit in its input makes the writer fail; a test that the cross-fitting parts are disjoint by model&ndash;chip
+group.</span></li>
+<li><span class="inv">DEC-3</span> <span class="stmt">Every value the stages return for a point that was not simulated is
+labelled estimated, in the <code>Result</code>, in <code>blis front</code>&rsquo;s output and in every grade that
+counts it.</span><span class="enf"><b>Checked by:</b> schema validation and a test on a scenario the engine modules
+refuse.</span></li>
+<li><span class="inv">DEC-4</span> <span class="stmt">The decision stage&rsquo;s inputs from the simulator and the
+calibration stage are differences between the two points of a pair, so one constant per objective added to every point
+of a case leaves its output unchanged; it is monotone in each predicted difference; and, for every pair, its
+probabilities that each point dominates the other sum to at most one and do not depend on the order of the
+pair.</span><span class="enf"><b>Checked by:</b> property tests over random case offsets and random pairs of the training
+data.</span></li>
+<li><span class="inv">DEC-5</span> <span class="stmt">Each stage ships as one artifact per release that records its
+training data&rsquo;s content hash and role counts, the forms and settings chosen, the dominance tolerance &epsilon; and
+the writer&rsquo;s commit; the stage, the dashboard&rsquo;s decision grades and <code>blis front</code> use that one
+&epsilon;; and a new artifact lands only with its held-out decision grades from the scoring harness, against those of the
+artifact it replaces and of the simulator alone.</span><span class="enf"><b>Checked by:</b> the writer&rsquo;s
+<code>--check</code> and the validators; the dashboard&rsquo;s test that it grades with the artifact&rsquo;s
+&epsilon;; the landing gate (<span class="inv">VAL-6</span>), extended to artifacts.</span></li>
+</ul>
